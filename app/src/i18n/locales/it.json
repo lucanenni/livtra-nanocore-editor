@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "NanoCore Editor",
+    "subtitle": "Editor online non ufficiale per il multieffetto Livtra NanoCore",
+    "noHardwareNotice": "Nessun NanoCore ancora collegato — crea la tua patch e provala nel Simulatore. Passa a Web MIDI quando arriva l'hardware."
+  },
+  "nav": {
+    "chain": "Catena effetti",
+    "presets": "Preset",
+    "global": "Impostazioni globali",
+    "tuner": "Accordatore",
+    "log": "Attività MIDI"
+  },
+  "connection": {
+    "title": "Connessione MIDI",
+    "transport": "Trasporto",
+    "transportWebmidi": "Web MIDI (hardware)",
+    "transportSimulator": "Simulatore (senza hardware)",
+    "output": "Uscita",
+    "noOutputs": "Nessuna uscita MIDI trovata. Collega il NanoCore via USB e aggiorna.",
+    "channel": "Canale",
+    "channelHint": "Deve corrispondere al canale MIDI impostato sul NanoCore (canale dispositivo 0 = Omni, va bene qualsiasi canale).",
+    "refresh": "Aggiorna",
+    "statusReady": "Pronto",
+    "statusInitializing": "Connessione…",
+    "statusError": "Errore",
+    "statusNotReady": "Non connesso"
+  },
+  "block": {
+    "on": "Attivo",
+    "off": "Spento",
+    "type": "Tipo",
+    "power": "Alimentazione"
+  },
+  "routing": {
+    "warning": "FX2 è impostato su {{type}}, che riutilizza i CC parametro di MOD (68-73). Modificare i parametri MOD ora cambierà in realtà {{type}} di FX2."
+  },
+  "preset": {
+    "title": "Libreria preset",
+    "sendToDevice": "Invia patch al dispositivo",
+    "sendToDeviceHint": "Trasmette on/off, tipo e parametri di ogni blocco della patch corrente. Ricorda di salvarla sul dispositivo (pressione lunga su MASTER) se vuoi che sia permanente.",
+    "newName": "Nome preset",
+    "save": "Salva come nuovo preset",
+    "update": "Aggiorna",
+    "rename": "Rinomina",
+    "delete": "Elimina",
+    "load": "Carica",
+    "export": "Esporta tutti (.json)",
+    "import": "Importa (.json)",
+    "empty": "Nessun preset salvato. Crea una patch e clicca \"Salva come nuovo preset\".",
+    "dirty": "Modifiche non salvate",
+    "confirmDelete": "Eliminare il preset \"{{name}}\"?",
+    "recallTitle": "Richiama preset dal dispositivo",
+    "recallHint": "Il Program Change indica al NanoCore solo quale preset memorizzato caricare — non rilegge i parametri risultanti in questo editor.",
+    "programNumber": "Numero preset (0-127)",
+    "recall": "Richiama",
+    "prev": "Precedente",
+    "next": "Successivo",
+    "importResult": "Importati {{count}} preset.",
+    "importError": "Importazione fallita: {{error}}"
+  },
+  "tuner": {
+    "title": "Accordatore",
+    "toggle": "Accordatore",
+    "note": "Invia CC80 (0 = spento, 127 = acceso) per aprire/chiudere l'accordatore da remoto. L'intonazione di riferimento (440Hz predefinita) è regolabile solo sul dispositivo — nessun CC è documentato per questo."
+  },
+  "global": {
+    "title": "Impostazioni globali (riferimento dispositivo)",
+    "hint": "Si impostano sul dispositivo stesso o tramite l'app companion ufficiale — nessun CC MIDI è documentato per queste. Rifletti qui i valori del tuo hardware solo per tenerne traccia.",
+    "loopback": "Loopback",
+    "inputGain": "Guadagno ingresso",
+    "usbVolume": "Volume USB",
+    "btVolume": "Volume BT",
+    "midiChannel": "Canale MIDI",
+    "midiChannelHint": "0 = Omni (riceve su tutti i canali)",
+    "firmware": "Firmware"
+  },
+  "log": {
+    "title": "Attività MIDI",
+    "clear": "Pulisci",
+    "empty": "Ancora nulla inviato. Muovi un controllo per vedere qui i messaggi MIDI in uscita.",
+    "cc": "CC{{cc}}",
+    "pc": "PC"
+  },
+  "language": {
+    "label": "Lingua"
+  },
+  "common": {
+    "cancel": "Annulla",
+    "close": "Chiudi",
+    "reset": "Reimposta patch"
+  }
+}

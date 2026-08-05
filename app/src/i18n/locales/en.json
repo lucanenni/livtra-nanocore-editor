@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "NanoCore Editor",
+    "subtitle": "Unofficial online editor for the Livtra NanoCore mini multi-effect processor",
+    "noHardwareNotice": "No NanoCore connected yet — build your patch and try it in the Simulator. Switch to Web MIDI once your hardware arrives."
+  },
+  "nav": {
+    "chain": "Effect Chain",
+    "presets": "Presets",
+    "global": "Global Settings",
+    "tuner": "Tuner",
+    "log": "MIDI Activity"
+  },
+  "connection": {
+    "title": "MIDI Connection",
+    "transport": "Transport",
+    "transportWebmidi": "Web MIDI (hardware)",
+    "transportSimulator": "Simulator (no hardware needed)",
+    "output": "Output",
+    "noOutputs": "No MIDI outputs found. Connect your NanoCore via USB and refresh.",
+    "channel": "Channel",
+    "channelHint": "Must match the NanoCore's own MIDI Channel setting (device channel 0 = Omni, any channel works).",
+    "refresh": "Refresh",
+    "statusReady": "Ready",
+    "statusInitializing": "Connecting…",
+    "statusError": "Error",
+    "statusNotReady": "Not connected"
+  },
+  "block": {
+    "on": "On",
+    "off": "Off",
+    "type": "Type",
+    "power": "Power"
+  },
+  "routing": {
+    "warning": "FX2 is set to {{type}}, which reuses MOD's parameter CCs (68-73). Editing MOD parameters right now will actually change FX2's {{type}} instead."
+  },
+  "preset": {
+    "title": "Preset Library",
+    "sendToDevice": "Send patch to device",
+    "sendToDeviceHint": "Transmits every block's on/off, type and parameter CC for the current patch. Remember to save it on the device afterwards (long-press MASTER) if you want it to persist.",
+    "newName": "Preset name",
+    "save": "Save as new preset",
+    "update": "Update",
+    "rename": "Rename",
+    "delete": "Delete",
+    "load": "Load",
+    "export": "Export all (.json)",
+    "import": "Import (.json)",
+    "empty": "No saved presets yet. Build a patch and click \"Save as new preset\".",
+    "dirty": "Unsaved changes",
+    "confirmDelete": "Delete preset \"{{name}}\"?",
+    "recallTitle": "Recall device preset",
+    "recallHint": "Program Change only tells the NanoCore which of its own stored presets to load — it does not read the resulting parameters back into this editor.",
+    "programNumber": "Preset number (0-127)",
+    "recall": "Recall",
+    "prev": "Previous",
+    "next": "Next",
+    "importResult": "Imported {{count}} preset(s).",
+    "importError": "Import failed: {{error}}"
+  },
+  "tuner": {
+    "title": "Tuner",
+    "toggle": "Tuner",
+    "note": "Sends CC80 (0 = off, 127 = on) to remotely open/close the on-device tuner. The reference pitch (default 440Hz) is only adjustable on the device itself — no CC is documented for it."
+  },
+  "global": {
+    "title": "Global Settings (device reference)",
+    "hint": "These are set on the device itself or via the official companion app — no MIDI CC is documented for them. Mirror your hardware's values here just to keep track.",
+    "loopback": "Loopback",
+    "inputGain": "Input Gain",
+    "usbVolume": "USB Volume",
+    "btVolume": "BT Volume",
+    "midiChannel": "MIDI Channel",
+    "midiChannelHint": "0 = Omni (receives on all channels)",
+    "firmware": "Firmware"
+  },
+  "log": {
+    "title": "MIDI Activity",
+    "clear": "Clear",
+    "empty": "Nothing sent yet. Move a control to see outgoing MIDI messages here.",
+    "cc": "CC{{cc}}",
+    "pc": "PC"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "reset": "Reset patch"
+  }
+}
