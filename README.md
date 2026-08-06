@@ -138,3 +138,10 @@ once actual hardware is involved.
   scratchpad only, never transmitted.
 - CC68-73 are **shared** between MOD and FX2's Pitch/Envelope Wah/Wah types;
   the editor warns when this conflict is live in the current patch.
+
+## License
+
+[MIT](LICENSE) — this is an unofficial, independent project and isn't
+affiliated with or endorsed by Livtra. "NanoCore" and any product names
+referenced are trademarks of their respective owners; see the trademark
+statement on the last page of `docs/NANOCORE-User-Manual.pdf`.
