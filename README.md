@@ -19,11 +19,10 @@ an documented-but-unverified convention. See
 assumptions and known gaps (chain reordering, global settings, tuner reference
 pitch — none of which have a documented CC).
 
-**When hardware arrives:** connect via USB, pick "Web MIDI" in the connection
-panel, select the NanoCore's port, set the channel to match the device, and
-sweep a few parameters while watching the actual sound/display — then fix up
-any range in `app/src/data/blocks/*.ts` that doesn't match, and remove the
-caveat from `MIDI_MAPPING_NOTES.md`.
+**When hardware arrives:** follow
+[`docs/HARDWARE_VERIFICATION.md`](docs/HARDWARE_VERIFICATION.md) — an ordered
+checklist that starts with the handful of genuinely uncertain values and works
+outward, rather than re-testing all ~250 parameters from scratch.
 
 ## Source material
 
