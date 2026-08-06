@@ -74,7 +74,7 @@
   color: var(--text);
 }
 
-.app-tabs__item:hover {
+.app-tabs__item:hover:not(.app-tabs__item--active) {
   background: var(--bg-inset);
 }
 
@@ -611,6 +611,48 @@ input[type='checkbox'] {
 
 .preset-panel__recall-row input {
   width: 80px;
+}
+
+/* --- Info panel ------------------------------------------------------------ */
+
+.info-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.info-panel__spec-list {
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.info-panel__spec-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-panel__spec-row dt {
+  color: var(--text-muted);
+}
+
+.info-panel__spec-row dd {
+  margin: 0;
+}
+
+.info-panel__list {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.info-panel__list li {
+  margin-bottom: 6px;
 }
 
 /* --- Language switcher --------------------------------------------------------- */

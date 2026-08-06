@@ -9,7 +9,8 @@
     "presets": "Presets",
     "global": "Global Settings",
     "tuner": "Tuner",
-    "log": "MIDI Activity"
+    "log": "MIDI Activity",
+    "info": "About"
   },
   "connection": {
     "title": "MIDI Connection",
@@ -81,6 +82,44 @@
     "empty": "Nothing sent yet. Move a control to see outgoing MIDI messages here.",
     "cc": "CC{{cc}}",
     "pc": "PC"
+  },
+  "info": {
+    "title": "About the NanoCore",
+    "hint": "Reference material from Livtra's own documentation — nothing on this page is editable or transmitted, it's here so you don't have to dig through the PDF.",
+    "specifications": "Specifications",
+    "bluetooth": "Bluetooth",
+    "bluetoothIntro": "The NanoCore has a fully independent dual-mode Bluetooth module. Both modes can be turned on or off independently without interfering with each other.",
+    "bluetoothNote": "The NanoCore MIDI module stays hidden until first paired from within the official mobile app; it only appears in your phone's Bluetooth settings after that initial pairing succeeds.",
+    "usbAudio": "USB Audio Interface",
+    "usbAudioText": "The device is a driver-free class-compliant USB audio interface — connect it to a computer and it shows up automatically as \"Nanocore\". It also supports direct connection to phones/tablets via USB OTG for high-quality on-the-go recording and live streaming.",
+    "companionSoftware": "Companion Software",
+    "companionSoftwareText": "Livtra also publishes a free official companion app for comprehensive device management: tone adjustment, preset import/export, NAM (Neural Amp Modeler) file import, third-party IR loading, and factory reset.",
+    "companionSoftwarePlatforms": "Desktop (Windows, macOS) and mobile (Android, iOS).",
+    "sources": "Source documents",
+    "firmware": "Documentation version: firmware {{fw}}",
+    "spec": {
+      "A/D/A Conversion": "A/D/A Conversion",
+      "Sample Rate": "Sample Rate",
+      "Signal-to-Noise Ratio": "Signal-to-Noise Ratio",
+      "Bluetooth Frequency Band": "Bluetooth Frequency Band",
+      "Max RF Power": "Max RF Power",
+      "Effect Modules": "Effect Modules",
+      "Presets": "Presets",
+      "Input": "Input",
+      "Output": "Output",
+      "Headphone Output": "Headphone Output",
+      "USB Interface": "USB Interface",
+      "USB Recording": "USB Recording",
+      "Dimensions": "Dimensions",
+      "Weight": "Weight",
+      "Power Requirement": "Power Requirement",
+      "Built-in Battery": "Built-in Battery",
+      "Included Accessories": "Included Accessories"
+    },
+    "bluetoothMode": {
+      "NanoCore Audio (BT Audio)": "Receives media audio from a phone or tablet. Once connected, your phone's music can be used as a backing track routed into the effects processor.",
+      "NanoCore MIDI (Wireless MIDI)": "Connects to the official mobile app for bidirectional parameter sync, control and editing — the wireless counterpart to this editor."
+    }
   },
   "language": {
     "label": "Language"

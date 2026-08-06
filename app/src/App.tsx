@@ -9,10 +9,11 @@ import { GlobalSettingsPanel } from './components/GlobalSettingsPanel';
 import { TunerPanel } from './components/TunerPanel';
 import { ActivityLog } from './components/ActivityLog';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { InfoPanel } from './components/InfoPanel';
 import { usePatchStore } from './store/patchStore';
 import { nanocoreSpec } from './data/nanocoreSpec';
 
-type Tab = 'chain' | 'presets' | 'global' | 'tuner' | 'log';
+type Tab = 'chain' | 'presets' | 'global' | 'tuner' | 'log' | 'info';
 
 function App() {
   const { t } = useTranslation();
@@ -31,6 +32,7 @@ function App() {
     { id: 'global', label: t('nav.global', 'Global Settings') },
     { id: 'tuner', label: t('nav.tuner', 'Tuner') },
     { id: 'log', label: t('nav.log', 'MIDI Activity') },
+    { id: 'info', label: t('nav.info', 'About') },
   ];
 
   return (
@@ -78,6 +80,7 @@ function App() {
           {tab === 'global' && <GlobalSettingsPanel />}
           {tab === 'tuner' && <TunerPanel />}
           {tab === 'log' && <ActivityLog />}
+          {tab === 'info' && <InfoPanel />}
         </main>
       </div>
     </div>
