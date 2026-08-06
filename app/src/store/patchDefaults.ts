@@ -62,3 +62,39 @@ export function activeParams(block: BlockSpec, typeId: number): ParamSpec[] {
   const type = findType(block, typeId);
   return [...(block.commonParams ?? []), ...type.params];
 }
+
+/**
+ * Validates and normalizes an arbitrary JSON value as a full PatchState (e.g. from an
+ * imported file): every block from the spec must be present with a valid typeId, and
+ * `on`/`params` are coerced to sane types rather than rejected outright, so a slightly
+ * stale or hand-edited file still loads instead of failing on a technicality.
+ */
+export function validatePatch(input: unknown): { ok: true; patch: PatchState } | { ok: false; error: string } {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    return { ok: false, error: 'Expected a JSON object mapping block ids to block state.' };
+  }
+  const raw = input as Record<string, unknown>;
+  const patch: PatchState = {};
+
+  for (const block of nanocoreSpec.blocks) {
+    const rawBlock = raw[block.id];
+    if (typeof rawBlock !== 'object' || rawBlock === null) {
+      return { ok: false, error: `Missing or invalid entry for block "${block.id}".` };
+    }
+    const b = rawBlock as Record<string, unknown>;
+    const typeId = typeof b.typeId === 'number' ? b.typeId : NaN;
+    const type = block.types.find((t) => t.id === typeId);
+    if (!type) {
+      return { ok: false, error: `Block "${block.id}" has an invalid type id (${String(b.typeId)}).` };
+    }
+    const rawParams = typeof b.params === 'object' && b.params !== null ? (b.params as Record<string, unknown>) : {};
+    const params: Record<string, number> = {};
+    for (const spec of activeParams(block, typeId)) {
+      const v = rawParams[spec.id];
+      params[spec.id] = typeof v === 'number' && Number.isFinite(v) ? v : defaultParamValue(spec);
+    }
+    patch[block.id] = { on: b.on === true, typeId, params };
+  }
+
+  return { ok: true, patch };
+}

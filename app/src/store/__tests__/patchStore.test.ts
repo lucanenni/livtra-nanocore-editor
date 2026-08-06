@@ -121,3 +121,49 @@ describe('patchStore preset library (localStorage-backed)', () => {
     expect(result.error).toBeTruthy();
   });
 });
+
+describe('single-patch export/import (distinct from the preset library)', () => {
+  it('round-trips the current patch through export -> import unchanged', () => {
+    usePatchStore.getState().setBlockOn('fx1', true);
+    usePatchStore.getState().setBlockType('fx2', 8); // Pitch
+    usePatchStore.getState().setParam('fx1', 'threshold', -42);
+
+    const json = usePatchStore.getState().exportCurrentPatch();
+    usePatchStore.getState().resetPatch();
+    expect(usePatchStore.getState().patch.fx1.on).toBe(false);
+
+    const result = usePatchStore.getState().importPatch(json);
+    expect(result.ok).toBe(true);
+    expect(usePatchStore.getState().patch.fx1.on).toBe(true);
+    expect(usePatchStore.getState().patch.fx1.params.threshold).toBe(-42);
+    expect(usePatchStore.getState().patch.fx2.typeId).toBe(8);
+  });
+
+  it('rejects invalid JSON without throwing', () => {
+    const result = usePatchStore.getState().importPatch('not json');
+    expect(result.ok).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('rejects a patch missing a required block', () => {
+    const result = usePatchStore.getState().importPatch(JSON.stringify({ fx1: { on: true, typeId: 0, params: {} } }));
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/fx2/i); // first block after fx1 in nanocoreSpec.blocks order
+  });
+
+  it('rejects a block with an invalid type id', () => {
+    const patch = JSON.parse(usePatchStore.getState().exportCurrentPatch());
+    patch.fx1.typeId = 999;
+    const result = usePatchStore.getState().importPatch(JSON.stringify(patch));
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/fx1/);
+  });
+
+  it('fills in missing params with defaults instead of rejecting the whole file', () => {
+    const patch = JSON.parse(usePatchStore.getState().exportCurrentPatch());
+    delete patch.fx1.params.threshold; // Gate's only param
+    const result = usePatchStore.getState().importPatch(JSON.stringify(patch));
+    expect(result.ok).toBe(true);
+    expect(typeof usePatchStore.getState().patch.fx1.params.threshold).toBe('number');
+  });
+});

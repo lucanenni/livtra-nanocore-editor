@@ -26,6 +26,8 @@ export function PresetPanel() {
   const applyPreset = usePatchStore((s) => s.applyPreset);
   const exportPresets = usePatchStore((s) => s.exportPresets);
   const importPresets = usePatchStore((s) => s.importPresets);
+  const exportCurrentPatch = usePatchStore((s) => s.exportCurrentPatch);
+  const importPatch = usePatchStore((s) => s.importPatch);
   const sendFullPatch = usePatchStore((s) => s.sendFullPatch);
   const recallProgram = usePatchStore((s) => s.recallProgram);
   const stepPreset = usePatchStore((s) => s.stepPreset);
@@ -34,7 +36,9 @@ export function PresetPanel() {
   const [newName, setNewName] = useState('');
   const [programNumber, setProgramNumber] = useState(0);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [importPatchMessage, setImportPatchMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const patchFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     savePresetLocal(newName);
@@ -57,6 +61,22 @@ export function PresetPanel() {
     e.target.value = '';
   };
 
+  const handleImportPatchFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = importPatch(String(reader.result));
+      setImportPatchMessage(
+        result.ok
+          ? t('preset.importPatchResult', 'Patch loaded into the editor.')
+          : t('preset.importError', { error: result.error, defaultValue: 'Import failed: {{error}}' }),
+      );
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
     <section className="preset-panel">
       <h2 className="panel-title">{t('preset.title', 'Preset Library')}</h2>
@@ -72,6 +92,21 @@ export function PresetPanel() {
           )}
         </p>
       </div>
+
+      <div className="preset-panel__current-io">
+        <button
+          type="button"
+          className="btn btn--ghost btn--small"
+          onClick={() => downloadJSON('nanocore-patch.json', exportCurrentPatch())}
+        >
+          {t('preset.exportCurrent', 'Export current patch (.json)')}
+        </button>
+        <button type="button" className="btn btn--ghost btn--small" onClick={() => patchFileInputRef.current?.click()}>
+          {t('preset.importCurrent', 'Import patch (.json)')}
+        </button>
+        <input ref={patchFileInputRef} type="file" accept="application/json" hidden onChange={handleImportPatchFile} />
+      </div>
+      {importPatchMessage && <p className="panel-hint">{importPatchMessage}</p>}
 
       <div className="preset-panel__new">
         <input

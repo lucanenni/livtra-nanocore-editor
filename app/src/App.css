@@ -470,6 +470,29 @@ input[type='checkbox'] {
   width: 100%;
 }
 
+.param-control__exact {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.param-control__exact-input {
+  width: 68px;
+  padding: 3px 6px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  text-align: right;
+  border-radius: 6px;
+}
+
+.param-control__exact-unit {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  min-width: 2.5em;
+}
+
 .param-control__note {
   font-size: 0.72rem;
   color: var(--text-muted);
@@ -549,10 +572,17 @@ input[type='checkbox'] {
   margin-bottom: 14px;
 }
 
+.preset-panel__current-io {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
 .preset-panel__new {
   display: flex;
   gap: 8px;
-  margin-bottom: 12px;
+  margin: 14px 0 12px;
 }
 
 .preset-panel__new input {

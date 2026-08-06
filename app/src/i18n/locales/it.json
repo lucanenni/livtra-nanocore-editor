@@ -41,6 +41,9 @@
     "title": "Libreria preset",
     "sendToDevice": "Invia patch al dispositivo",
     "sendToDeviceHint": "Trasmette on/off, tipo e parametri di ogni blocco della patch corrente. Ricorda di salvarla sul dispositivo (pressione lunga su MASTER) se vuoi che sia permanente.",
+    "exportCurrent": "Esporta patch corrente (.json)",
+    "importCurrent": "Importa patch (.json)",
+    "importPatchResult": "Patch caricata nell'editor.",
     "newName": "Nome preset",
     "save": "Salva come nuovo preset",
     "update": "Aggiorna",
@@ -181,7 +184,8 @@
     "time": "Tempo",
     "tone": "Tono",
     "treble": "Acuti",
-    "wave": "Forma d'onda"
+    "wave": "Forma d'onda",
+    "exactValue": "{{label}} (valore esatto)"
   },
   "enum": {
     "sine": "Sinusoidale",

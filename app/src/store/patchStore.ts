@@ -11,6 +11,7 @@ import {
   findParamSpec,
   findType,
   remapParamsForType,
+  validatePatch,
 } from './patchDefaults';
 import { loadPresets, savePresets } from './localPresetStorage';
 import type { BlockPatchState, PatchState, PresetEntry } from './patchTypes';
@@ -76,6 +77,11 @@ interface PatchStore {
   applyPreset: (id: string) => void;
   exportPresets: () => string;
   importPresets: (json: string) => { ok: boolean; error?: string };
+
+  // Single-patch export/import (the current, possibly-unsaved patch — distinct from the
+  // saved preset library above).
+  exportCurrentPatch: () => string;
+  importPatch: (json: string) => { ok: boolean; error?: string };
 }
 
 function currentOutputId(state: PatchStore): string | null {
@@ -333,6 +339,20 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
       const presets = [...get().presets, ...incoming];
       savePresets(presets);
       set({ presets });
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  },
+
+  exportCurrentPatch: () => JSON.stringify(get().patch, null, 2),
+
+  importPatch: (json) => {
+    try {
+      const parsed = JSON.parse(json);
+      const result = validatePatch(parsed);
+      if (!result.ok) return result;
+      set({ patch: result.patch, activePresetId: null, activePresetDirty: true });
       return { ok: true };
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
