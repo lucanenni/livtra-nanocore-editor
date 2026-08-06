@@ -96,6 +96,40 @@ values, register it in `app/src/i18n/index.ts`, and add it to
 `SUPPORTED_LANGUAGES`; translating the data-driven content is optional and
 incremental (add matching `type.*` / `param.*` keys as you go).
 
+## Deploying (e.g. GitHub Pages)
+
+The repo is local-only for now. When you're ready to publish:
+
+```bash
+cd app
+npm run build          # -> app/dist/
+```
+
+`app/dist/` is a static site — drop it on any static host. For **GitHub Pages**
+specifically:
+
+1. Push this repo to GitHub.
+2. If the Pages site will live at `https://<user>.github.io/<repo>/` (a
+   project page, not a custom domain or a `<user>.github.io` repo), add
+   `base: '/<repo>/'` to the `defineConfig({...})` in `app/vite.config.ts`
+   before building — otherwise the bundled asset paths will 404.
+3. Either commit `app/dist/` to a `gh-pages` branch and enable Pages on that
+   branch in the repo settings, or use the `gh-pages` npm package
+   (`npm i -D gh-pages`, add a `"deploy": "gh-pages -d dist"` script, `npm run
+   build && npm run deploy`) — no GitHub Actions/paid plan required, Pages is
+   free on public repos.
+
+Note: **Web MIDI needs HTTPS** (except on `localhost`) — GitHub Pages serves
+over HTTPS by default, so hardware connection will work fine there once you
+have a NanoCore to test against.
+
+There's also a self-contained single-file build for quick, no-hosting-needed
+sharing/testing (e.g. as a Claude Artifact) — `npm run build:artifact` outputs
+`app/dist-artifact/index.html` with all JS/CSS inlined. Note this path is best
+for exercising the Simulator; the artifact sandbox's iframe may block real Web
+MIDI hardware access, so use the regular deployed build (or `npm run dev`)
+once actual hardware is involved.
+
 ## Known limitations (see MIDI_MAPPING_NOTES.md for detail)
 
 - Effect chain **reorder** isn't exposed via MIDI — order is fixed in the editor.
