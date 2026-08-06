@@ -96,6 +96,23 @@ values, register it in `app/src/i18n/index.ts`, and add it to
 `SUPPORTED_LANGUAGES`; translating the data-driven content is optional and
 incremental (add matching `type.*` / `param.*` keys as you go).
 
+## CI
+
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs lint, the 161
+Vitest tests, and a production build. It's **disabled by default** — the
+private repo's free plan includes 2,000 Actions minutes/month (this job takes
+~1-2 min/run, so that's not really a practical concern), but it's off until
+you opt in:
+
+```bash
+gh workflow enable ci.yml     # turn on: runs on every push/PR to main
+gh workflow run ci.yml        # or just run it once, on demand
+gh workflow disable ci.yml    # turn back off
+```
+
+Once the repo is public, Actions minutes are unlimited on standard runners
+regardless.
+
 ## Deploying (e.g. GitHub Pages)
 
 The repo is local-only for now. When you're ready to publish:

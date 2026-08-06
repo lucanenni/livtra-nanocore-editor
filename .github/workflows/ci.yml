@@ -1,0 +1,33 @@
+name: CI
+
+# Disabled by default right after being added (see README's CI section) to avoid using
+# GitHub Actions minutes on the free plan without asking first. Re-enable with:
+#   gh workflow enable ci.yml
+# ...or from the repo's Actions tab on GitHub. Once re-enabled, it runs on every push/PR
+# to main, plus on demand via the "Run workflow" button (workflow_dispatch below).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
