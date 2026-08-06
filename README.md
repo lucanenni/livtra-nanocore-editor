@@ -9,6 +9,19 @@ Built ahead of owning the hardware: everything can be exercised end-to-end
 today via a built-in **Simulator** transport, and switched to real **Web MIDI**
 the moment a NanoCore is plugged in.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/editor-desktop-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/editor-desktop-light.png">
+  <img alt="NanoCore Editor: the effect chain (FX1–EQ) with AMP selected, showing its Bogner XTC model and Gain/Bass/Mid/Treble/Level controls" src="docs/screenshots/editor-desktop-light.png" width="820">
+</picture>
+
+<img alt="NanoCore Editor on a phone-sized viewport, sidebar stacked above the effect chain and AMP panel" src="docs/screenshots/editor-mobile-dark.png" width="220" align="right">
+
+Responsive down to phone widths — the sidebar (MIDI connection + section nav)
+stacks above the effect chain instead of sitting beside it.
+
+<br clear="right">
+
 ## Status
 
 The device is not in hand yet, so nothing here has been confirmed against real

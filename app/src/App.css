@@ -54,6 +54,16 @@
   gap: 16px;
 }
 
+@media (max-width: 820px) {
+  /* Sidebar and main stack into separate rows at this width (see .app-layout's own
+     820px query above), so sticking the sidebar no longer means "stays beside main
+     while it scrolls" — it means "floats over main's content once you scroll past
+     it." Only makes sense in the 2-column side-by-side layout. */
+  .app-sidebar {
+    position: static;
+  }
+}
+
 .app-tabs {
   display: flex;
   flex-direction: column;
