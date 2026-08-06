@@ -16,15 +16,23 @@ export function ChainView({ selected, onSelect }: Props) {
     <nav className="chain-view" aria-label={t('nav.chain', 'Effect Chain')}>
       {nanocoreSpec.blocks.map((block, i) => {
         const state = patch[block.id];
+        const blockName = t(`block.${block.id}.name`, block.name);
+        // The on/off dot is color-only visually; fold the state into the accessible name too
+        // (WCAG 1.4.1) rather than relying on the color difference alone.
+        const stateLabel = state?.on ? t('block.on', 'On') : t('block.off', 'Off');
         return (
           <Fragment key={block.id}>
             <button
               type="button"
               className={`chain-view__block ${selected === block.id ? 'chain-view__block--active' : ''}`}
+              aria-pressed={selected === block.id}
+              aria-label={`${blockName} — ${stateLabel}`}
               onClick={() => onSelect(block.id)}
             >
               <span className={`chain-view__dot ${state?.on ? 'chain-view__dot--on' : ''}`} aria-hidden />
-              <span className="chain-view__label">{t(`block.${block.id}.name`, block.name)}</span>
+              <span className="chain-view__label" aria-hidden>
+                {blockName}
+              </span>
             </button>
             {i < nanocoreSpec.blocks.length - 1 && (
               <span className="chain-view__arrow" aria-hidden>

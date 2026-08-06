@@ -10,7 +10,8 @@
     "global": "Impostazioni globali",
     "tuner": "Accordatore",
     "log": "Attività MIDI",
-    "info": "Info"
+    "info": "Info",
+    "sections": "Sezioni"
   },
   "connection": {
     "title": "Connessione MIDI",

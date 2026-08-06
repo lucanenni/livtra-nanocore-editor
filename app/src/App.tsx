@@ -55,12 +55,13 @@ function App() {
       <div className="app-layout">
         <aside className="app-sidebar">
           <ConnectionPanel />
-          <nav className="app-tabs">
+          <nav className="app-tabs" aria-label={t('nav.sections', 'Sections')}>
             {tabs.map((tb) => (
               <button
                 key={tb.id}
                 type="button"
                 className={`app-tabs__item ${tab === tb.id ? 'app-tabs__item--active' : ''}`}
+                aria-pressed={tab === tb.id}
                 onClick={() => setTab(tb.id)}
               >
                 {tb.label}

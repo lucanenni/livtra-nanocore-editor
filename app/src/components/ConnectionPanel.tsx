@@ -32,6 +32,7 @@ export function ConnectionPanel() {
               key={kind}
               type="button"
               className={`segmented__option ${connection.transportKind === kind ? 'segmented__option--active' : ''}`}
+              aria-pressed={connection.transportKind === kind}
               onClick={() => initTransport(kind)}
             >
               {kind === 'simulator'

@@ -30,11 +30,11 @@ export function BlockEditor({ blockId }: Props) {
           <span>{t('block.power', 'Power')}</span>
           <input
             type="checkbox"
+            className="visually-hidden"
             checked={blockState.on}
             onChange={(e) => setBlockOn(block.id, e.target.checked)}
-            aria-label={t('block.on', 'On')}
           />
-          <span className={`pill ${blockState.on ? 'pill--on' : 'pill--off'}`}>
+          <span className={`pill ${blockState.on ? 'pill--on' : 'pill--off'}`} aria-hidden>
             {blockState.on ? t('block.on', 'On') : t('block.off', 'Off')}
           </span>
         </label>

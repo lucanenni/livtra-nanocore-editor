@@ -10,7 +10,8 @@
     "global": "Global Settings",
     "tuner": "Tuner",
     "log": "MIDI Activity",
-    "info": "About"
+    "info": "About",
+    "sections": "Sections"
   },
   "connection": {
     "title": "MIDI Connection",
