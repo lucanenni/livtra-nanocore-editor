@@ -67,6 +67,35 @@ npm run build   # outputs to app/dist
 Web MIDI (the real hardware path) needs a Chromium-based browser (Chrome,
 Edge, Opera, …) and — outside of `localhost` — HTTPS, per the Web MIDI API spec.
 
+## Portable version (single HTML file)
+
+For a zero-install path — no `npm`, no hosting, no build step for whoever's
+using it — there's a **portable build**: one self-contained `.html` file with
+all JS/CSS inlined, closer in spirit to how
+[suckyble/PocketEdit](https://github.com/suckyble/PocketEdit) ships (a single
+`index.html`, open it and go) than to a normal Vite app.
+
+```bash
+cd app
+npm run build:portable   # -> app/dist-portable/nanocore-editor-portable.html
+```
+
+That one file is the whole app. Double-click it to open it straight from disk,
+drop it on a USB stick, attach it to a GitHub Release, or drop it on any
+static file host — there's nothing else to copy alongside it and no server
+required. Both the **Simulator** and real **Web MIDI** work from it: opening a
+file with `file://` (or hosting it anywhere) is a secure context in Chromium
+browsers, same as `npm run dev` or a normal deployed build, so hardware
+connects normally — this is the file to hand someone who just wants the
+editor without cloning the repo.
+
+(There's a second single-file build, `npm run build:artifact` →
+`app/dist-artifact/index.html`, used for publishing the editor as a Claude
+Artifact. It's built the same way, but Claude's artifact iframe sandbox can
+block real Web MIDI access, so treat that one as Simulator-only and use the
+portable build — or a normal hosted deploy — once actual hardware is
+involved.)
+
 ## How it's organized
 
 ```
@@ -152,12 +181,9 @@ Note: **Web MIDI needs HTTPS** (except on `localhost`) — GitHub Pages serves
 over HTTPS by default, so hardware connection will work fine there once you
 have a NanoCore to test against.
 
-There's also a self-contained single-file build for quick, no-hosting-needed
-sharing/testing (e.g. as a Claude Artifact) — `npm run build:artifact` outputs
-`app/dist-artifact/index.html` with all JS/CSS inlined. Note this path is best
-for exercising the Simulator; the artifact sandbox's iframe may block real Web
-MIDI hardware access, so use the regular deployed build (or `npm run dev`)
-once actual hardware is involved.
+Don't want to host anything at all? See **Portable version** above —
+`npm run build:portable` gives you a single `.html` file that just works when
+opened directly, no Pages/hosting setup needed.
 
 ## Known limitations (see MIDI_MAPPING_NOTES.md for detail)
 

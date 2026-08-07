@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:artifact": "vite build --config vite.artifact.config.ts"
+    "build:artifact": "vite build --config vite.artifact.config.ts",
+    "build:portable": "vite build --config vite.portable.config.ts && node scripts/rename-portable-output.mjs"
   },
   "dependencies": {
     "i18next": "^26.3.6",
