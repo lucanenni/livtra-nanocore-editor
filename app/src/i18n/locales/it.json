@@ -1,0 +1,552 @@
+{
+  "app": {
+    "title": "NanoCore Editor",
+    "subtitle": "Editor online non ufficiale per il multieffetto Livtra NanoCore",
+    "noHardwareNotice": "Nessun NanoCore ancora collegato — crea la tua patch e provala nel Simulatore. Passa a Web MIDI quando arriva l'hardware."
+  },
+  "nav": {
+    "chain": "Catena effetti",
+    "presets": "Preset",
+    "global": "Impostazioni globali",
+    "tuner": "Accordatore",
+    "log": "Attività MIDI",
+    "info": "Info",
+    "sections": "Sezioni"
+  },
+  "connection": {
+    "title": "Connessione MIDI",
+    "transport": "Trasporto",
+    "transportWebmidi": "Web MIDI (USB / Bluetooth abbinato dal sistema)",
+    "pairingHint": "USB e Bluetooth funzionano entrambi. Per il Bluetooth qui, abbina prima il NanoCore a livello di sistema operativo (su macOS: Audio MIDI Setup → finestra MIDI Studio → Bluetooth) — riattiva il Bluetooth sul device per farlo tornare visibile, e assicurati che nient'altro (es. l'app ufficiale sul telefono) stia già occupando la connessione. Una volta abbinato, comparirà qui sotto come qualsiasi altra porta. (Oppure usa il trasporto \"Bluetooth\" qui sopra per abbinarlo direttamente da questa pagina.)",
+    "transportSimulator": "Simulatore (senza hardware)",
+    "output": "Uscita",
+    "noOutputs": "Nessuna uscita MIDI trovata. Collega il NanoCore via USB e aggiorna.",
+    "channel": "Canale",
+    "channelHint": "Deve corrispondere al canale MIDI impostato sul NanoCore (canale dispositivo 0 = Omni, va bene qualsiasi canale).",
+    "refresh": "Aggiorna",
+    "statusReady": "Pronto",
+    "statusInitializing": "Connessione…",
+    "statusError": "Errore",
+    "statusNotReady": "Non connesso",
+    "transportBluetooth": "Bluetooth (abbina da questa pagina)",
+    "bluetoothHint": "Apre il selettore dispositivi del browser (solo Chrome/Edge/Opera, richiede HTTPS o localhost) e si connette direttamente al servizio Bluetooth MIDI del NanoCore — nessun abbinamento a livello di sistema operativo necessario. Riattiva il Bluetooth sul device se non compare, e assicurati che nient'altro (es. l'app ufficiale sul telefono) stia già occupando la connessione. Già connesso? Selezionarlo di nuovo non riaprirà il selettore — usa Disconnetti qui sotto per scegliere un altro dispositivo.",
+    "disconnect": "Disconnetti",
+    "noBluetoothOutput": "Non ancora connesso — clicca sul pulsante di trasporto Bluetooth qui sopra per aprire il selettore dispositivi."
+  },
+  "block": {
+    "on": "Attivo",
+    "off": "Spento",
+    "type": "Tipo",
+    "power": "Alimentazione"
+  },
+  "routing": {
+    "warning": "FX2 è impostato su {{type}}, che riutilizza i CC parametro di MOD (68-73). Modificare i parametri MOD ora cambierà in realtà {{type}} di FX2."
+  },
+  "preset": {
+    "title": "Libreria preset",
+    "sendToDevice": "Invia patch al dispositivo",
+    "sendToDeviceHint": "Trasmette on/off, tipo e parametri di ogni blocco della patch corrente. Ricorda di salvarla sul dispositivo (pressione lunga su MASTER) se vuoi che sia permanente.",
+    "exportCurrent": "Esporta patch corrente (.json)",
+    "importCurrent": "Importa patch (.json)",
+    "importPatchResult": "Patch caricata nell'editor.",
+    "newName": "Nome preset",
+    "save": "Salva come nuovo preset",
+    "update": "Aggiorna",
+    "rename": "Rinomina",
+    "delete": "Elimina",
+    "load": "Carica",
+    "export": "Esporta tutti (.json)",
+    "import": "Importa (.json)",
+    "empty": "Nessun preset salvato. Crea una patch e clicca \"Salva come nuovo preset\".",
+    "dirty": "Modifiche non salvate",
+    "confirmDelete": "Eliminare il preset \"{{name}}\"?",
+    "recallTitle": "Richiama preset dal dispositivo",
+    "recallHint": "Il Program Change indica al NanoCore solo quale preset memorizzato caricare — non rilegge i parametri risultanti in questo editor.",
+    "recallOffsetHint": "Confermato su hardware: il display dei preset del device mostra un numero più alto di 1 rispetto a quello qui — inviare 0 richiama quello che il device mostra come preset \"1\", inviare 5 richiama \"6\", e così via.",
+    "programNumber": "Numero preset (0-127)",
+    "recall": "Richiama",
+    "prev": "Precedente",
+    "next": "Successivo",
+    "importResult": "Importati {{count}} preset.",
+    "importError": "Importazione fallita: {{error}}"
+  },
+  "tuner": {
+    "title": "Accordatore",
+    "toggle": "Accordatore",
+    "note": "Invia CC80 (0 = spento, 127 = acceso) per aprire/chiudere l'accordatore da remoto. L'intonazione di riferimento (440Hz predefinita) è regolabile solo sul dispositivo — nessun CC è documentato per questo."
+  },
+  "global": {
+    "title": "Impostazioni globali (riferimento dispositivo)",
+    "hint": "Si impostano sul dispositivo stesso o tramite l'app companion ufficiale — nessun CC MIDI è documentato per queste. Rifletti qui i valori del tuo hardware solo per tenerne traccia.",
+    "loopback": "Loopback",
+    "inputGain": "Guadagno ingresso",
+    "usbVolume": "Volume USB",
+    "btVolume": "Volume BT",
+    "midiChannel": "Canale MIDI",
+    "midiChannelHint": "0 = Omni (riceve su tutti i canali)",
+    "firmware": "Firmware"
+  },
+  "log": {
+    "title": "Attività MIDI",
+    "clear": "Pulisci",
+    "empty": "Ancora nulla inviato. Muovi un controllo per vedere qui i messaggi MIDI in uscita.",
+    "cc": "CC{{cc}}",
+    "pc": "PC"
+  },
+  "language": {
+    "label": "Lingua"
+  },
+  "common": {
+    "cancel": "Annulla",
+    "close": "Chiudi",
+    "reset": "Reimposta patch"
+  },
+  "info": {
+    "title": "Informazioni sul NanoCore",
+    "hint": "Materiale di riferimento dalla documentazione ufficiale Livtra — niente in questa pagina è modificabile o viene trasmesso, è qui solo per evitarti di consultare il PDF.",
+    "specifications": "Specifiche",
+    "bluetooth": "Bluetooth",
+    "bluetoothIntro": "Il NanoCore ha un modulo Bluetooth dual-mode completamente indipendente. Entrambe le modalità possono essere attivate o disattivate separatamente senza interferire tra loro.",
+    "bluetoothNote": "Il modulo NanoCore MIDI resta nascosto finché non viene abbinato per la prima volta dall'app ufficiale; compare nelle impostazioni Bluetooth del telefono solo dopo il primo abbinamento riuscito.",
+    "usbAudio": "Interfaccia audio USB",
+    "usbAudioText": "Il dispositivo è un'interfaccia audio USB class-compliant, senza bisogno di driver: collegalo al computer e comparirà automaticamente come \"Nanocore\". Supporta anche il collegamento diretto a telefoni/tablet via USB OTG per registrazione e streaming live di alta qualità.",
+    "companionSoftware": "Software companion",
+    "companionSoftwareText": "Livtra pubblica anche un'app companion ufficiale gratuita per la gestione completa del dispositivo: regolazione del timbro, import/export preset, importazione file NAM (Neural Amp Modeler), caricamento IR di terze parti e ripristino di fabbrica.",
+    "companionSoftwarePlatforms": "Desktop (Windows, macOS) e mobile (Android, iOS).",
+    "sources": "Documenti sorgente",
+    "firmware": "Versione documentazione: firmware {{fw}}",
+    "spec": {
+      "A/D/A Conversion": "Conversione A/D/A",
+      "Sample Rate": "Frequenza di campionamento",
+      "Signal-to-Noise Ratio": "Rapporto segnale/rumore",
+      "Bluetooth Frequency Band": "Banda di frequenza Bluetooth",
+      "Max RF Power": "Potenza RF massima",
+      "Effect Modules": "Moduli effetto",
+      "Presets": "Preset",
+      "Input": "Ingresso",
+      "Output": "Uscita",
+      "Headphone Output": "Uscita cuffie",
+      "USB Interface": "Interfaccia USB",
+      "USB Recording": "Registrazione USB",
+      "Dimensions": "Dimensioni",
+      "Weight": "Peso",
+      "Power Requirement": "Alimentazione richiesta",
+      "Built-in Battery": "Batteria integrata",
+      "Included Accessories": "Accessori inclusi"
+    },
+    "bluetoothMode": {
+      "NanoCore Audio (BT Audio)": "Riceve l'audio multimediale da un telefono o tablet. Una volta connesso, la musica del telefono può essere usata come base ritmica instradata nel processore di effetti.",
+      "NanoCore MIDI (Wireless MIDI)": "Si collega all'app mobile ufficiale per sincronizzazione, controllo e modifica bidirezionale dei parametri — la controparte wireless di questo editor."
+    },
+    "specValue": {
+      "Built-in Battery": "Batteria al litio 1300 mAh, supporta la ricarica pass-through",
+      "Included Accessories": "Cavo USB-C, manuale utente, clip da cintura"
+    }
+  },
+  "param": {
+    "age": "Invecchiamento",
+    "attack": "Attacco",
+    "bass": "Bassi",
+    "bit_depth": "Profondità bit",
+    "boost": "Boost",
+    "comp_threshold": "Soglia compressore",
+    "crossover": "Crossover",
+    "decay": "Decadimento",
+    "delay": "Delay",
+    "depth": "Profondità",
+    "env": "Inviluppo",
+    "feedback": "Feedback",
+    "filter": "Filtro",
+    "fine": "Regolazione fine",
+    "freq": "Frequenza",
+    "gain": "Gain",
+    "gate_threshold": "Soglia gate",
+    "high": "Alti",
+    "high_cut": "Taglio alti",
+    "interval": "Intervallo",
+    "knee": "Knee",
+    "level": "Livello",
+    "lf_damp": "Attenuazione bassi",
+    "lofi_mix": "Mix LoFi",
+    "low": "Bassi",
+    "low_cut": "Taglio bassi",
+    "makeup": "Makeup Gain",
+    "mid": "Medi",
+    "mix": "Mix",
+    "mod": "Modulazione",
+    "mod_depth": "Profondità modulazione",
+    "mod_rate": "Velocità modulazione",
+    "pitch": "Pitch",
+    "pre_delay": "Pre Delay",
+    "q": "Q",
+    "rate": "Velocità",
+    "ratio": "Rapporto",
+    "release": "Release",
+    "shape": "Forma",
+    "smear": "Sfocatura",
+    "smooth": "Fluidità",
+    "sweep": "Scansione",
+    "threshold": "Soglia",
+    "time": "Tempo",
+    "tone": "Tono",
+    "treble": "Acuti",
+    "wave": "Forma d'onda",
+    "exactValue": "{{label}} (valore esatto)"
+  },
+  "enum": {
+    "sine": "Sinusoidale",
+    "triangle": "Triangolare",
+    "square": "Quadra",
+    "saw": "Dente di sega"
+  },
+  "type": {
+    "fx1": {
+      "gate": {
+        "name": "Gate",
+        "description": "Elimina il rumore di fondo a basso livello e ripulisce il segnale in ingresso."
+      },
+      "auto_gate": {
+        "name": "Auto Gate",
+        "description": "Noise gate adattivo che regola automaticamente la soglia in base alle variazioni del livello del segnale."
+      },
+      "gate_compressor": {
+        "name": "Gate + Compressore (NC-Com)",
+        "description": "Combo Gate + Compressore; ottimizza contemporaneamente il rumore di fondo e la gamma dinamica."
+      },
+      "compressor": {
+        "name": "Compressore",
+        "description": "Attenua le fluttuazioni di volume e stabilizza il timbro."
+      }
+    },
+    "fx2": {
+      "scream": {
+        "name": "Scream",
+        "description": "Basato sulla modellazione del pedale Ibanez TS9."
+      },
+      "klone": {
+        "name": "Klone",
+        "description": "Basato sulla modellazione del pedale Ryra The Klone."
+      },
+      "ocd": {
+        "name": "OCD",
+        "description": "Basato sulla modellazione del pedale Fulltone OCD."
+      },
+      "ds2": {
+        "name": "DS2",
+        "description": "Basato sulla modellazione del pedale Boss DS-2."
+      },
+      "pifuzz": {
+        "name": "PIFUZZ",
+        "description": "Basato sulla modellazione del pedale EHX Big Muff Pi."
+      },
+      "range": {
+        "name": "Range",
+        "description": "Basato sulla modellazione del pedale Dallas-Arbiter Rangemaster."
+      },
+      "xac": {
+        "name": "XAC",
+        "description": "Basato sulla modellazione del pedale Xotic AC Booster."
+      },
+      "fiman": {
+        "name": "Fiman",
+        "description": "Basato sulla modellazione del pedale Friedman Marty Friedman."
+      },
+      "pitch": {
+        "name": "Pitch",
+        "description": "Effetto pitch shift; modifica l'intonazione del segnale."
+      },
+      "envelope_wah": {
+        "name": "Envelope Wah",
+        "description": "Wah auto-innescato che segue la dinamica dell'esecuzione."
+      },
+      "wah": {
+        "name": "Wah",
+        "description": "Filtro wah ciclico con forma d'onda impostabile."
+      }
+    },
+    "mod": {
+      "chorus": {
+        "name": "Chorus",
+        "description": "Chorus classico; allarga l'immagine stereo per un timbro più pieno e corposo."
+      },
+      "phaser": {
+        "name": "Phaser",
+        "description": "Filtraggio periodico che crea un timbro fluttuante e vorticoso."
+      },
+      "flanger": {
+        "name": "Flanger",
+        "description": "Comb-filtering che crea una texture eterea e metallica."
+      },
+      "tremolo": {
+        "name": "Tremolo",
+        "description": "Tremolo di volume; fa fluttuare ciclicamente il volume in base alla forma d'onda."
+      },
+      "vibrato": {
+        "name": "Vibrato",
+        "description": "Vibrato di intonazione; fa fluttuare leggermente il pitch per arricchire il timbro."
+      }
+    },
+    "del": {
+      "bbd": {
+        "name": "BBD",
+        "description": "Delay analogico BBD classico; texture calda in stile nastro vintage."
+      },
+      "digital": {
+        "name": "Digital",
+        "description": "Delay digitale pulito e trasparente, adatto a molti generi."
+      },
+      "duck": {
+        "name": "Duck",
+        "description": "Delay in ducking; abbassa automaticamente la coda del delay durante l'esecuzione per evitare impasti."
+      },
+      "ice": {
+        "name": "Ice",
+        "description": "Delay con pitch-shift; segnale ritardato con intonazione traslata per un'atmosfera eterea."
+      },
+      "reverse": {
+        "name": "Reverse",
+        "description": "Delay inverso; riproduce il segnale ritardato al contrario per un effetto sognante."
+      },
+      "lofi": {
+        "name": "LoFi",
+        "description": "Delay lo-fi; la distorsione da bit-rate crea una texture da nastro vintage degradato."
+      },
+      "smear": {
+        "name": "Smear",
+        "description": "Delay che ammorbidisce e sfoca il segnale per una diffusione spaziale delicata."
+      },
+      "mod_delay": {
+        "name": "Mod Delay",
+        "description": "Delay modulato; aggiunge un'oscillazione tipo tremolo per strati tonali più ricchi."
+      }
+    },
+    "rev": {
+      "room": {
+        "name": "Room",
+        "description": "Riverbero d'ambiente; simula uno spazio interno compatto dal suono naturale."
+      },
+      "plate": {
+        "name": "Plate",
+        "description": "Riverbero a piastra; timbro vintage classico, caldo e morbido."
+      },
+      "hall": {
+        "name": "Hall",
+        "description": "Riverbero di sala; simula una grande sala concerti dall'ampio respiro spaziale."
+      },
+      "concert": {
+        "name": "Concert",
+        "description": "Riverbero da sala concerti; trasparente e strutturato, ideale per performance soliste."
+      },
+      "spring": {
+        "name": "Spring",
+        "description": "Riverbero a molla; emula il riverbero a molla degli amplificatori vintage con texture retro-rock."
+      },
+      "shimmer": {
+        "name": "Shimmer",
+        "description": "Riverbero shimmer; armonici pitch-shiftati creano un'atmosfera eterea e sognante."
+      },
+      "cloud": {
+        "name": "Cloud",
+        "description": "Riverbero ambient Cloud; decadimento ultra-lungo con modulazione morbida per un effetto fluttuante."
+      }
+    },
+    "eq": {
+      "eq3": {
+        "name": "EQ a 3 bande",
+        "description": "Regola rapidamente bassi, medi e alti."
+      },
+      "eq6": {
+        "name": "EQ a 6 bande",
+        "description": "EQ parametrico multibanda per una messa a punto fine del timbro."
+      },
+      "eq8": {
+        "name": "EQ a 8 bande",
+        "description": "EQ full-range; modellazione tonale precisa su tutto lo spettro di frequenze."
+      }
+    },
+    "amp": {
+      "bogxtc1": {
+        "description": "Basato sulla modellazione del preamplificatore Bogner XTC — Tono 1"
+      },
+      "bogxtc2": {
+        "description": "Basato sulla modellazione del preamplificatore Bogner XTC — Tono 2"
+      },
+      "engp1": {
+        "description": "Basato sulla modellazione del preamplificatore ENGL Powerball E645 — Tono 1"
+      },
+      "engp2": {
+        "description": "Basato sulla modellazione del preamplificatore ENGL Powerball E645 — Tono 2"
+      },
+      "fd59bm": {
+        "description": "Basato sulla modellazione del preamplificatore Fender '59 Bassman"
+      },
+      "fd65dk": {
+        "description": "Basato sulla modellazione del preamplificatore Fender '65 Darkface"
+      },
+      "hiw103": {
+        "description": "Basato sulla modellazione del preamplificatore Hiwatt DR103"
+      },
+      "mardsl1": {
+        "description": "Basato sulla modellazione del preamplificatore Marshall DSL50 — Tono 1"
+      },
+      "mardsl2": {
+        "description": "Basato sulla modellazione del preamplificatore Marshall DSL50 — Tono 2"
+      },
+      "mar8001": {
+        "description": "Basato sulla modellazione del preamplificatore Marshall JCM800 — Tono 1"
+      },
+      "mar8002": {
+        "description": "Basato sulla modellazione del preamplificatore Marshall JCM800 — Tono 2"
+      },
+      "mesr1": {
+        "description": "Basato sulla modellazione del preamplificatore Mesa Boogie Rectifier — Tono 1"
+      },
+      "mesr2": {
+        "description": "Basato sulla modellazione del preamplificatore Mesa Boogie Rectifier — Tono 2"
+      },
+      "mesr3": {
+        "description": "Basato sulla modellazione del preamplificatore Mesa Boogie Rectifier — Tono 3"
+      },
+      "ogg120": {
+        "description": "Basato sulla modellazione del preamplificatore Orange Graphic 120"
+      },
+      "pey51501": {
+        "description": "Basato sulla modellazione del preamplificatore Peavey 5150 — Tono 1"
+      },
+      "pey51502": {
+        "description": "Basato sulla modellazione del preamplificatore Peavey 5150 — Tono 2"
+      },
+      "pey6505": {
+        "description": "Basato sulla modellazione del preamplificatore Peavey 6505"
+      },
+      "rant21": {
+        "description": "Basato sulla modellazione del preamplificatore Randall T2 — Tono 1"
+      },
+      "rant22": {
+        "description": "Basato sulla modellazione del preamplificatore Randall T2 — Tono 2"
+      },
+      "rojc120": {
+        "description": "Basato sulla modellazione del preamplificatore Roland JC-120"
+      },
+      "slo1001": {
+        "description": "Basato sulla modellazione del preamplificatore Soldano SLO-100 — Tono 1"
+      },
+      "slo1002": {
+        "description": "Basato sulla modellazione del preamplificatore Soldano SLO-100 — Tono 2"
+      },
+      "slo1003": {
+        "description": "Basato sulla modellazione del preamplificatore Soldano SLO-100 — Tono 3"
+      },
+      "vxac30": {
+        "description": "Basato sulla modellazione del preamplificatore VOX AC30"
+      },
+      "apsvtvr": {
+        "description": "Basato sulla modellazione del preamplificatore Ampeg SVTVR"
+      },
+      "apsvtcl": {
+        "description": "Basato sulla modellazione del preamplificatore Ampeg SVT-CL"
+      },
+      "adn900": {
+        "description": "Basato sulla modellazione del preamplificatore Ashdown ABM900 EVO II"
+      },
+      "hiw320": {
+        "description": "Basato sulla modellazione del preamplificatore Hiwatt Jupiter 320"
+      },
+      "marsup": {
+        "description": "Basato sulla modellazione del preamplificatore Marshall Super Bass"
+      }
+    },
+    "cab": {
+      "bog412a": {
+        "description": "Basato sul cabinet Bogner 4x12 — Tono A"
+      },
+      "bog412b": {
+        "description": "Basato sul cabinet Bogner 4x12 — Tono B"
+      },
+      "eng412a": {
+        "description": "Basato sul cabinet ENGL E412 Pro Vintage30 4x12 — Tono A"
+      },
+      "eng412b": {
+        "description": "Basato sul cabinet ENGL E412 Pro Vintage30 4x12 — Tono B"
+      },
+      "fdtr212": {
+        "description": "Basato sul cabinet Fender Twin Reverb Darkface 2x12"
+      },
+      "fd59bm410": {
+        "description": "Basato sul cabinet Fender 1959 Bassman 4x10"
+      },
+      "hiw412": {
+        "description": "Basato sul cabinet Hiwatt Brilliant 4x12"
+      },
+      "mar412a": {
+        "description": "Basato sul cabinet Marshall V30 4x12 — Tono A"
+      },
+      "mar412b": {
+        "description": "Basato sul cabinet Marshall V30 4x12 — Tono B"
+      },
+      "mar96412a": {
+        "description": "Basato sul cabinet Marshall 1960B 4x12 — Tono A"
+      },
+      "mar96412b": {
+        "description": "Basato sul cabinet Marshall 1960B 4x12 — Tono B"
+      },
+      "mes412a": {
+        "description": "Basato sul cabinet Mesa/Boogie Oversized V30 4x12 — Tono A"
+      },
+      "mes412b": {
+        "description": "Basato sul cabinet Mesa/Boogie Oversized V30 4x12 — Tono B"
+      },
+      "mes412c": {
+        "description": "Basato sul cabinet Mesa/Boogie Oversized V30 4x12 — Tono C"
+      },
+      "og412": {
+        "description": "Basato sul cabinet Orange Vintage30 4x12"
+      },
+      "pey412a": {
+        "description": "Basato sul cabinet Peavey 5150 4x12 — Tono A"
+      },
+      "pey412b": {
+        "description": "Basato sul cabinet Peavey 5150 4x12 — Tono B"
+      },
+      "peyvk412": {
+        "description": "Basato sul cabinet Peavey Valveking 4x12"
+      },
+      "ran112a": {
+        "description": "Basato sul cabinet Randall RD112 1x12 — Tono A"
+      },
+      "ran112b": {
+        "description": "Basato sul cabinet Randall RD112 1x12 — Tono B"
+      },
+      "ran112c": {
+        "description": "Basato sul cabinet Randall RD112 1x12 — Tono C"
+      },
+      "slo412a": {
+        "description": "Basato sul cabinet Soldano SLO412 4x12 — Tono A"
+      },
+      "slo412b": {
+        "description": "Basato sul cabinet Soldano SLO412 4x12 — Tono B"
+      },
+      "slo412c": {
+        "description": "Basato sul cabinet Soldano SLO412 4x12 — Tono C"
+      },
+      "ac30212": {
+        "description": "Basato sul cabinet VOX AC30 2x12"
+      },
+      "ap810": {
+        "description": "Basato sul cabinet Ampeg 8x10"
+      },
+      "ap410": {
+        "description": "Basato sul cabinet Ampeg SVT 4x10"
+      },
+      "adn410": {
+        "description": "Basato sul cabinet Ashdown 4x10"
+      },
+      "hiwb410": {
+        "description": "Basato sul cabinet Hiwatt B410 4x10"
+      },
+      "mar412": {
+        "description": "Basato sul cabinet Marshall 4x12"
+      }
+    }
+  }
+}

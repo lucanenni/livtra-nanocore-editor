@@ -1,0 +1,827 @@
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+                                                              MIDI Control User Guide
+                                                                                            NanoCore
+
+    Firmware compatibility
+
+    For NanoCore firmware 1.04 or later.
+
+
+
+   Quick start
+
+  1. Connect                                        2. Match channel                                  3. Assign CC                                    4. Send values
+
+
+
+  Connect with USB MIDI or another supported MIDI   Use the same MIDI channel. Device channel 0
+                                                                                                      Choose the needed CC number from this guide.    Switches: 0=OFF, 127=ON. Knobs: 0-127.
+  transport.                                        means Omni.
+
+
+
+
+   Value rules
+  Message                                           Value                                                Meaning
+
+  Effect ON/OFF                                     0-63 OFF; 64-127 ON                                  Absolute state. Use 0 and 127.
+  Effect Type                                       Exact Type ID                                        Send the exact number from the Type table.
+  Parameter                                         0-127                                                Lowest to highest value.
+  Momentary action                                  64-127 triggers                                      Use 127 on press and 0 on release.
+
+
+    Find it fast
+
+    Page 2 CC map | Page 3 effect types | Pages 4-7 parameters | Page 8 presets | Page 9 examples and help
+
+
+
+
+English section                                                                                                                                                                   English 1/9 | Overall 1/18
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+   Main CC Map
+   Effect blocks
+  Block                                                                      ON/OFF CC                         Type CC
+
+  FX1                                                                        CC20                              CC40
+  FX2                                                                        CC21                              CC41
+  Amp                                                                        CC23                              CC43
+  Cab                                                                        CC24                              CC44
+  Mod                                                                        CC25                              CC45
+  Delay                                                                      CC26                              CC46
+  Reverb                                                                     CC27                              CC47
+  EQ                                                                         CC28                              CC48
+
+
+   Global controls
+  Function                                                                               Message                         Value
+
+  Tuner OFF                                                                              CC80                            0-63
+  Tuner ON                                                                               CC80                            64-127
+  Previous preset                                                                        CC81                            64-127
+  Next preset                                                                            CC82                            64-127
+  Direct preset recall                                                                   Program Change (PC)             0-127
+
+
+    Unused controls
+
+    CC22/42 and CC29/49 are ignored. Unsupported controls are safe no-ops.
+
+
+
+
+English section                                                                                                                   English 2/9 | Overall 2/18
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+   Effect Type IDs
+   Send the exact ID with the block's Type CC. IDs are continuous; future types append at the end.
+
+   FX1 and FX2                                                         Mod and Delay                   Reverb and EQ
+    CC40 / ID        FX1 type                                            CC45 / ID        Mod type     CC47 / ID   Reverb type
+    0                Gate                                                0                Chorus       0           Room
+
+    1                Auto Gate                                           1                Phaser       1           Plate
+
+    2                Gate + Compressor                                   2                Flanger      2           Hall
+
+    3                Compressor                                          3                Tremolo      3           Concert
+
+                                                                         4                Vibrato      4           Shimmer
+    CC41 / ID        FX2 type
+                                                                                                       5           Cloud
+    0                Drive 1                                             CC46 / ID        Delay type
+                                                                                                       6           Spring
+    1                Drive 2                                             0                BBD
+
+    2                Drive 3                                             1                Digital      CC48 / ID   EQ type
+    3                Drive 4                                             2                Duck         0           3-band EQ
+
+    4                Drive 5                                             3                Ice          1           6-band EQ
+
+    5                Boost 1                                             4                Reverse      2           8-band EQ
+
+    6                Boost 2                                             5                LoFi
+
+    7                Boost 3                                             6                Smear
+
+    8                Pitch                                               7                Mod Delay
+
+    9                Envelope Wah
+
+    10               Wah
+
+
+
+    Reverb quick check
+
+    CC47: 4=Shimmer, 5=Cloud, 6=Spring. The next new type will be 7.
+
+
+
+
+English section                                                                                                                  English 3/9 | Overall 3/18
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+   Direct Parameters - FX1, FX2, Amp, Cab and EQ
+  CC              Parameter                                             Works with
+  50              Gate Threshold                                        FX1 Gate or Gate+Comp
+
+  51              Compressor Threshold                                  FX1 Compressor
+
+  52              Ratio                                                 FX1 Compressor
+
+  53              Knee                                                  FX1 Compressor
+
+  54              Attack                                                FX1 Compressor
+
+  55              Release                                               FX1 Compressor
+
+  56              Makeup                                                FX1 Compressor
+
+  57              Drive Gain or Boost                                   FX2 Drive 1-5 or Boost 1-3
+
+  58              Tone                                                  FX2 Drive 1-5
+
+  59              Level                                                 FX2 Drive 1-5
+
+  60              Amp Gain                                              Amp
+
+  61              Bass                                                  Amp
+
+  62              Mid                                                   Amp
+
+  63              Treble                                                Amp
+
+  64              Amp Level                                             Amp
+
+  65              Cab Low Cut                                           Cab
+
+  66              Cab High Cut                                          Cab
+
+  67              Cab Level                                             Cab
+
+
+   EQ bands depend on the selected EQ type
+  EQ type                        CC91     CC92        CC93     CC94             CC95                 CC96    CC97    CC33
+  0 3-band                       Low      Mid         High     -                -                    -       -       -
+
+  1 6-band                       120 Hz   250 Hz      500 Hz   1 kHz            2 kHz                4 kHz   -       -
+
+  2 8-band                       60 Hz    120 Hz      250 Hz   500 Hz           1 kHz                2 kHz   4 kHz   8 kHz
+
+
+
+
+English section                                                                                                      English 4/9 | Overall 4/18
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+   Mod Parameters and FX2 Pitch/Wah
+    Important routing rule
+
+    CC68-73 normally control Mod. When FX2 type is 8, 9 or 10, they control FX2 Pitch/Wah instead.
+
+
+   Mod block - select with CC45
+  Type ID                                 CC68                         CC69                          CC70    CC71     CC72    CC73
+  0 Chorus                                Rate                         Depth                         Level   -        -       -
+
+  1 Phaser                                Rate                         Feedback                      Mix     Level    -       -
+
+  2 Flanger                               Rate                         Feedback                      Mix     Level    -       -
+
+  3 Tremolo                               Rate                         Depth                         Wave    Smooth   Mix     Level
+
+  4 Vibrato                               Rate                         Depth                         Wave    Mix      Level   -
+
+
+
+   FX2 special types - select with CC41
+  FX2 Type ID                             CC68                         CC69                          CC70    CC71     CC72    CC73
+  8 Pitch                                 Pitch                        Fine                          Mix     Level    -       -
+
+  9 Envelope Wah                          Freq                         Env                           Q       Mix      Level   -
+
+  10 Wah                                  Freq                         Sweep                         Rate    Shape    Mix     Level
+
+
+
+
+English section                                                                                                                       English 5/9 | Overall 5/18
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+   Delay Parameters
+   Select the Delay type with CC46, then use CC74-79.
+
+  Type ID                                CC74                  CC75                      CC76        CC77       CC78    CC79
+
+
+
+  0 BBD                                  Delay                 Feedback                  Age         Mix        Level   -
+
+
+
+
+  1 Digital                              Time                  Feedback                  Mix         Level      -       -
+
+
+
+
+  2 Duck                                 Time                  Feedback                  Filter      Mix        Level   -
+
+
+
+
+  3 Ice                                  Time                  Feedback                  Interval    Mix        Level   -
+
+
+
+
+  4 Reverse                              Time                  Feedback                  Mix         Level      -       -
+
+
+
+
+  5 LoFi                                 Time                  Feedback                  Bit Depth   LoFi Mix   Mix     Level
+
+
+
+
+  6 Smear                                Time                  Feedback                  Smear       Filter     Mix     Level
+
+
+
+
+  7 Mod Delay                            Time                  Feedback                  Mod Depth   Mod Rate   Mix     Level
+
+
+
+
+    Example
+
+    Digital Delay: CC46=1, CC26=127, then CC74=Time, CC75=Feedback, CC76=Mix and CC77=Level.
+
+
+
+
+English section                                                                                                                 English 6/9 | Overall 6/18
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+   Reverb Parameters
+   Select the Reverb type with CC47, then use CC85-90.
+
+  Type ID                                 CC85                      CC86       CC87        CC88       CC89   CC90
+
+
+
+  0 Room                                  Decay                     PreDelay   Tone        Mod        Mix    Level
+
+
+
+
+  1 Plate                                 Decay                     PreDelay   Tone        Mod        Mix    Level
+
+
+
+
+  2 Hall                                  Decay                     PreDelay   Tone        LF Damp    Mix    Level
+
+
+
+
+  3 Concert                               Decay                     PreDelay   HF Damp     Mod        Mix    Level
+
+
+
+
+  4 Shimmer                               Decay                     PreDelay   Tone        Pitch      Mix    Level
+
+
+
+
+  5 Cloud                                 Decay                     Tone       Mod Depth   Mod Rate   Mix    Level
+
+
+
+
+  6 Spring                                Decay                     PreDelay   Crossover   Mod        Mix    Level
+
+
+
+
+    Continuous public IDs
+
+    Shimmer=4, Cloud=5, Spring=6. Future Reverb types start at 7.
+
+
+
+
+English section                                                                                                      English 7/9 | Overall 7/18
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+   Tuner and Preset Control
+  Goal                                                                         Send              Result
+
+  Open tuner                                                                   CC80 value 127    Tuner ON
+  Close tuner                                                                  CC80 value 0      Tuner OFF
+  Previous preset                                                              CC81 value 127    Step back once
+  Next preset                                                                  CC82 value 127    Step forward once
+  Recall preset 12                                                             PC 12             Direct recall
+
+
+   Program Change numbering
+  Controller display                                                  MIDI sent                           Device preset
+
+  0-127                                                               PC 0-127                            Same number
+  1-128                                                               Usually PC 0-127                    Displayed number minus 1
+
+
+    Bank Select
+
+    CC0 is Bank Select MSB and CC32 is Bank Select LSB. Current firmware normally uses bank 0.
+
+
+
+
+English section                                                                                                                      English 8/9 | Overall 8/18
+NANOCORE | MIDI CONTROL USER GUIDE | FIRMWARE 1.04+
+
+
+
+
+   Controller Setup Examples and Help
+   Example assignments
+  Controller                                                     MIDI assignment                                              Use
+  Footswitch 1                                                   CC20: press 127, release 0                                   FX1 ON while pressed
+
+  Footswitch 2                                                   CC21: toggle 127 / 0                                         Toggle FX2
+
+  Footswitch 3                                                   CC82: press 127, release 0                                   Next preset
+
+  Footswitch 4                                                   CC80: toggle 127 / 0                                         Open or close tuner
+
+  Knob 1                                                         CC60: range 0-127                                            Amp Gain
+
+  Knob 2                                                         CC89: range 0-127                                            Reverb Mix
+
+  Selector                                                       CC47: exact values 0-6                                       Choose Reverb type
+
+
+   If it does not respond
+  Check                                                 What to do
+  MIDI channel                                          Match controller and device channels. Device channel 0 is Omni.
+
+  ON/OFF value                                          Use 0 for OFF and 127 for ON. Values below 64 are OFF.
+
+  Type value                                            Send the exact Type ID, not a continuously scaled knob value.
+
+  Parameter availability                                Some slots work only with selected effect types; '-' means ignored.
+
+
+    Scope
+
+    Standard MIDI CC and Program Change for NanoCore. Model/profile and IR-slot selection are not assigned here.
+
+
+
+
+English section                                                                                                                                      English 9/9 | Overall 9/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+                                                         MIDI 控制用户指南
+                                                              NanoCore
+
+  固件兼容性
+
+  适用于 NanoCore 固件 1.04 及以上版本。
+
+
+
+ 快速开始
+
+ 1. 连接                                  2. 匹配通道                   3. 分配 CC               4. 发送数值
+
+
+
+                                        控制器与设备使用相同通道；设备通道 0
+ 通过 USB MIDI 或设备支持的其他 MIDI 方式连接。                                  从本指南中选择所需的 CC 编号。      开关：0=关，127=开。旋钮：0-127。
+                                        为全通道接收。
+
+
+
+
+ 数值规则
+ 消息                                     数值                          说明
+
+ 效果开关                                   0-63 关闭；64-127 开启           绝对状态；建议使用 0 和 127。
+ 效果类型                                   精确类型 ID                     发送类型表中列出的精确数字。
+ 参数                                     0-127                       从最低值到最高值。
+ 瞬时动作                                   64-127 触发                   按下发送 127，松开发送 0。
+
+
+  快速查找
+
+  第 2 页 CC 表 | 第 3 页效果类型 | 第 4-7 页参数 | 第 8 页预设 | 第 9 页示例与帮助
+
+
+
+
+中文部分                                                                                                        中文 1/9 | 总页码 10/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+ 主 CC 对照表
+ 效果模块
+ 模块                                      开关 CC                         类型 CC
+
+ FX1                                     CC20                          CC40
+ FX2                                     CC21                          CC41
+ 音箱                                      CC23                          CC43
+ 箱体                                      CC24                          CC44
+ 调制                                      CC25                          CC45
+ 延迟                                      CC26                          CC46
+ 混响                                      CC27                          CC47
+ 均衡                                      CC28                          CC48
+
+
+ 全局控制
+ 功能                                              消息                            数值
+
+ 关闭调音器                                           CC80                          0-63
+ 打开调音器                                           CC80                          64-127
+ 上一个预设                                           CC81                          64-127
+ 下一个预设                                           CC82                          64-127
+ 直接调用预设                                          Program Change (PC)           0-127
+
+
+  未使用控制
+
+  CC22/42 与 CC29/49 会被忽略；不支持的控制不会产生动作。
+
+
+
+
+中文部分                                                                                    中文 2/9 | 总页码 11/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+ 效果类型 ID
+ 使用模块的类型 CC 发送精确 ID。ID 连续排列，未来新增类型从末尾继续添加。
+
+ FX1 与 FX2                             调制与延迟               混响与均衡
+  CC40 / ID   FX1 类型                    CC45 / ID   调制类型   CC47 / ID   混响类型
+  0           噪声门                       0           合唱     0           房间
+
+  1           自动噪声门                     1           移相     1           板式
+
+  2           噪声门 + 压缩                  2           镶边     2           大厅
+
+  3           压缩器                       3           颤音     3           音乐厅
+
+                                        4           震音     4           闪烁
+  CC41 / ID   FX2 类型
+                                                           5           云雾
+  0           失真 1                      CC46 / ID   延迟类型
+                                                           6           弹簧
+  1           失真 2                      0           桶形
+
+  2           失真 3                      1           数字     CC48 / ID   均衡类型
+  3           失真 4                      2           闪避     0           3 段均衡
+
+  4           失真 5                      3           冰晶     1           6 段均衡
+
+  5           激励 1                      4           反向     2           8 段均衡
+
+  6           激励 2                      5           低保真
+
+  7           激励 3                      6           扩散
+
+  8           移调                        7           调制延迟
+
+  9           包络哇音
+
+  10          哇音
+
+
+
+  混响快速确认
+
+  CC47：4=闪烁，5=云雾，6=弹簧。下一个新增类型将使用 7。
+
+
+
+
+中文部分                                                                           中文 3/9 | 总页码 12/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+ 直接参数 - FX1、FX2、音箱、箱体与均衡
+ CC         参数                                             适用模块
+ 50         噪声门阈值                                          FX1 噪声门或噪声门+压缩
+
+ 51         压缩阈值                                           FX1 压缩
+
+ 52         压缩比                                            FX1 压缩
+
+ 53         拐点                                             FX1 压缩
+
+ 54         启动                                             FX1 压缩
+
+ 55         释放                                             FX1 压缩
+
+ 56         补偿增益                                           FX1 压缩
+
+ 57         失真增益或激励量                                       FX2 失真 1-5 或激励 1-3
+
+ 58         音色                                             FX2 失真 1-5
+
+ 59         电平                                             FX2 失真 1-5
+
+ 60         音箱增益                                           音箱
+
+ 61         低频                                             音箱
+
+ 62         中频                                             音箱
+
+ 63         高频                                             音箱
+
+ 64         音箱电平                                           音箱
+
+ 65         箱体低切                                           箱体
+
+ 66         箱体高切                                           箱体
+
+ 67         箱体电平                                           箱体
+
+
+ 均衡频段取决于所选 EQ 类型
+ 均衡类型               CC91        CC92     CC93     CC94           CC95           CC96    CC97    CC33
+ 0 3-band           低           中        高        -              -              -       -       -
+
+ 1 6-band           120 Hz      250 Hz   500 Hz   1 kHz          2 kHz          4 kHz   -       -
+
+ 2 8-band           60 Hz       120 Hz   250 Hz   500 Hz         1 kHz          2 kHz   4 kHz   8 kHz
+
+
+
+
+中文部分                                                                                                中文 4/9 | 总页码 13/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+ 调制参数与 FX2 移调/哇音
+  重要路由规则
+
+  CC68-73 通常控制调制；当 FX2 类型为 8、9 或 10 时，同一组 CC 改为控制 FX2 移调/哇音。
+
+
+ 调制模块 - 使用 CC45 选择
+ 类型 ID                      CC68               CC69            CC70   CC71   CC72   CC73
+ 0 合唱                       速率                 深度              电平     -      -      -
+
+ 1 移相                       速率                 反馈              混合     电平     -      -
+
+ 2 镶边                       速率                 反馈              混合     电平     -      -
+
+ 3 颤音                       速率                 深度              波形     平滑     混合     电平
+
+ 4 震音                       速率                 深度              波形     混合     电平     -
+
+
+
+ FX2 特殊类型 - 使用 CC41 选择
+ FX2 类型 ID                  CC68               CC69            CC70   CC71   CC72   CC73
+ 8 移调                       音高                 微调              混合     电平     -      -
+
+ 9 包络哇音                     频率                 包络              Q      混合     电平     -
+
+ 10 哇音                      频率                 扫频              速率     形状     混合     电平
+
+
+
+
+中文部分                                                                                       中文 5/9 | 总页码 14/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+ 延迟参数
+ 使用 CC46 选择延迟类型，再用 CC74-79 调节参数。
+
+ 类型 ID                    CC74             CC75              CC76   CC77    CC78   CC79
+
+
+
+ 0 桶形                     延迟               反馈                老化     混合      电平     -
+
+
+
+
+ 1 数字                     时间               反馈                混合     电平      -      -
+
+
+
+
+ 2 闪避                     时间               反馈                滤波     混合      电平     -
+
+
+
+
+ 3 冰晶                     时间               反馈                音程     混合      电平     -
+
+
+
+
+ 4 反向                     时间               反馈                混合     电平      -      -
+
+
+
+
+ 5 低保真                    时间               反馈                位深     低保真混合   混合     电平
+
+
+
+
+ 6 扩散                     时间               反馈                扩散     滤波      混合     电平
+
+
+
+
+ 7 调制延迟                   时间               反馈                调制深度   调制速率    混合     电平
+
+
+
+
+  示例
+
+  数字延迟：CC46=1，CC26=127；然后用 CC74 调时间、CC75 调反馈、CC76 调混合、CC77 调电平。
+
+
+
+
+中文部分                                                                                      中文 6/9 | 总页码 15/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+ 混响参数
+ 使用 CC47 选择混响类型，再用 CC85-90 调节参数。
+
+ 类型 ID                   CC85       CC86   CC87   CC88   CC89   CC90
+
+
+
+ 0 房间                    衰减         预延迟    音色     调制     混合     电平
+
+
+
+
+ 1 板式                    衰减         预延迟    音色     调制     混合     电平
+
+
+
+
+ 2 大厅                    衰减         预延迟    音色     低频阻尼   混合     电平
+
+
+
+
+ 3 音乐厅                   衰减         预延迟    高频阻尼   调制     混合     电平
+
+
+
+
+ 4 闪烁                    衰减         预延迟    音色     音高     混合     电平
+
+
+
+
+ 5 云雾                    衰减         音色     调制深度   调制速率   混合     电平
+
+
+
+
+ 6 弹簧                    衰减         预延迟    分频     调制     混合     电平
+
+
+
+
+  连续的公开 ID
+
+  闪烁=4，云雾=5，弹簧=6。未来新增混响类型从 7 开始。
+
+
+
+
+中文部分                                                                   中文 7/9 | 总页码 16/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+ 调音器与预设控制
+ 目标                                                           发送            结果
+
+ 打开调音器                                                        CC80 数值 127   调音器开启
+ 关闭调音器                                                        CC80 数值 0     调音器关闭
+ 上一个预设                                                        CC81 数值 127   向前切换一次
+ 下一个预设                                                        CC82 数值 127   向后切换一次
+ 调用预设 12                                                      PC 12         直接调用
+
+
+ Program Change 编号
+ 控制器显示                                                 实际 MIDI                   设备预设
+
+ 0-127                                                 PC 0-127                  相同编号
+ 1-128                                                 通常发送 PC 0-127             显示编号减 1
+
+
+  音色库选择
+
+  CC0 为 Bank Select MSB，CC32 为 Bank Select LSB。当前固件通常使用 Bank 0。
+
+
+
+
+中文部分                                                                                       中文 8/9 | 总页码 17/18
+NANOCORE | MIDI 控制用户指南 | 固件 1.04+
+
+
+
+
+ 控制器设置示例与使用帮助
+ 分配示例
+ 控制器控件                                        MIDI 分配                用途
+ 脚钉 1                                         CC20：按下 127，松开 0       按下开启 FX1，松开关闭
+
+ 脚钉 2                                         CC21：切换 127 / 0        切换 FX2 开关
+
+ 脚钉 3                                         CC82：按下 127，松开 0       下一个预设
+
+ 脚钉 4                                         CC80：切换 127 / 0        打开或关闭调音器
+
+ 旋钮 1                                         CC60：范围 0-127          音箱增益
+
+ 旋钮 2                                         CC89：范围 0-127          混响比例
+
+ 选择器                                          CC47：精确数值 0-6          选择混响类型
+
+
+ 没有响应时
+ 检查                                    处理方法
+ MIDI 通道                               确保控制器与设备通道一致；设备通道 0 为全通道接收。
+
+ 开关数值                                  关闭用 0，开启用 127；小于 64 表示关闭。
+
+ 类型数值                                  发送精确类型 ID，不要使用连续缩放的旋钮数值。
+
+ 参数适用性                                 部分参数只适用于特定类型；“-”表示忽略。
+
+
+  适用范围
+
+  适用于 NanoCore 的标准 MIDI CC 与 Program Change；音箱模型、配置文件及 IR 槽位不在本表中。
+
+
+
+
+中文部分                                                                                 中文 9/9 | 总页码 18/18
+

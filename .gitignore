@@ -1,0 +1,7 @@
+app/node_modules/
+app/dist/
+app/dist-artifact/
+app/dist-portable/
+.DS_Store
+*.log
+app/dist-pages/

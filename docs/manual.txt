@@ -1,0 +1,1738 @@
+NANOCORE
+   Mini Multi-Effect Processor
+
+
+
+       用户手册 CN
+
+
+                          MASTER
+
+
+
+                          SELECTOR
+
+
+
+
+※本公司有权对产品进行持续升级与优化，可随时调整产品的外观、
+规格参数、包装设计、配套配件及相关细节，前述调整恕不另行通
+知。产品图片因拍摄光线、设备屏幕显示差异等因素，可能与实物存
+在轻微色差，仅供参考。为确保您选购到符合需求的产品，请在购买
+前向当地经销商确认产品实际功能及规格。
+目录
+使用须知 ------------------------------------------------------------- 01
+
+面板介绍 ------------------------------------------------------------- 02
+
+界面介绍 ------------------------------------------------------------- 03
+
+主界面 ---------------------------------------------------------------- 03
+
+全局设置界面 ------------------------------------------------------- 04
+
+效果链界面 ---------------------------------------------------------- 05
+
+调音表界面 ---------------------------------------------------------- 05
+
+模块参数界面 ------------------------------------------------------- 06
+
+预设保存操作 ------------------------------------------------------- 06
+
+BT功能 ---------------------------------------------------------------- 07
+
+配套软件 ------------------------------------------------------------- 08
+
+声卡功能 ------------------------------------------------------------- 08
+
+效果列表 ------------------------------------------------------------- 08-20
+
+MIDI 控制 ------------------------------------------------------------ 20
+
+规格参数 ------------------------------------------------------------- 21
+
+常见故障排查 ------------------------------------------------------- 22-23
+使用须知
+电源规格匹配： 本设备采用 USB Type-C 接口供电，请务必使用
+符合 DC 5V 1A 规格的电源适配器进行充电或持续供电。
+
+内置电池管理： 设备内置 1300mAh 锂电池，支持边充边用。充
+电时指示灯显示为红灯常亮，充满电后指示灯转为绿色。若长时
+间不使用本设备，建议每隔几个月为其充电一次，以保护锂电池
+寿命。
+
+避免极端环境： 请勿将设备暴露在极高温度（如阳光直射的汽车
+仪表盘上）或极度潮湿的环境中，以防电池过热或内部电路短
+路。
+
+
+
+
+设备连接与听力保护
+保护听力与设备： 在佩戴监听耳机（接入 3.5mm PHONES 接
+口）或连接外部吉他音箱/调音台之前，请务必先将 MASTER 旋
+钮（总输出音量）调至最低。佩戴/连接完毕后，再缓慢增加音
+量至舒适的听觉水平。
+
+安全插拔线材： 在接入或拔出 6.35mm 乐器输入线（INPUT）和
+输出线（OUTPUT）时，请尽量保持效果器或后端扩声设备处于
+静音或低音量状态，以免产生瞬间的爆音损坏音箱喇叭。
+
+正确区分接口： 请认准单声道与立体声接口。吉他等乐器请接入
+6.35mm TS 单声道输入（阻抗 1MΩ）；监听耳机请接入
+3.5mm TRS 立体声输出（阻抗 16Ω），切勿混接以免造成声音
+异常或设备损坏。
+
+
+
+-01-
+屏幕与旋钮操作保护
+温柔操作： 面板上的 TFT 屏幕及编码器旋钮（MASTER /
+SELECTOR）为精密电子部件，请勿用力按压屏幕或暴力旋转、
+敲击旋钮，以免造成不可逆的物理损坏。
+
+断电保存： 在进行“覆盖保存（REPLACE）”或“交换保存
+（SWAP）”的高级操作时，请确保设备电量充足或已连接电
+源，切勿在保存进度中强制关机，以免预设数据丢失。
+
+
+面板介绍
+                             ①2.4英寸 TFT 屏
+                           ② 幕：用于显示预设信
+                             息、效果链、可调参
+                             数及设备状态。
+                             ②MASTER 旋钮（编
+                             码器）：旋转控制机
+                           ③
+                             器总输出音量
+
+
+         ①
+（在非主界面旋转时，屏幕会有弹窗提示当前总输出音
+量）。短按作为 Home 键，返回主界面。长按进行预设保存操
+作。
+③ SELECTOR 旋钮（编码器）：旋转调节参数值、切换预设/
+模块、移动光标。短按确认选择、进入编辑界面、切换页面。
+
+                           ④开关机按键：长按进
+                           行开机或关机。
+                           ⑤USB-C 接口：连接 5V
+                           电源充电（支持边充边
+                           用）。作为 USB 音频接
+                           口（声卡）连接电脑进
+       ④   ⑤ ⑥ ⑦   ⑧   ⑨   行录音。
+-02-
+连接官方电脑上位机软件进行参数精调、预设管理、IR 导入、更
+换系统主题、语言及固件升级。支持 USB MIDI 协议连接控制设
+备。搭配 OTG 转接器连接手机/平板实现音画同步的数字录音。
+⑥充电指示灯：充电时红灯常亮，充满后转为绿色。
+⑦6.35mm TS 输入接口：单声道输入，用于连接吉他/贝斯等乐
+器。
+⑧6.35mm TS 输出接口：单声道输出，用于连接音箱或调音台设
+备。
+⑨3.5mm TRS 输出接口：立体声输出，用于连接监听耳机。
+
+
+
+界面介绍
+主界面
+
+输出           输入 MASTER 预设 BT 电量
+信号           信号 总输出 音量 开关 显示
+
+
+
+
+                       01 preset
+
+       FX1      FX2   AMP     CAB
+
+
+
+       DEL      MOD   REV     EQ
+
+
+
+全局设置 效果链 调音表 预设编号名称
+              效果链信息
+开机后默认进入主界面。
+通过旋转和短按 SELECTOR 旋钮可访问主界面的各项功能。
+
+-03-
+全局设置界面
+
+       settings
+
+  loopback
+  Input gain                 +0
+  usb volume                 100
+  bt volume                  100
+  midi channel               0
+  firmware                   0.6
+
+
+
+菜单项               参数范围            功能描述
+Loopback          On / Off        开启后，通过 USB 或 BT 输入的
+                                  外部音频，可混合吉他信号再
+                                  次通过 USB 录入。
+Input Gain        -20dB ~ +20dB 调节乐器输入的增益。
+USB Volume        0 ~ 100         调节 USB 接口输入的音频音
+                                  量。
+BT Volume         0 ~ 100         调节BT输入的音频音量。
+MIDI              0 ~ 16          MIDI 通道：0～16用于设置设
+Channel                           备接收MIDI 控制通道；通道设
+                                  为0时，开启全通道模式。
+                  版本号             显示当前设备运行的固件版
+Firmware                          本。
+
+
+
+-04-
+效果链界面
+                                在效果链界面中，转动
+        chain
+                                SELECTOR旋钮选定特定
+                                的效果模块，选中后移
+                                动该模块的位置，即可
+  FX1         FX2   AMP   CAB   自定义音频信号经过效
+                                果器的先后顺序。
+  DEL      MOD      REV   EQ
+
+
+
+
+调音表界面
+
+        440                       参考频率
+
+                                  静音调音开关
+
+                                  调音指示刻度，
+                                  偏左代表音偏
+                                  低，偏右代表音
+                                  偏高，居中即表
+                                  示音准达标。
+                                  音名显示
+
+用 SELECTOR 旋钮旋转选择参考频率调节或静音调音开关。
+
+参考频率：可调范围 400Hz ~ 480Hz（默认 440Hz）。
+静音调音：默认打开，调音时输出静音。
+
+-05-
+模块参数界面
+                                                       模块
+
+  EQ     3-3 eq8                                       模块开关
+
+                                                       效果
+ B1[60] B2[120] B3[250] B4[500] B5[1K]
+
+                                                       参数显示
+  0.0      0.0         0.0         0.0     0.0
+  dB       dB          dB          dB      dB
+
+                       1/2                             参数页码
+
+
+                                         进入模块： 在主界面选中任意模块图
+ FX1     FX2     AMP         CAB
+                                         标，短按 SELECTOR 旋钮即可进入。
+                                         调节与翻页： 旋转 SELECTOR 旋钮可
+ DEL     MOD     REV         EQ          调节具体的效果参数；当参数超过一页
+                                         时，也可通过该旋钮进行页码切换。
+
+切换与开关： 界面会直观显示当前所在的模块与效果。您可以使
+用 SELECTOR 旋钮灵活地选定并切换不同的模块/效果，以及控
+制当前模块的开启与关闭。
+
+                                                       预设保存操作
+
+                                    01 preset          闪烁
+
+
+   FX1           FX2              AMP            CAB
+
+
+
+   DEL           MOD               REV           EQ
+
+
+
+
+-06-
+                  01 preset
+                               保存成功提示
+     FX1   FX2   AMP     CAB
+
+
+
+     DEL   MOD   REV     EQ
+
+
+
+操作步骤
+在主界面下：
+长按 MASTER 旋钮，屏幕中预设编号和预设名称开始闪烁。
+旋转 SELECTOR 旋钮，选择你想要覆盖或交换位置的目标预设。
+短按 SELECTOR 旋钮，旋转选择 REPLACE（覆盖）或 SWAP
+（交换）模式。
+再次短按 SELECTOR 旋钮确认保存，屏幕弹出保存成功提示。
+
+在非主界面下：
+长按 MASTER 旋钮，直接保存当前预设参数，屏幕弹出保存成功
+提示。
+
+
+BT
+nanocore 内置完全独立的双模 BT模块，两者可单独开启或关
+闭，互不干扰。
+Nanocore Audio（BT音频）：用于接收手机或平板的媒体音
+频。连接后，可将手机音乐作为伴奏输入至效果器。
+Nanocore Midi（数据BT）：用于连接官方手机 APP，实现双向
+参数同步控制与修改。
+注意：Nanocore Midi 模块在首次配对前处于“隐藏”状态。请
+务必直接在官方手机 APP 内部完成配对，配对成功后，该名称才
+会显现在手机系统的BT设置列表中。
+
+-07-
+配套软件
+将 Nanocore 连接至电脑或手机，即可使用免费的配套软件对您
+的设备进行全面管理，如调节音色、导入/导出预设文件、导入
+NAM 文件、加载第三方 IR 文件以及恢复出厂设置等。软件支持
+电脑端（Windows、Mac）及移动端（Android、iOS）。请访
+问 www.LIVTRAMUSIC.com 下载安装即可使用。
+
+
+
+
+声卡功能
+设备支持免驱 USB 声卡功能，连接电脑即可自动识别为
+Nanocore，同时支持通过 OTG 直连手机或平板进行高品质内录
+与直播。
+
+
+效果列表
+FX1
+效果名称       效果描述           参数说明
+1–4 gate   消除低电平底噪，净      Threshold: 设定噪声
+           化演奏信号          门的信号临界电平
+                          (-100.0~0.0 dB）
+2–4 auto gate 自适应噪声门，随信   无手动调节参数，设
+              号动态自动适配阈值   备自动检测并适配信
+                          号电平变化
+
+-08-
+FX1
+效果名称         效果描述    参数说明
+3–4 NG-Com   噪声门 + 压缩二
+                     Gate: 噪声门阈值
+             合一，同步优化 (-100.0~0.0 dB）
+             底噪与动态范围 Threshold: 压缩触发临界
+                     电平(-60.0~0.0 dB）
+                     Ratio: 压缩强度比
+                     (1.1:1~20.0:1）
+                     Knee: 压缩过渡软硬
+                     (0.0~24.0 dB）
+                     Attack: 压缩启动时间
+                     (0.0~200.0 ms）
+                     Release: 压缩释放时间
+                     (0.0~1000.0 ms）
+                     Makeup: 压缩后增益补偿
+             平滑音量波动， (-24.0~24.0 dB）
+4–4          稳定音色质感  Threshold: 压缩触发临界
+compressor           电平(-60.0~0.0 dB）
+                     Ratio: 压缩强度比
+                     (1.1:1~20.0:1）
+                     Knee: 压缩过渡软硬
+                     (0.0~24.0 dB）
+                     Attack: 压缩启动时间
+                     (0.0~200.0 ms）
+                     Release: 压缩释放时间
+                     (0.0~1000.0 ms）
+                     Makeup: 压缩后增益补偿
+                     (-24.0~24.0 dB）
+
+
+
+
+-09-
+FX2
+效果名称          效果描述              参数说明
+1-11          基于 Ibanez TS9 单   Gain: (0.0到1.0）
+scream        块建模音色             Tone: (0到100）
+              基于 Ryra The       Level: (0到100）
+2-11 Klone    Klone 单块建模音
+              色
+              基于 Fulltone
+3-11 OCD      OCD 单块建模音
+              色
+4-11 DS2      基于 Boss DS-2单
+              块建模音色
+5-11 PIFUZZ   基于 EHX Big Muff
+              Pi 单块建模音色
+              基于                Boost: （0.0到1.0）
+6-11 Range    Dallas-Arbiter
+              Rangemaster 单
+              块建模音色
+              基于 Xotic AC
+7-11 XAC      Booster 单块建模
+              音色
+              基于 Friedman
+8-11 Fiman    Marty Friedman
+              单块建模音色
+              移调效果，改变信          Pitch: 移调音程
+9–11 Pitch    号音程               (-12~12 st）
+                                Fine: 音高微调
+                                (-1.00~1.00）
+                                Mix: 干湿比
+                                (0~100）
+
+-10-
+FX2
+效果名称        效果描述         参数说明
+10–11 env   包络哇音，随       Freq: 哇音中心频率
+wah         演奏力度自动       (10.0~20kHz）
+            触发滤波扫频       Env: 包络灵敏度
+                         (0.00~20kHz）
+                         Q: 滤波共振强度(0.1~20.0）
+                         Mix: 干湿比(0~100）
+11–11 auto 自动哇音，按        Freq: 哇音中心频率
+wah        设定波形循环        (163~3.5kHz）
+           扫频滤波          Sweep: 扫频范围(0~100）
+                         Rate: 扫频速度(0.00~8.00Hz）
+                         Shape: 扫频波形(0~100）
+                         Mix: 干湿比(0~100）
+
+
+
+AMP
+参数说明           Gain: 调节音色增益度(0.0~1.0）
+               Bass: 调节低频厚度与下潜(-10.0~10.0dB）
+               Mid: 调节中频核心突出度(-10.0~10.0dB）
+               Treble: 调节高频亮度与清晰度
+               (-10.0~10.0dB）
+               Level: 调节模块整体输出电平(-10.0~10.0dB）
+
+效果名称           效果描述
+1-30 BogXTC1   基于 Bogner XTC 前级建模音色1
+2-30 BogXTC2   基于 Bogner XTC 前级建模音色2
+3-30 ENGP1     基于 ENGL Powerball E645 前级建模音色1
+4-30 ENGP2     基于 ENGL Powerball E645 前级建模音色2
+5-30 Fd59Bm    基于 Fender 59 Bassman 前级建模音色
+-11-
+AMP
+效果名称          效果描述
+6-30 Fd65Dk   基于 Fender 65 Darkface 前级建模音色
+7-30 Hiw103   基于 Hiwatt DR103 前级建模音色
+8-30 MarDSL1 基于 Marshall DSL50 前级建模音色1
+9-30 MarDSL2 基于 Marshall DSL50 前级建模音色2
+10-30         基于 Marshall JCM800 前级建模音色1
+Mar8001
+11-30         基于 Marshall JCM800 前级建模音色2
+Mar8002
+12-30 MesR1   基于 Mesa Boogie Rectifier 前级建模音色1
+13-30 MesR2   基于 Mesa Boogie Rectifier 前级建模音色2
+14-30 MesR3   基于 Mesa Boogie Rectifier 前级建模音色3
+15-30 OgG120 基于 Orange Graphic 120 前级建模音色
+16-30         基于 Peavey 5150 前级建模音色1
+Pey51501
+17-30         基于 Peavey 5150 前级建模音色2
+Pey51502
+18-30 Pey6505 基于 Peavey 6505 前级建模音色
+19-30 RanT21
+20-30 RanT22 基于 Randall T2 前级建模音色1
+21-30         基于 Randall T2 前级建模音色2
+RoJC120       基于 Roland JC-120 前级建模音色
+22-30 SLO1001 基于 Soldano SLO-100前级建模音色1
+23-30 SLO1002
+24-30 SLO1003 基于 Soldano SLO-100 前级建模音色2
+
+            基于 Soldano SLO-100 前级建模音色3
+
+
+
+
+-12-
+AMP
+效果名称         效果描述
+25-30 VXAC30 基于 VOX AC30 前级建模音色
+26-30
+ApSVTVR      基于 Ampeg SVT VR 前级建模音色
+27-30
+ApSVTCL      基于 Ampeg SVT-CL 前级建模音色
+28-30 Adn900
+29-30 Hiw320 基于 Ashdown ABM900 EVO II 前级建模音色
+30-30 MarSup 基于 Hiwatt Jupiter 320 前级建模音色
+             基于 Marshall Super Bass 前级建模音色
+
+
+CAB
+参数说明           Low Cut: 低频切除，滤除多余浑浊低音
+               (20.0~500 Hz）High Cut：高频切除，削减尖
+               锐高频毛刺(2k~20kHz）
+效果名称           效果描述
+1-30 Bog412A   基于 Bogner 4×12 箱体音色A
+2-30 Bog412B   基于 Bogner 4×12 箱体音色B
+3-30 Eng412A   基于 ENGL E412 ProVintage30 4×12 箱体音
+               色A
+4-30 Eng412B   基于 ENGL E412 ProVintage30 4×12 箱体音
+               色B
+5-30 FdTR212   基于 Fender Twin Reverb Darkface 2×12
+               箱体音色
+6-30           基于 Fender 1959 Bassman 4×10 箱体音色
+Fd59BM410
+7-30 Hiw412    基于 Hiwatt Brilliant 4×12 箱体音色
+8-30 Mar412A   基于 Marshall V30 4×12 箱体音色A
+
+-13-
+CAB
+效果名称             效果描述
+9-30 Mar412B     基于 Marshall V30 4×12 箱体音色B
+10-30            基于 Marshall 1960B 4×12 箱体音色A
+Mar96412A
+11-30            基于 Marshall 1960B 4×12 箱体音色B
+Mar96412B
+12-30 Mes412A    基于 Mesa/Boogie Oversized V30 4×12
+                 箱体音色A
+13-30 Mes412B    基于 Mesa/Boogie Oversized V30 4×12
+                 箱体音色B
+14-30 Mes412C    基于 Mesa/Boogie Oversized V30 4×12
+                 箱体音色C
+15-30 Og412      基于 Orange Vintage30 4×12 箱体音色
+16-30 pey412A    基于 Peavey 5150 4×12 箱体音色A
+17-30 pey412B    基于 Peavey 5150 4×12 箱体音色B
+18-30 peyVk412   基于 Peavey Valveking 4×12 箱体音色
+19-30 Ran112A    基于 Randall RD112 1×12 箱体音色A
+20-30 Ran112B    基于 Randall RD112 1×12 箱体音色B
+21-30 Ran112C    基于 Randall RD112 1×12 箱体音色C
+22-30 SLO412A    基于 Soldano SLO412 4×12 箱体音色A
+23-30 SLO412B    基于 Soldano SLO412 4×12 箱体音色B
+24-30 SLO412C    基于 Soldano SLO412 4×12 箱体音色C
+25-30 AC30212    基于 VOX AC30 2×12 箱体音色
+26-30 AP810      基于 Ampeg 8×10 箱体音色
+27-30 Ap410      基于 Ampeg SVT 4×10 箱体音色
+28-30 Adn410     基于 Ashdown 4×10 箱体音色
+29-30 HiwB410    基于 Hiwatt B410 4×10 箱体音色
+30-30 Mar412     基于 Marshall 4×12 箱体音色
+
+
+-14-
+DEL
+效果名称 效果描述           参数说明
+1-8 bbd 经典 BBD 模拟   Delay: 调节延时时间(1~2000ms）
+         延迟，复古温     Feedback: 调节延时重复次数(0~95）
+         暖磁带延时质     Age: 调节复古老化程度(0~100）
+         感          Mix: 调节延时干湿比(0~100）
+2-8      纯净数字延      Time: 调节延时时间(0.1~3000ms）
+digital 迟，音色干净      Feedback: 调节延时重复次数(0~95）
+         通透，适配各     Mix: 调节延时干湿比(0~100）
+         类曲风
+3-8 duck 闪避延迟，演     Time: 调节延时时间(0.1~3000ms）
+         奏时自动压低     Feedback: 调节延时重复次数(0~95）
+         延时尾音，避     Filter: 调节延时滤波色调(0~100）
+         免音色浑浊      Mix: 调节延时干湿比(0~100）
+4-8 Ice 冰霜移调延       Time: 调节延时时间(0.1~3000ms）
+         迟，延时声附     Feedback: 调节延时重复次数(0~95）
+         带音程偏移，     Interval: 调节延时移调音程(-12~12st）
+         空灵氛围感强     Mix: 调节延时干湿比(0~100）
+5-8      反向延迟，反     Time: 调节延时时间(0.1~3000ms）
+reverse 向回放延时信      Feedback: 调节延时重复次数(0~95）
+         号，营造梦幻     Mix: 调节延时干湿比(0~100）
+         空间效果
+6-8 lofi 低保真延迟，     Time: 调节延时时间(2.0~3000ms）
+         比特率失真营     Feedback: 调节延时重复次数(0~95）
+         造复古老旧磁     Bit Depth: 调节音频比特深度(4~16b）
+         带质感        LoFi Mix: 调节低保真效果占比(0~100）
+                    Mix: 调节整体干湿比(0~100）
+
+
+
+
+-15-
+DEL
+效果名称 效果描述        参数说明
+7-8   弥散延迟，软     Time: 调节延时时间(0.1~3000ms）
+smear 化模糊延时信     Feedback: 调节延时重复次数(0~95）
+      号，营造柔和     Smear: 调节信号弥散模糊程度(0~100）
+      空间弥散感      Filter: 调节延时滤波色调(0~100）
+                 Mix: 调节延时干湿比(0~100）
+
+8-8 mod 调制延迟，延   Time: 调节延时时间（0.1~3000ms）
+        时自带颤音波   Feedback: 调节延时重复次数（0~95）
+        动，音色层次   Mod Depth: 调节调制深度
+        更丰富      (0.0~20.0ms）
+                 Mod Rate: 调节调制速度
+                 (0.05~5.00Hz）
+                 Mix: 调节延时干湿比(0~100）
+
+MOD
+效果名称 效果描述        参数说明
+1-5     经典合唱效    Rate: 调节合唱调制速度(0.10~3.74Hz）
+chorus 果，拓宽声场    Depth: 调节合唱调制深度
+        层次，音色饱   (0.00~1.00ms）
+        满厚实
+2-5     相位效果，周   Rate: 调节相位扫频速度(0.05~5.00Hz）
+phaser 期性扫频波     Feedback: 调节相位反馈强度(-95~95）
+        动，音色富有   Mix: 调节效果干湿比(0~100）
+        流动旋转感    Rate: 调节镶边调制速度(0.05~5.00Hz）
+3-5     镶边效果，梳   Feedback: 调节镶边反馈强度(-95~95）
+flanger 状滤波营造空   Mix: 调节效果干湿比(0~100）
+        灵悬浮金属质
+        感
+
+-16-
+MOD
+效果名称 效果描述          参数说明
+4-5     音量颤音，按     Rate: 调节颤音波动速度(0.01~20.0Hz）
+tremolo 波形周期性起     Depth: 调节颤音起伏深度(0~100）
+        伏变化音量      wave: 选择调制波形
+                   (Sine/Triangle/Square/Saw）
+                   Smooth: 调节波形过渡平滑度
+                   (0.00~40.0Hz）
+                   Mix: 调节效果干湿比(0~100）
+
+                   Rate: 调节音高波动速度(0.01~20.0Hz）
+5-5       音高颤音，音
+                   Depth: 调节音高颤音深度
+vibrato   高周期性小幅
+                   (0.0~20.0ms）
+          波动润色音色
+                   wave: 选择调制波形
+                   (Sine/Triangle/Square/Saw）
+                   Mix: 调节效果干湿比（0~100）
+
+
+
+REV
+效果名称 效果描述          参数说明
+1-7  房间混响，模        Decay: 调节混响衰减时长(0.5~12.0s）
+room 拟小型室内空        Pre Delay: 调节预延迟时间
+     间，声场紧凑        (0.0~80.0ms）
+     自然            Tone: 调节混响音色明暗(0~100）
+                   Mod: 调节混响内部调制感(0~100）
+                   Mix: 调节混响干湿比(0~100）
+
+
+
+
+-17-
+REV
+效果名称 效果描述           参数说明
+2-7 plate 板式混响，经    Decay: 调节混响衰减时长(0.5~12.0s）
+          典金属板复古    Pre Delay: 调节预延迟时间
+          音色，温暖顺    (0.0~80.0ms）
+          滑         Tone: 调节混响音色明暗（0~100）
+                    Mod: 调节混响内部调制感（0~100）
+                    Mix: 调节混响干湿比（0~100）
+
+3-7 hall   大厅混响，模   Decay: 调节混响衰减时长（0.5~12.0s）
+           拟大型音乐    Pre Delay: 调节预延迟时间
+           厅，空间宽阔   （0.0~80.0ms）
+           宏大       Tone: 调节混响音色明暗（0~100）
+                    LF Damp: 调节低频衰减阻尼（0~100）
+                    Mix: 调节混响干湿比（0~100）
+
+4-7     演奏厅混响，      Decay: 调节混响衰减时长(0.5~12.0s）
+concert 声场通透规       Pre Delay: 调节预延迟时间
+        整，适合独奏      (0.0~80.0ms）
+        演奏          HF Damp: 调节高频衰减阻尼(0~100）
+                    Mod: 调节混响内部调制感(0~100）
+                    Mix: 调节混响干湿比(0~100）
+
+
+5-7 spring 弹簧混响，复   Decay: 调节混响衰减时长(0.0~12.0s）
+           刻老式音箱弹   Pre Delay: 调节预延迟时间
+           簧回响，复古   (5.0~80.0ms）
+           摇滚质感     Crossover: 调节高低频分频点
+                    (800Hz~8kHz）
+                    Mod: 调节混响内部调制感(0~100）
+                    Mix: 调节混响干湿比(0~100）
+ -18-
+REV
+效果名称      效果描述   参数说明
+6-7       闪烁混响，带 Decay: 调节混响衰减时长(0.0~12.0s）
+shimmer   移调泛音，营 Pre Delay: 调节预延迟时间
+          造空灵梦幻氛 (5.0~120.0ms）
+          围      Tone: 调节混响音色明暗(0~100）
+                 Pitch: 调节混响移调音程(-24~24st）
+                 Mix: 调节混响干湿比(0~100）
+
+7-7 cloud 云端氛围混  Decay: 调节混响衰减时长
+          响，超长衰减 (1.0~100.0s）
+          带柔和调制， Tone: 调节混响音色明暗(0~100）
+          飘渺环境感  Mod Depth: 调节调制深度(0~100）
+                 Mod Rate: 调节调制速度
+                 (0.02~0.25Hz）
+                 Mix: 调节混响干湿比(0~100）
+
+
+EQ
+效果名称      效果描述    参数说明
+1-3 eq3   三段均衡，   Low: 调节低频音量(-15~15dB）
+          快速调节    Mid: 调节中频音量(-15~15dB）
+          低、中、高   High: 调节高频音量(-15~15dB）
+          频音色
+2-3 eq6   六段参量均   B2 (120): 120Hz 频段音量调(-15~15dB）
+          衡，多频段   B3 (250): 250Hz 频段音量调(-15~15dB）
+          精细修饰音   B4 (500): 500Hz 频段音量调(-15~15dB）
+          色       B5 (1K): 1KHz 频段音量调节(-15~15dB）
+                  B6 (2K): 2KHz 频段音量调节(-15~15dB）
+                  B7 (4K): 4KHz 频段音量调节(-15~15dB）
+
+
+-19-
+EQ
+效果名称      效果描述   参数说明
+3-3 eq8   八段全频   B1 (60): 60Hz 频段音量调(-15~15dB）
+          均衡，全   B2 (120): 120Hz 频段音量调节(-15~15dB）
+          频段精准   B3 (250): 250Hz 频段音量调节(-15~15dB）
+          塑形音色   B4 (500): 500Hz 频段音量调节(-15~15dB）
+                 B5 (1K): 1KHz 频段音量调节(-15~15dB）
+                 B6 (2K): 2KHz 频段音量调节(-15~15dB）
+                 B7 (4K): 4KHz 频段音量调节(-15~15dB）
+                 B8 (8K): 8KHz 频段音量调节(-15~15dB）
+
+
+
+
+声明：
+本列表中提及的厂商及产品名称，仅用于客观描述相关产品的音色表现与功能特性，
+不构成对任何厂商或产品的推荐、认可或背书，亦不涉及任何形式的质量保证或使用
+建议。
+所有商标名称均为其所属公司的合法财产，相关商标权依法归对应公司所有。本列表
+对上述商标的引用，仅为辅助说明产品信息之用，不构成对其商标专用权的侵犯。
+
+
+
+
+MIDI控制
+本设备支持通过标准 MIDI 协议进行全面的远程控制。无论是快速切
+换音色、开关特定效果，还是使用表情踏板进行参数的实时精细干
+预，您都可以通过MIDI控制指令表去完成设置。（MIDI指令表需到
+官网另外下载）
+
+
+-20-
+规格参数
+•A/D/A 转换: 24-bit
+•采样率: 44.1kHz
+•信噪比: 103dB
+•频段：2400MHz～2483.5MHz（2.4GHz ISM 频段）
+•设备在工作频段内发射的最大射频功率：6.4 dBm（EIRP）
+•效果模块：最大支持 8+1 个效果模块
+•预设数量: 64 个预设位置，40个出厂预设
+模拟输入连接
+•输入: 6.35mm (1/4") 非平衡输入 (TS) 接口，阻抗1MΩ
+模拟输出连接
+•输出：6.35mm (1/4") 非平衡输出 (TS) 接口，阻抗100Ω
+•立体声（耳机）输出: 3.5mm (1/8") TRS 接口，阻抗16Ω
+数字连接
+•USB接口: USB2.0 Type-C
+USB 录音规格
+•采样频率: 44.1kHz
+•采样深度: 24 位
+尺寸及重量
+•尺寸: 90.5mm（长）x 55.5mm（宽）x 36.7mm（高）
+•重量: 约126g
+电源
+•电源要求: USB-C，DC 5V 1A
+•内置锂电池: 1300mAh
+出厂附件
+•USB-C数据线、说明书、背夹配件
+
+
+
+
+-21-
+常见故障排查
+在使用 nanocore 的过程中，如果您遇到以下问题，请先参照本指
+南进行初步排查。若问题仍未解决，请联系官方售后支持。
+1.设备无法开机
+电量耗尽： 电池可能已完全耗尽。请使用符合标准的 USB-C 数据线
+和 5V 1A 电源适配器连接设备，检查充电指示灯是否亮起（红灯常
+亮）。建议充电片刻后再长按开机键尝试开机。
+按键操作： 请确认是否正确“长按”了开关机按键。
+2. 设备有工作显示，但没有声音输出
+总音量过低： 检查面板上的 MASTER 旋钮是否被调到了最低。请顺
+时针缓慢旋转以增加音量。
+接口连接错误： 确认乐器已正确插入 6.35mm INPUT 接口。请勿将
+耳机错误插入 6.35mm 输出口，监听耳机必须使用 3.5mm
+PHONES 接口。
+处于静音调音模式： 检查设备是否处于调音表界面，且开启了“静
+音调音”功能。短按 SELECTOR 旋钮或 MASTER 旋钮退出调音表界
+面。
+模块电平过低： 检查当前效果链中，AMP（箱头）、CAB（箱体）
+或其他效果模块的 Level（输出电平）参数是否被设置为了 0 或极低
+值。
+3. 声音底噪过大或有明显电流声
+增益与失真过高： 高增益（High Gain）音色本身会带来底噪放
+大。请检查 AMP 模块的 Gain 参数或失真单块的参数是否过高。
+噪声门未开启： 建议在效果链前端（如 FX1 模块）开启 gate、
+auto gate 或 NG-Com 模块，并适当调高 Threshold（阈值）直到
+消除底噪。
+电源干扰： 边充边用时，部分未经过滤的劣质电源适配器可能会引
+入交流电噪声。请尝试拔掉充电线，使用内置电池供电测试。如果
+此时底噪消失，建议更换高质量的电源适配器。
+线材问题： 检查吉他连接线是否屏蔽不良或老化，尝试更换一根高
+质量的乐器线。
+-22-
+4. BT无法连接或找不到设备
+隐藏的Nanocore Midi： 请务必注意，用于控制参数的 Nanocore
+Midi 模块在首次配对前处于“隐藏”状态。请勿在手机系统的BT设
+置中盲目搜索，必须打开官方手机 APP，在 APP 内部的连接界面进
+行搜索与配对。
+连接对象混淆： 确认您的需求。若要播放伴奏音乐，请在手机系统
+BT设置中连接 Nanocore Audio；若要调节预设参数，请在 APP 内
+连接 Nanocore Midi。
+5. 手机/电脑 USB 录音或直播没有声音
+音频输入音量： 在主界面的“全局设置”中，检查 USB Volume 是
+否被调至 0。
+Loopback未开启： 如果您希望在直播或录音时，将电脑/手机播放
+的伴奏音乐连同您的吉他声音一起录制进去，请在“全局设置”中
+确保 Loopback 选项处于 On 状态。
+OTG 线材不兼容： 连接手机/平板时，请确保使用的是支持数据传
+输的 OTG 转接线，普通的纯充电线无法传输音频数据。
+系统设备选择： 确保在电脑或录音软件（DAW）的音频设置中，已
+将输入和输出设备正确选择为 Nanocore。
+6. 关机重启后，修改的音色参数丢失
+未执行保存操作： 对预设模块参数进行调节后，设备不会自动保
+存。您必须在非主界面长按 MASTER 旋钮，或在主界面通过
+REPLACE / SWAP 操作确认保存，看到“保存成功提示”后，参数
+才会被永久写入。如果在未保存状态下切换了其他预设或关机，所
+做的修改将丢失。
+
+
+
+
+-23-
+NANOCORE Mini Multi-Effect Processor
+
+
+
+       USER MANUAL                                    EN
+
+
+
+
+                                                     MASTER
+
+
+
+                                                     SELECTOR
+
+
+
+
+※ We reserve the right to continuously upgrade and optimize our
+products. We may adjust the appearance, specifications, packaging
+design, included accessories, and other related details at any time
+without prior notice.
+Please note that product images may show slight color variations from
+the actual item due to lighting during photography and differences in
+screen displays; they are for reference only.
+To ensure you select a product that meets your needs, please confirm
+the actual features and specifications with your local dealer before
+purchasing.
+Contents
+User Guide---------------------------------------------------------- 01
+
+Device Connection & Hearing Protection -------------- 01
+
+Screen & Knob Operation Protection -------------------- 02
+
+Panel Introduction ----------------------------------------------- 03
+
+Interface Introduction ----------------------------------------- 04
+
+Global Settings Interface-------------------------------------- 05
+
+Effect Chain Interface ----------------------------------------- 06
+
+Tuner Interface --------------------------------------------------- 06
+
+Module Parameter Interface -------------------------------- 07
+
+Preset Save Operation ---------------------------------------- 08
+
+BT ---------------------------------------------------------------------- 09
+
+Companion Software ------------------------------------------ 09-10
+
+Audio Interface Function ------------------------------------- 10
+
+Effect List ------------------------------------------------------------ 10-22
+
+MIDI Control ------------------------------------------------------- 22
+
+Specifications ----------------------------------------------------- 23
+
+Troubleshooting -------------------------------------------------- 24-26
+User Guide
+Power Supply Specifications：This device is powered via a
+USB Type-C port. Please ensure you use a power adapter
+that meets DC 5V 1A specifications for charging or
+continuous operation.
+Built-in Battery Management：The device is equipped with
+a built-in 1300mAh lithium battery and supports
+pass-through charging (use while charging). The indicator
+light glows solid red during charging and turns green when
+fully charged. If the device will not be used for an
+extended period, it is recommended to charge it every
+few months to preserve battery health.
+Avoid Extreme Environments：Do not expose the device
+to excessively high temperatures (e.g., on a car
+dashboard under direct sunlight) or extremely humid
+environments, as this may cause battery overheating or
+internal circuit shorting.
+
+
+Device Connection &
+Hearing Protection
+Protect Your Hearing and Equipment：Before putting on
+monitoring headphones (connected to the 3.5mm
+PHONES jack) or connecting to an external guitar
+amplifier/mixer, always turn the MASTER knob (master
+output volume) all the way down. After putting on
+headphones or completing the connection, gradually
+increase the volume to a comfortable listening level.
+Safe Cable Handling：When plugging in or unplugging the
+6.35mm instrument input cable (INPUT) or output cable
+(OUTPUT), keep the effects unit or downstream
+
+-01-
+audio equipment muted or at low volume to avoid sudden
+pops that could damage speakers.
+
+Correct Jack Identification：Please distinguish between
+mono and stereo interfaces:
+Guitars and other instruments should connect to the
+6.35mm TS mono input (impedance: 1MΩ).
+Monitoring headphones should connect to the 3.5mm TRS
+stereo output (impedance: 16Ω).
+Do not mix them up, as incorrect connections may cause
+audio issues or equipment damage.
+
+
+
+Screen & Knob
+Operation Protection
+Gentle Operation
+The TFT screen and encoder knobs (MASTER/SELECTOR) on
+the panel are precision electronic components. Do not
+press hard on the screen or violently rotate or strike the
+knobs, as this may cause irreversible physical damage.
+
+Power-Safe Saving
+When performing advanced operations such as "Replace
+Save" or "Swap Save," please ensure the device has
+sufficient battery or is connected to a power source. Never
+force a shutdown during the save process, as this may
+result in preset data loss.
+
+
+
+
+-02-
+Panel Introduction
+                                         ① 2.4-inch TFT
+                                       ② Screen
+                                         Displays preset
+                                         information, effect
+                                         chain, adjustable
+                                         parameters, and
+                                       ③
+                                         device status.
+
+
+              ①
+② MASTER Knob (Encoder)
+Rotating controls the master output volume of the device
+(a popup will display the current volume level when
+rotated outside the main interface). Short press acts as the
+Home key to return to the main interface. Long press to
+perform preset save operations.
+③ SELECTOR Knob (Encoder)
+Rotating adjusts parameter values, switches
+presets/modules, and moves the cursor. Short press
+confirms selection, enters the edit interface, or switches
+pages.
+                                       ④ Power Button
+                                       Long press to power
+                                       on or off the device.
+                                       ⑤ USB-C Port
+                                       Connects to a 5V
+                                       power source for
+                                       charging
+        ④   ⑤ ⑥ ⑦         ⑧     ⑨
+ (supports pass-through charging). Functions as a USB
+audio interface (sound card) to connect to a computer
+for recording. Connects to the official PC software for
+ -03-
+parameter fine-tuning, preset management, IR import,
+theme/language changes, and firmware upgrades.
+Supports USB MIDI protocol for device control. Can be
+connected to a smartphone/tablet via an OTG adapter
+for synchronized audio-visual digital recording.
+⑥ Charging Indicator LED
+Glows solid red during charging; turns green when fully
+charged.
+⑦ 6.35mm TS Input Jack
+Mono input for connecting guitars, basses, and other
+instruments.
+⑧ 6.35mm TS Output Jack
+Mono output for connecting to amplifiers or mixing
+consoles.
+⑨ 3.5mm TRS Output Jack
+Stereo output for connecting monitoring headphones.
+
+Interface Introduction
+Output Input Master Preset BT      Battery
+Signal Signal Output Volume Switch Level
+
+                                         Main Interface
+                                         The device
+                                         defaults to the
+                                         main interface
+                       01 preset         upon startup.
+                                         Rotate and
+       FX1   FX2     AMP      CAB        short-press the
+                                         SELECTOR knob
+                                         to access various
+       DEL   MOD     REV       EQ        functions on the
+                                         main interface.
+
+Global FX      Tuner Preset
+Settings Chain       FX Chain Info
+-04-
+Global Settings Interface
+
+       settings
+
+ loopback
+ Input gain              +0
+ usb volume              100
+ bt volume               100
+ midi channel            0
+ firmware                0.6
+
+
+Menu       Parameter Description
+Item       Range
+Loopback On / Off    When enabled, external audio
+                     input via USB or BT can be mixed
+                     with the guitar signal and routed
+                     back through USB for recording.
+Input Gain -20dB ~   Adjust the input gain for the
+           +20dB     instrument.
+USB        0 ~ 100   Adjust the volume of audio input
+Volume               via the USB interface.
+BT Volume 0 ~ 100    Adjust the volume of audio input
+                     via Bluetooth.
+MIDI       0 ~ 16    MIDI channel: 0~16 sets the
+Channel              device's MIDI receive channel;
+                     channel 0 enables Omni mode (all
+                     channels).
+Firmware Version No. Displays the current firmware
+                     version running on the device.
+
+-05-
+Effect Chain Interface
+                                   In the effect chain
+        chain                      interface, rotate the
+                                   SELECTOR knob to
+                                   select a specific
+                                   effect module. After
+  FX1         FX2   AMP    CAB     selection, you can
+                                   move the module's
+                                   position to customize
+  DEL      MOD      REV     EQ     the order in which the
+                                   audio signal passes
+                                   through the effects.
+
+
+Tuner Interface
+                                     Reference
+        440                          Frequency
+                                     Mute Tuning
+                                     Tuner Indicator —
+                                     The needle
+                                     deflects left for flat
+                                     notes, right for
+                                     sharp notes, and
+                                     centers when in
+
+                                     Note Name Display
+Use the SELECTOR knob to select the reference frequency
+or toggle the silent tuning switch.
+Reference Frequency: Adjustable range 400Hz ~ 480Hz
+(default: 440Hz).
+Silent Tuning: ON by default; mutes the output during
+tuning.
+-06-
+Module Parameter Interface
+                                                       Module
+
+  EQ     3-3 eq8                                       Module On/Off
+
+                                                       Effect
+  B1[60] B2[120] B3[250] B4[500] B5[1K]
+
+                                                       Parameter Display
+   0.0     0.0         0.0         0.0      0.0
+   dB      dB          dB          dB       dB
+
+                   1/2                                 Parameter Page
+
+
+
+
+                                         Entering a Module: On the main
+  FX1    FX2     AMP         CAB
+                                         interface, select any module icon
+                                         and short-press the SELECTOR knob
+ DEL     MOD     REV         EQ          to enter.
+
+
+Adjusting & Page Switching: Rotate the SELECTOR knob to
+adjust specific effect parameters; when parameters
+exceed one page, use the knob to switch pages.
+
+Switching & On/Off: The interface intuitively displays the
+current module and effect. Use the SELECTOR knob to
+flexibly select and switch between different modules/ef-
+fects, and to turn the current module ON or OFF.
+
+
+
+
+-07-
+Preset Save Operation
+
+
+
+                     01 preset         Flash
+
+
+   FX1      FX2     AMP      CAB
+
+
+
+   DEL     MOD      REV      EQ
+
+
+
+
+                     01 preset
+                                       Saved successfully
+   FX1      FX2     AMP      CAB
+
+
+
+   DEL     MOD      REV      EQ
+
+
+
+
+Operation Steps
+From Main Interface
+Long-press the MASTER knob; the preset number and name
+will begin to flash.
+Rotate the SELECTOR knob to select the target preset you
+wish to overwrite or swap positions with.
+
+-08-
+Short-press the SELECTOR knob, then rotate to select
+REPLACE (overwrite) or SWAP (exchange) mode.
+Short-press the SELECTOR knob again to confirm the save. A
+"Save Successful" prompt will appear on the screen.
+
+From Non-Main Interface
+Long-press the MASTER knob to directly save the current
+preset parameters. A "Save Successful" prompt will appear
+on the screen.
+
+
+BT
+nanocore has a fully independent dual-mode Bluetooth
+module. Both can be turned ON or OFF independently
+without interfering with each other.
+Nanocore Audio (BT Audio)
+Used to receive media audio from a smartphone or tablet.
+After connecting, your phone's music can be used as
+backing tracks input to the effects processor.
+Nanocore Midi (Data BT)
+Used to connect to the official mobile app for bidirectional
+parameter synchronization, control, and modification.
+Important Note
+The Nanocore Midi module is in a "hidden" state before its
+first pairing. You must complete the pairing directly within
+the official mobile app. The device name will only appear
+in your phone's Bluetooth settings list after successful
+
+
+Companion Software
+Connect Nanocore to your computer or smartphone to use
+the free companion software for comprehensive device
+management, including tone adjustment, preset
+import/export, NAM file import, third-party IR file loading,
+
+
+-09-
+ and factory reset. The software supports desktop
+(Windows, macOS) and mobile (Android, iOS). Visit
+www.LIVTRAMUSIC.com to download and install.
+
+
+
+
+Audio Interface Function
+The device supports driver-free USB audio interface
+functionality. Simply connect to a computer and it will be
+automatically recognized as "Nanocore." It also supports
+direct connection to smartphones or tablets via OTG for
+high-quality internal recording and live streaming.
+
+
+Effect List
+FX1
+Effect Name   Description             Parameters
+1–4 gate      Eliminates low-level    Threshold: -100.0 ~
+              noise and purifies      0.0 dB
+              the input signal.
+              Adaptive noise          No manual
+2–4 auto gate gate that               parameters; the
+              automatically           device auto-detects
+              adjusts the             and adapts to signal
+              threshold based on      level changes.
+
+-10-
+FX1
+Effect Name   Description       Parameters
+3–4 NG-Com    Noise Gate +      Gate: -100.0~0.0 dB
+              Compressor        Threshold: -60.0~0.0 dB
+              combo;            Ratio: 1.1:1~20.0:1
+              simultaneously    Knee: 0.0~24.0 dB
+              optimizes         Attack: 0.0~200.0ms
+              noise floor and   Release: 0.0~1000.0ms
+              dynamic           Makeup: -24.0~24.0 dB
+              range.
+
+              Smooths           Threshold: -60.0~0.0 dB
+4–4
+              volume            Ratio: 1.1:1~20.0:1
+compressor    fluctuations      Knee: 0.0~24.0 dB
+              and stabilizes    Attack: 0.0~200.0ms
+              tone quality.     Release: 0.0~1000.0ms
+                                Makeup: -24.0~24.0 dB
+
+
+FX2
+Effect Name Description             Parameters
+1-11 scream Based on Ibanez TS9     Gain: (0.0-1.0）
+            pedal modeling.         Tone: (0-100）
+2-11 Klone  Based on Ryra The       Level: (0-100）
+            Klone pedal
+            modeling.
+3-11 OCD    Based on Fulltone
+            OCD pedal
+4-11 DS2    modeling.
+            Based on Boss DS-2
+5-11 PIFUZZ pedal modeling.
+            Based on EHX Big
+            Muff Pi pedal
+
+-11-
+FX2
+Effect Name Description              Parameters
+6-11 Range Based on
+            Dallas-Arbiter           Boost: （0.0-1.0）
+            Rangemaster pedal
+            modeling.
+7-11 XAC    Based on Xotic AC
+            Booster pedal
+            modeling.
+8-11 Fiman Based on Friedman
+            Marty Friedman
+            pedal modeling.
+9–11 Pitch  Pitch shift effect;      Pitch: -12~12 st
+            changes the signal       Fine: -1.00~1.00
+            pitch.                   Mix: 0~100
+
+10-11 Env    Envelope wah;           Freq: 10.0~20kHz
+Wah          auto-triggered filter   Env: 0.00~20kHz
+             sweep based on          Q: 0.1~20.0
+             playing dynamics.       Mix: 0~100
+
+11-11 Auto   Auto wah; cyclic        Freq: 163~3.5kHz
+Wah          sweep filter with a set Sweep: 0~100
+             waveform.               Rate: 0.00~8.00Hz
+                                     Shape: 0~100
+                                     Mix: 0~100
+
+
+
+
+-12-
+AMP
+Common       Gain (0.0~1.0)
+Parameters   Bass (-10.0~10.0dB)
+             Mid (-10.0~10.0dB)
+             Treble (-10.0~10.0dB)
+             Level (-10.0~10.0dB)
+Effect Name Description
+1-30 BogXTC1 Based on Bogner XTC preamp modeling
+             — Tone 1
+2-30 BogXTC2 Based on Bogner XTC preamp modeling
+             — Tone 2
+3-30 ENGP1   Based on ENGL Powerball E645 preamp
+             modeling — Tone 1
+4-30 ENGP2   Based on ENGL Powerball E645 preamp
+             modeling — Tone 2
+5-30 Fd59Bm Based on Fender '59 Bassman preamp
+             modeling
+6-30 Fd65Dk  Based on Fender '65 Darkface preamp
+             modeling
+7-30 Hiw103  Based on Hiwatt DR103 preamp modeling
+8-30 MarDSL1 Based on Marshall DSL50 preamp
+             modeling — Tone 1
+9-30 MarDSL2 Based on Marshall DSL50 preamp
+             modeling — Tone 2
+10-30        Based on Marshall JCM800 preamp
+Mar8001      modeling — Tone 1
+11-30        Based on Marshall JCM800 preamp
+Mar8002      modeling — Tone 2
+12-30 MesR1  Based on Mesa Boogie Rectifier preamp
+             modeling — Tone 1
+
+-13-
+AMP
+Effect Name   Description
+13-30 MesR2   Based on Mesa Boogie Rectifier preamp
+              modeling — Tone 2
+14-30 MesR3   Based on Mesa Boogie Rectifier preamp
+              modeling — Tone 3
+15-30 OgG120 Based on Orange Graphic 120 preamp
+              modeling
+16-30         Based on Peavey 5150 preamp modeling
+Pey51501      — Tone 1
+17-30         Based on Peavey 5150 preamp modeling
+Pey51502      — Tone 2
+18-30 Pey6505 Based on Peavey 6505 preamp modeling
+19-30 RanT21
+              Based on Randall T2 preamp modeling —
+20-30 RanT22 Tone 1
+              Based on Randall T2 preamp modeling —
+21-30         Tone 2
+RoJC120       Based on Roland JC-120 preamp
+22-30 SLO1001 modeling
+23-30 SLO1002 Based on Soldano SLO-100 preamp
+24-30 SLO1003 modeling — Tone 1
+25-30 VXAC30 Based on Soldano SLO-100 preamp
+26-30         modeling — Tone 2
+ApSVTVR       Based on Soldano SLO-100 preamp
+              modeling — Tone 3
+              Based on VOX AC30 preamp modeling
+
+              Based on Ampeg SVTVR preamp
+AMP
+Effect Name    Description
+27-30          Based on Ampeg SVT-CL preamp
+ApSVTCL        modeling
+28-30 Adn900   Based on Ashdown ABM900 EVO II
+               preamp modeling
+29-30 Hiw320   Based on Hiwatt Jupiter 320 preamp
+               modeling
+30-30 MarSup   Based on Marshall Super Bass preamp
+               modeling
+
+
+
+
+CAB
+Common         Low Cut (20.0~500Hz)
+Parameters     High Cut (2k~20kHz)
+Effect Name    Description
+1-30 Bog412A   Based on Bogner 4x12 cabinet — Tone A
+2-30 Bog412B   Based on Bogner 4x12 cabinet — Tone B
+3-30 Eng412A   Based on ENGL E412 Pro Vintage30 4x12
+               cabinet — Tone A
+4-30 Eng412B   Based on ENGL E412 Pro Vintage30 4x12
+               cabinet — Tone B
+5-30 FdTR212   Based on Fender Twin Reverb Darkface
+               2x12 cabinet
+6-30           Based on Fender 1959 Bassman 4x10
+Fd59BM410      cabinet
+7-30 Hiw412    Based on Hiwatt Brilliant 4x12 cabinet
+8-30 Mar412A   Based on Marshall V30 4x12 cabinet —
+               Tone A
+
+-15-
+CAB
+Effect Name   Description
+9-30 Mar412B  Based on Marshall V30 4x12 cabinet —
+              Tone B
+10-30         Based on Marshall 1960B 4x12 cabinet —
+Mar96412A     Tone A
+11-30         Based on Marshall 1960B 4x12 cabinet —
+Mar96412B     Tone B
+12-30         Based on Mesa/Boogie Oversized V30
+Mes412A       4x12 cabinet — Tone A
+13-30         Based on Mesa/Boogie Oversized V30
+Mes412B       4x12 cabinet — Tone B
+14-30         Based on Mesa/Boogie Oversized V30
+Mes412C       4x12 cabinet — Tone C
+15-30 Og412   Based on Orange Vintage30 4x12
+16-30         cabinet
+pey412A       Based on Peavey 5150 4x12 cabinet —
+17-30 pey412B Tone A
+18-30         Based on Peavey 5150 4x12 cabinet —
+peyVk412      Tone B
+19-30         Based on Peavey Valveking 4x12 cabinet
+Ran112A
+              Based on Randall RD112 1x12 cabinet —
+20-30         Tone A
+Ran112B       Based on Randall RD112 1x12 cabinet —
+21-30         Tone B
+Ran112C       Based on Randall RD112 1x12 cabinet —
+              Tone C
+22-30         Based on Soldano SLO412 4x12 cabinet
+
+
+-16-
+CAB
+Effect Name       Description
+23-30 SLO412B     Based on Soldano SLO412 4x12 cabinet
+24-30             — Tone B
+SLO412C           Based on Soldano SLO412 4x12 cabinet
+25-30             — Tone C
+AC30212           Based on VOX AC30 2x12 cabinet
+26-30 AP810
+27-30 Ap410       Based on Ampeg 8x10 cabinet
+28-30 Adn410      Based on Ampeg SVT 4x10 cabinet
+29-30 HiwB410     Based on Ashdown 4x10 cabinet
+30-30 Mar412      Based on Hiwatt B410 4x10 cabinet
+
+                  Based on Marshall 4x12 cabinet
+
+DEL
+Effect    Description                 Parameters
+Name
+1-8 BBD   Classic BBD analog          Delay: 1~2000ms
+          delay; vintage warm         Feedback: 0~95
+          tape delay texture.         Age: 0~100
+                                      Mix: 0~100
+2-8      Clean digital delay;         Time: 0.1~3000ms
+Digital  clear and transparent        Feedback: 0~95
+         tone, suitable for various   Mix: 0~100
+         genres.
+3-8 Duck Duck delay;                  Time: 0.1~3000ms
+         automatically lowers         Feedback: 0~95
+         delay tail during playing    Filter: 0~100
+         to avoid muddiness.          Mix: 0~100
+
+-17-
+DEL
+Effect     Description                  Parameters
+Name
+4-8 Ice    Ice pitch-shift delay;       Time: 0.1~3000ms
+           delayed signal with          Feedback: 0~95
+           pitch offset for ethereal    Interval: -12~12st
+           atmosphere.                  Mix: 0~100
+5-8        Reverse delay; plays         Time: 0.1~3000ms
+Reverse    back delay signal in         Feedback: 0~95
+           reverse for a dreamy          Mix: 0~100
+           spatial effect.
+6-8 LoFi   Lo-fi delay; bit-rate        Time: 2.0~3000ms
+           distortion creates           Feedback: 0~95
+           vintage degraded tape        Bit Depth: 4~16b
+           texture.                     LoFiMix: 0~100
+                                        Mix: 0~100
+7-8        Smear delay; softens         Time: 0.1~3000ms
+Smear      and blurs delay signal for   Feedback: 0~95
+           a gentle spatial             Smear: 0~100
+           diffusion.                   Filter: 0~100
+                                        Mix: 0~100
+8-8 Mod Modulated delay; delay          Time: 0.1~3000ms
+        with tremolo wobble for         Feedback: 0~95
+        richer tonal layers.            Mod Depth:
+                                        0.0~20.0ms
+                                        Mod Rate:
+                                        0.05~5.00Hz
+                                        Mix: 0~100
+
+
+
+
+-18-
+MOD
+Effect    Description                   Parameters
+Name
+1-5       Classic chorus effect;        Rate: 0.10~3.74Hz
+Chorus    widens the soundstage         Depth: 0.00~1.00ms
+          for a fuller, thicker tone.
+2-5       Phaser effect; periodic       Rate: 0.05~5.00Hz
+Phaser    sweep filtering for a         Feedback: -95~95
+          swirling, moving tone.        Mix: 0~100
+3-5       Flanger effect;               Rate: 0.05~5.00Hz
+Flanger   comb-filtering creates        Feedback: -95~95
+          an ethereal, metallic         Mix: 0~100
+          floating texture.
+4-5       Volume tremolo;               Rate: 0.01~20.0Hz
+Tremolo   cyclically fluctuates         Depth: 0~100
+          volume based on               Wave: Sine/Triangle/
+          waveform.                     Square/Saw
+                                        Smooth: 0.00~40.0Hz
+                                        Mix: 0~100
+                                        Rate: 0.01~20.0Hz
+5-5       Pitch vibrato;                Depth: 0.0~20.0ms
+Vibrato   subtly fluctuates pitch       Wave: Sine/Triangle
+          to enrich the tone.           /Square/Saw
+                                        Mix: 0~100
+
+REV
+Effect    Description                    Parameters
+Name
+1-7       Room reverb;                   Decay: 0.5~12.0s
+Room      simulates a small indoor       Pre Delay:
+          space with a compact,          0.0~80.0ms
+          natural sound.                 Tone: 0~100
+                                         Mod: 0~100
+                                         Mix: 0~100
+
+-19-
+REV
+Effect    Description                  Parameters
+Name
+2-7 Plate Plate reverb; classic        Decay: 0.5~12.0s
+          metal plate vintage          Pre Delay:
+          tone, warm and smooth.       0.0~80.0ms
+                                       Tone: 0~100
+                                       Mod: 0~100
+                                       Mix: 0~100
+3-7 Hall   Hall reverb; simulates a    Decay: 0.5~12.0s
+           large concert hall with a   Pre Delay:
+           wide, grand spatial feel.   0.0~80.0ms
+                                       Tone: 0~100
+                                       LF Damp: 0~100
+                                       Mix: 0~100
+
+4-7     Concert hall reverb;           Decay: 0.5~12.0s
+Concert transparent and                Pre Delay:
+        structured, ideal for solo     0.0~80.0ms
+        performances.                  HF Damp: 0~100
+                                       Mod: 0~100
+                                       Mix: 0~100
+5-7        Spring reverb; emulates     Decay: 0.0~12.0s
+Spring     vintage amp spring          Pre Delay:
+           reverb with retro-rock      5.0~80.0ms
+           texture.                    Crossover:
+                                       800Hz~8kHz
+                                       Mod: 0~100
+                                       Mix: 0~100
+
+
+-20-
+REV
+Effect  Description                  Parameters
+Name
+6-7     Shimmer reverb;              Decay: 0.0~12.0s
+Shimmer pitch-shifted overtones      Pre Delay:
+        create an ethereal,          5.0~120.0ms
+        dreamy atmosphere.           Tone: 0~100
+                                     Pitch: -24~24st
+                                     Mix: 0~100
+7-7       Cloud ambient reverb;      Decay: 1.0~100.0s
+Cloud     ultra-long decay with      Tone: 0~100
+          soft modulation for a      Mod Depth: 0~100
+          floating environmental     Mod Rate:
+          feel.                      0.02~0.25Hz
+                                     Mix: 0~100
+
+
+EQ
+Effect    Description              Parameters
+Name
+1-3 EQ3   3-band EQ; quickly       Low: -15~15dB
+          adjust low, mid, and     Mid: -15~15dB
+          high frequencies.        High: -15~15dB
+2-3 EQ6   6-band parametric        B2(120): 120Hz ±15dB
+          EQ; multi-band           B3(250): 250Hz ±15dB
+          fine-tuning of tone.     B4(500): 500Hz ±15dB
+                                   B5(1K): 1KHz ±15dB
+                                   B6(2K): 2KHz ±15dB
+                                   B7(4K): 4KHz ±15dB
+
+
+
+-21-
+ EQ
+ Effect       Description                      Parameters
+ Name
+ 3-3 EQ8      8-band full-range EQ;            B1(60): 60Hz ±15dB
+              precise tonal shaping            B2(120): 120Hz ±15dB
+              across the entire                B3(250): 250Hz ±15dB
+              frequency spectrum.              B4(500): 500Hz ±15dB
+                                               B5(1K): 1KHz ±15dB
+                                               B6(2K): 2KHz ±15dB
+                                               B7(4K): 4KHz ±15dB
+                                               B8(8K): 8KHz ±15dB
+
+Trademark Statement：
+The manufacturer and product names mentioned in this list are used
+solely to objectively describe the tonal characteristics and functional
+features of the related products. They do not constitute a
+recommendation, endorsement, or sponsorship of any manufacturer or
+product, nor do they imply any form of quality assurance or usage
+advice.
+All trademarks are the legitimate property of their respective owners, and
+the trademark rights belong to the respective companies. References to
+these trademarks in this list are for auxiliary description purposes only and
+
+
+
+
+MIDI Control
+This device supports comprehensive remote control via the
+standard MIDI protocol. Whether you need to quickly
+switch tones, toggle specific effects, or use an expression
+pedal for real-time fine-tuning of parameters, you can
+accomplish all of these through the MIDI control command
+table (available for separate download from the official
+website).
+
+
+
+-22-
+Specifications
+•A/D/A Conversion: 24-bit
+•Sample Rate: 44.1kHz
+•SNR (Signal-to-Noise Ratio): 103dB
+•Frequency Band: 2400MHz ~ 2483.5MHz (2.4GHz ISM Band)
+•Max RF Power (EIRP): 6.4dBm
+•Effect Modules: Max 8+1 effect modules
+•Presets: 64 preset slots, 40 factory presets
+•Input: 6.35mm (1/4") unbalanced TS jack, impedance 1MΩ
+•Output: 6.35mm (1/4") unbalanced TS jack, impedance 100Ω
+•Headphone Output: 3.5mm (1/8") TRS stereo jack,
+impedance 16Ω
+•USB Interface: USB 2.0 Type-C
+•USB Recording Sample Rate: 44.1kHz / 24-bit
+•Dimensions: 90.5mm (L) x 55.5mm (W) x 36.7mm (H)
+•Weight: Approx. 126g
+•Power Requirement: USB-C, DC 5V 1A
+•Built-in Battery: 1300mAh lithium battery
+•Included Accessories: USB-C cable, user manual, back-clip
+accessory
+
+
+
+
+ -23-
+Troubleshooting
+If you encounter any of the following issues while using
+nanocore, please refer to this guide for initial troubleshooting.
+If the problem persists, please contact official after-sales
+support.
+
+1. Device Fails to Power On
+Battery Depleted
+The battery may be completely drained. Use a standard
+USB-C cable and a 5V 1A power adapter to connect the
+device and check whether the charging indicator lights up
+(solid red). It is recommended to charge for a while before
+long-pressing the power button to attempt startup.
+Button Operation
+Please confirm whether you correctly performed a "long
+press" on the power button.
+
+2. Device Is Operational but No Sound Output
+Master Volume Too Low
+Check whether the MASTER knob on the panel has been
+turned all the way down. Rotate it clockwise slowly to
+increase the volume.
+Incorrect Jack Connection
+Confirm that the instrument is correctly plugged into the
+6.35mm INPUT jack. Do not mistakenly insert headphones into
+the 6.35mm output jack; monitoring headphones must use the
+3.5mm PHONES jack.
+Silent Tuning Mode Active
+Check whether the device is in the tuner interface with the
+"Silent Tuning" function enabled. Short-press the SELECTOR
+knob or MASTER knob to exit the tuner interface.
+Module Level Too Low
+Check whether the Level (output level) parameter of the
+AMP, CAB, or other effect modules in the current effect chain
+has been set to 0 or an extremely low value.
+-24-
+Cable Issues
+Check whether the guitar cable has poor shielding or is aged.
+Try replacing it with a high-quality instrument cable.
+
+3. Excessive Noise or Noticeable Hum/Buzz Sound
+Gain and Distortion Too High
+High-gain (High Gain) tones inherently amplify background
+noise. Check the Gain parameter of the AMP module or the
+overdrive pedal parameters.
+Noise Gate Not Enabled
+It is recommended to enable the Gate, Auto Gate, or
+NG-Com module at the front of the effect chain and
+appropriately increase the Threshold until the noise is
+eliminated.
+Power Supply Interference
+When charging and using simultaneously, some unfiltered,
+low-quality power adapters may introduce AC noise. Try
+disconnecting the charging cable and using the built-in
+battery for power. If the noise disappears, replace the power
+adapter with a high-quality one.
+
+4. Bluetooth Cannot Connect or Device Not Found
+Hidden Nanocore Midi
+Important: The Nanocore Midi module used for parameter
+control is in a "hidden" state before its first pairing. Do not
+blindly search in your phone's Bluetooth settings. You must
+open the official mobile app and perform the search and
+pairing within the app's connection interface.
+Connection Target Confusion
+Confirm your requirement:
+•To play backing music: Connect to "Nanocore Audio" in your
+phone's system Bluetooth settings.
+•To adjust preset parameters: Connect to "Nanocore Midi"
+within the app.
+
+
+-25-
+5. No Sound During USB Recording or
+Live Streaming on
+Phone/PC
+Audio Input Volume
+In the "Global Settings" on the main interface, check whether
+USB Volume has been set to 0.
+Loopback Not Enabled
+If you want to record backing music played on your
+computer/phone together with your guitar sound during live
+streaming or recording, ensure that the Loopback option in
+"Global Settings" is set to ON.OTG Cable Incompatibility
+When connecting to a smartphone or tablet, ensure you are
+using an OTG adapter that supports data transfer. A regular
+charging-only cable cannot transmit audio data.
+System Device Selection
+Ensure that the input and output devices are correctly set to
+"Nanocore" in your computer's or DAW's audio settings.
+
+6. Modified Tone Parameters Lost After Shutdown/Restart
+Save Operation Not Performed
+After adjusting preset module parameters, the device does
+NOT auto-save. You must long-press the MASTER knob from a
+non-main interface, or confirm the save via REPLACE/SWAP
+from the main interface. Parameters will only be permanently
+written after you see the "Save Successful" prompt. If you
+switch to another preset or shut down without saving, all
+modifications will be lost.
+
+
+
+
+-26-
+
