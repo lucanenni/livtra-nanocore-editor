@@ -74,5 +74,61 @@ export const mod: BlockSpec = {
         range('level', 72, 0, 100, { default: 70 }),
       ],
     },
+    // --- Added in a later firmware update (post-1.04, exact version unconfirmed — the manual
+    // and MIDI guide have not been updated to document it). IDs are NOT continuous with the
+    // original 5 above or with each other — confirmed empirically on hardware (CC45 values
+    // 5-9 and 13-16 select nothing); see docs/MIDI_MAPPING_NOTES.md for the full story.
+    {
+      id: 10,
+      slug: 'velvet_vibrato',
+      name: 'Velvet Vibrato',
+      description: 'Richer, multi-voice take on Vibrato from a later firmware update.',
+      params: [
+        range('rate', 68, 0.45, 10, { unit: 'Hz', decimals: 2, default: 5 }),
+        range('wave', 69, 0, 100, { default: 50 }),
+        range('voice', 70, 0, 100, { default: 50 }),
+        range('depth', 71, 0, 100, { default: 50 }),
+        range('mix', 72, 0, 100, { default: 50 }),
+      ],
+    },
+    {
+      id: 11,
+      slug: 'chorus_ii',
+      name: 'Chorus II',
+      description: 'Alternate chorus algorithm from a later firmware update.',
+      params: [
+        range('rate', 68, 0, 1, { decimals: 2, default: 0.5 }),
+        range('amount', 69, 0, 1, { decimals: 2, default: 0.5 }),
+        range('feedback', 70, 0, 1, { decimals: 2, default: 0 }),
+        range('mix', 71, 0, 1, { decimals: 2, default: 0.5 }),
+      ],
+    },
+    {
+      id: 12,
+      slug: 'phaser_ii',
+      name: 'Phaser II',
+      description: 'Alternate phaser algorithm from a later firmware update.',
+      warning:
+        'Confirmed on real hardware: none of this type\'s parameters respond to MIDI — and not ' +
+        'from the official Livtra app either, so this looks like a current firmware limitation ' +
+        'rather than something specific to this editor. Selecting Phaser II itself works fine; ' +
+        'its Depth/Rate/Feedback/Mix controls just have no effect yet. See MIDI_MAPPING_NOTES.md.',
+      params: [],
+    },
+    {
+      id: 17,
+      slug: 'jet_flanger',
+      name: 'Jet Flanger',
+      description: 'Alternate flanger algorithm from a later firmware update.',
+      warning:
+        "Confirmed on real hardware: Feedback, Phase and Mix don't respond to MIDI — and not " +
+        'from the official Livtra app either, so this looks like a current firmware limitation ' +
+        'rather than something specific to this editor. Only Rate and Depth (shown below) work; ' +
+        'the other three are omitted here rather than shown as dead controls. See MIDI_MAPPING_NOTES.md.',
+      params: [
+        range('rate', 68, 0, 1, { decimals: 2, default: 0.5 }),
+        range('depth', 69, 0, 1, { decimals: 2, default: 0.5 }),
+      ],
+    },
   ],
 };

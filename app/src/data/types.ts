@@ -62,6 +62,10 @@ export interface EffectType {
   params: ParamSpec[];
   /** Set when selecting this type repurposes another block's parameter CCs (routing caveat). */
   note?: string;
+  /** Set when something about this specific type is confirmed broken/unsupported over MIDI on
+   * real hardware — rendered as a prominent warning banner, same as BlockSpec.warning but
+   * scoped to just this type instead of the whole block. See docs/MIDI_MAPPING_NOTES.md. */
+  warning?: string;
 }
 
 export interface BlockSpec {

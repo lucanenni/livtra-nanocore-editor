@@ -27,12 +27,16 @@ describe('nanocoreSpec structural integrity', () => {
     }
   });
 
-  it.each(nanocoreSpec.blocks)('block "$id": type ids are unique, continuous, and slugs are unique', (block) => {
+  it.each(nanocoreSpec.blocks)('block "$id": type ids are unique, ascending, and slugs are unique', (block) => {
     const ids = block.types.map((t) => t.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toEqual([...ids].sort((a, b) => a - b));
     expect(ids[0]).toBe(0);
-    expect(ids[ids.length - 1]).toBe(ids.length - 1); // continuous per MIDI guide ("IDs are continuous")
+    // NOT asserted: ids are continuous. The MIDI guide says "IDs are continuous; future types
+    // append at the end", but a firmware update confirmed MOD's new types (Chorus II, Phaser
+    // II, Jet Flanger, Velvet Vibrato) landed at ids 10/11/12/17 with gaps at 5-9/13-16 that
+    // do nothing — so this is firmware-version-dependent, not a hard invariant. See
+    // MIDI_MAPPING_NOTES.md.
 
     const slugs = block.types.map((t) => t.slug);
     expect(new Set(slugs).size).toBe(slugs.length);

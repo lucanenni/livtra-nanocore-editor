@@ -16,6 +16,38 @@ now complete) confirmed it holds across every parameter "shape" checked (dB,
 ms, ratio, index, semitones, Hz). If a future firmware update changes
 behavior, re-run that checklist and adjust `app/src/data/blocks/*.ts` as needed.
 
+## Post-1.04 firmware update: MOD gets 4 new types
+
+Livtra shipped a firmware update (exact version unconfirmed — neither the manual nor the MIDI
+guide has been updated to document it yet) whose release notes mentioned new MOD types among
+other changes. Investigated empirically on real hardware, the same way as everything else in
+this file, since there's no updated document to read from:
+
+- **The original 5 MOD types kept their exact ids (0-4)** — chorus/phaser/flanger/tremolo/
+  vibrato are unchanged, no code changes needed there.
+- **4 new types were added, but not contiguously**: `Velvet Vibrato`=10, `Chorus II`=11,
+  `Phaser II`=12, `Jet Flanger`=17. IDs 5-9 and 13-16 select nothing (confirmed by testing
+  every value up to 30) — this breaks the MIDI guide's original "IDs are continuous" claim, so
+  it's evidently a firmware-version-dependent convention, not a hard rule. (Do **not** assume
+  device-screen display order matches CC id order when investigating this kind of thing —
+  that's exactly the mistake that caused the original REV bug above; always confirm the actual
+  CC value against what the device selects, one type at a time.)
+- **`Velvet Vibrato`** (CC68-72): Rate (0.45-10Hz), Wave (0-100), Voice (0-100), Depth (0-100),
+  Mix (0-100) — fully functional.
+- **`Chorus II`** (CC68-71): Rate, Amount, Feedback, Mix, all 0.00-1.00 — fully functional.
+- **`Phaser II`**: shown on-device with Depth/Rate/Feedback/Mix (all 0.00-1.00), but **none of
+  them respond to MIDI — confirmed via the official Livtra app too**, not just this editor, so
+  this is a current firmware limitation rather than a mapping error. Selecting the type itself
+  (CC45=12) works fine; modeled in the data as a type with zero params plus a `warning` rather
+  than guessed-at dead controls.
+- **`Jet Flanger`**: shown on-device with Rate/Depth/Feedback/Phase/Mix (all 0.00-1.00), but
+  only **Rate (CC68) and Depth (CC69) actually work** — Feedback/Phase/Mix don't, confirmed via
+  the official app too. Modeled with only Rate/Depth as params, plus a `warning` explaining the
+  other three are omitted rather than shown non-functional.
+
+If a later firmware/manual update fixes Phaser II or the rest of Jet Flanger, revisit both
+`warning`s in `mod.ts` and add the missing params then.
+
 ## Confirmed against real hardware (firmware 1.04+)
 
 Findings from working through `HARDWARE_VERIFICATION.md` with an actual

@@ -58,9 +58,9 @@ export function BlockEditor({ blockId }: Props) {
         </select>
       </div>
 
-      {block.warning && (
+      {(block.warning || type.warning) && (
         <p className="block-editor__warning" role="alert">
-          {block.warning}
+          {block.warning ?? type.warning}
         </p>
       )}
 
@@ -73,9 +73,14 @@ export function BlockEditor({ blockId }: Props) {
       {block.id === 'mod' && <RoutingWarning />}
 
       {params.length === 0 ? (
-        <p className="block-editor__no-params">
-          {t('block.noParams', 'This effect type has no user-adjustable parameters — it self-adjusts automatically.')}
-        </p>
+        // If there's already a warning explaining why (e.g. "confirmed broken on this
+        // firmware"), don't also claim it "self-adjusts automatically" — that's only true for
+        // genuinely automatic types like Auto Gate, not ones with no *working* controls.
+        !type.warning && (
+          <p className="block-editor__no-params">
+            {t('block.noParams', 'This effect type has no user-adjustable parameters — it self-adjusts automatically.')}
+          </p>
+        )
       ) : (
         <div className="block-editor__params">
           {params.map((spec) => (
