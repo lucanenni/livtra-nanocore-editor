@@ -99,5 +99,24 @@ export const fx2: BlockSpec = {
         range('level', 73, 0, 100, { default: 70 }),
       ],
     },
+    // Added in a later firmware update (post-1.04, exact version unconfirmed — manual/MIDI
+    // guide not updated yet). Confirmed contiguous with Wah (id 10) — unlike MOD's new types
+    // from the same update, which landed non-contiguously. See MIDI_MAPPING_NOTES.md.
+    {
+      id: 11,
+      slug: 'motion_wah',
+      name: 'Motion Wah',
+      description: 'Cyclic wah filter from a later firmware update.',
+      note: ROUTING_NOTE,
+      warning:
+        "Confirmed on real hardware: Sweep and Mix don't respond to MIDI — and not from the " +
+        'official Livtra app either, so this looks like a current firmware limitation rather ' +
+        'than something specific to this editor. Only Rate and Voice (shown below) work; the ' +
+        'other two are omitted here rather than shown as dead controls. See MIDI_MAPPING_NOTES.md.',
+      params: [
+        range('rate', 68, 0, 15, { unit: 'Hz', decimals: 1, default: 2 }),
+        range('voice', 69, 0, 100, { default: 50 }),
+      ],
+    },
   ],
 };

@@ -2,8 +2,9 @@ import { findType } from './patchDefaults';
 import { fx2 } from '../data/nanocoreSpec';
 import type { PatchState } from './patchTypes';
 
-/** FX2 type ids that repurpose CC68-73 away from MOD (Pitch / Envelope Wah / Wah). */
-const FX2_SPECIAL_TYPE_IDS = [8, 9, 10];
+/** FX2 type ids that repurpose CC68-73 away from MOD (Pitch / Envelope Wah / Wah / Motion Wah —
+ * the last one added in a post-1.04 firmware update, see MIDI_MAPPING_NOTES.md). */
+const FX2_SPECIAL_TYPE_IDS = [8, 9, 10, 11];
 
 export interface RoutingConflict {
   active: boolean;

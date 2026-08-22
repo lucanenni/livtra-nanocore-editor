@@ -62,6 +62,14 @@ not broken, just SysEx-only, same situation as AMP/CAB model selection:
   there is for AMP/CAB's type dropdown, so quietly omitting is more consistent with how CC67
   (CAB Level) and CC72 (FX2 Envelope Wah Level) were handled.
 
+Same update also added one new type to **FX2**: **`Motion Wah`** = id 11 (confirmed — unlike
+MOD's new types, this one *is* contiguous, right after Wah=10). Params: Rate (CC68, 0-15Hz) and
+Voice (CC69, 0-100) are fully functional; Sweep and Mix are shown on-device but **confirmed
+non-functional even from the official app** — same Phaser II/Jet Flanger treatment (`warning`,
+those two omitted). Motion Wah also participates in the CC68-73 MOD/FX2 routing conflict
+(`FX2_SPECIAL_TYPE_IDS` in `store/routing.ts` updated to include it) since its working params
+land in that shared range.
+
 ## Confirmed against real hardware (firmware 1.04+)
 
 Findings from working through `HARDWARE_VERIFICATION.md` with an actual
