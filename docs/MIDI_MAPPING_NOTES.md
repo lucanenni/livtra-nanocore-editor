@@ -48,6 +48,20 @@ this file, since there's no updated document to read from:
 If a later firmware/manual update fixes Phaser II or the rest of Jet Flanger, revisit both
 `warning`s in `mod.ts` and add the missing params then.
 
+Same update also added three params to FX1 that turned out to be a *different* kind of gap —
+not broken, just SysEx-only, same situation as AMP/CAB model selection:
+
+- **Gate's new Release** (5.0-100.0ms) and **Auto Gate's new Sensitivity** (-6.0~6.0dB) and
+  **Release** (20.0-300.0ms): exhaustively tested every CC in FX1's param range (50-56, with
+  the relevant type — Gate or Auto Gate — actually selected) via direct MIDI monitoring; none
+  of them move any of the three. Confirmed via the official Livtra app that these params *are*
+  adjustable there — but the app sends **SysEx**, not a CC, to do it. Same conclusion and same
+  decision as AMP/CAB: not pursuing SysEx reverse-engineering, so these three stay out of
+  `fx1.ts` entirely (no dead sliders) rather than getting the `warning` treatment used for
+  Phaser II/Jet Flanger — there's no meaningful "selection" affordance to preserve here the way
+  there is for AMP/CAB's type dropdown, so quietly omitting is more consistent with how CC67
+  (CAB Level) and CC72 (FX2 Envelope Wah Level) were handled.
+
 ## Confirmed against real hardware (firmware 1.04+)
 
 Findings from working through `HARDWARE_VERIFICATION.md` with an actual
