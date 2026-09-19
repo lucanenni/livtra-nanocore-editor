@@ -1,0 +1,18 @@
+app/node_modules/
+app/dist/
+app/dist-artifact/
+app/dist-portable/
+.DS_Store
+*.log
+app/dist-pages/
+
+# session scratch tooling (hardware-query scripts, capture dumps)
+.scratch/
+
+# Obsidian vault config (created by opening the repo/docs as a vault)
+.obsidian/
+
+# Livtra's official manuals — not ours to redistribute; cited by URL in the README
+docs/*.pdf
+docs/manual.txt
+docs/midi.txt
