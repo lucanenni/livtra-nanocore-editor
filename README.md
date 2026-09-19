@@ -171,7 +171,14 @@ what's on screen. **Rename patch on device** (also under Presets) renames the
 device's own currently active/edited patch, up to its real 8-character limit
 — also reverse-engineered from a real capture (opcode `0x6d`, field `0x08`).
 Like any other live tweak, it isn't persisted until you Save to device slot
-afterward.
+afterward. **Online Tone Library** (also under Presets) is a plain link out to
+Livtra's own RESONA tone library at livtramusic.com — its API doesn't allow
+requests from other pages (no CORS), and this editor has no backend to route
+around that, so browsing/importing it inline isn't possible; downloading also
+needs a Livtra account, and loading a downloaded tone onto the device would
+need the same complex profile-upload protocol as custom AMP models, which
+this project hasn't taken on. See `docs/MIDI_MAPPING_NOTES.md` for the
+investigation.
 
 **CC Reference.** A full table of every CC this editor's data model knows
 about — on/off, type-select, and every parameter, for all 8 blocks plus the

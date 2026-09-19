@@ -54,6 +54,9 @@
   },
   "preset": {
     "title": "Libreria preset",
+    "onlineLibraryTitle": "Libreria toni online",
+    "onlineLibraryHint": "La libreria toni RESONA di Livtra vive su livtramusic.com, non in questo editor — il loro sito non permette richieste da altre pagine, quindi sfogliare o importare un tono qui non è ancora possibile (anche scaricarlo richiede un account Livtra). Anche caricare un tono scaricato sul dispositivo non è supportato — servirebbe lo stesso protocollo complesso di upload dei profili usato per i modelli AMP personalizzati, che questo progetto non ha ancora affrontato.",
+    "onlineLibraryLink": "Apri la libreria toni ↗",
     "sendToDevice": "Invia patch al dispositivo",
     "sendToDeviceHint": "Trasmette on/off, tipo e parametri di ogni blocco della patch corrente. Ricorda di salvarla sul dispositivo (pressione lunga su MASTER) se vuoi che sia permanente.",
     "exportCurrent": "Esporta patch corrente (.json)",

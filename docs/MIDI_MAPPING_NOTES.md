@@ -972,6 +972,34 @@ exact scenario the original bug report described; it now works.
   device. Given the spec sheet's "Max 8+1 effect modules" line, these are most
   likely reserved for a 9th block not yet exposed by firmware 1.04.
 
+## Online Tone Library (RESONA) — investigated 2026-09-19, link-out only for now
+
+ToneCommand v1.2.8/1.3.0 added "online Tone Library" browsing/import. Turns out this isn't a
+MIDI/SysEx question at all — the "library" is just ToneCommand embedding
+**`https://livtramusic.com/tones`**, a normal public website, with a Livtra account only required
+to actually download a tone. Investigated with nothing more than a browser (no traffic capture
+needed, unlike everything else in this document):
+
+- **The browse/list API is genuinely public**: `GET https://livtramusic.com/api/tones` returns
+  full JSON with no login — id, slug, title, description, category, download/like counts,
+  timestamps, cover image URL, author, tags, and a `file` descriptor (name, size, mimeType,
+  sha256). The file name extension is **`.eadl`**.
+- **This editor can't call that API directly — no CORS.** A `fetch()` from this editor's real
+  deployed origin (`https://lucanenni.github.io`) to `livtramusic.com/api/tones` fails outright
+  (no `Access-Control-Allow-Origin` header) — confirmed by contrast with the identical call
+  succeeding when run from `livtramusic.com` itself. The API is built for Livtra's own frontend
+  only. Since this editor is a static page with no backend by design, there's no server-side hop
+  to route around this without a real architecture change.
+- **Even past that, loading a tone onto the device hits the same wall custom AMP models already
+  did.** `.eadl` is almost certainly the same NAM-style neural amp-profile format found bundled in
+  ToneCommand's own assets when this project first looked at AMP/CAB model selection — uploading
+  one to the device needs a complex chunked SysEx transfer, previously judged too complex to
+  pursue for this project (see "Resolved: AMP/CAB type switching..." above).
+
+**Current state**: the editor links out to `livtramusic.com/tones` (Presets tab, "Online Tone
+Library") instead of embedding a browse UI — a plain link has no CORS problem. Actually
+implementing device-side tone import remains a real possibility but is deliberately not started.
+
 ## Source documents
 
 Livtra's official documentation — not redistributed in this repo (theirs to

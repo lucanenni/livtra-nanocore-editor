@@ -54,6 +54,9 @@
   },
   "preset": {
     "title": "Preset Library",
+    "onlineLibraryTitle": "Online Tone Library",
+    "onlineLibraryHint": "Livtra's RESONA tone library lives on livtramusic.com, not in this editor — its own site doesn't allow requests from other pages, so browsing or importing a tone here isn't possible yet (downloading also requires a Livtra account). Loading a downloaded tone onto the device isn't supported either — it needs the same complex profile-upload protocol as custom AMP models, which this project hasn't taken on.",
+    "onlineLibraryLink": "Open Tone Library ↗",
     "sendToDevice": "Send patch to device",
     "sendToDeviceHint": "Transmits every block's on/off, type and parameter CC for the current patch. Remember to save it on the device afterwards (long-press MASTER) if you want it to persist.",
     "exportCurrent": "Export current patch (.json)",

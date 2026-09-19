@@ -88,6 +88,19 @@ export function PresetPanel() {
     <section className="preset-panel">
       <h2 className="panel-title">{t('preset.title', 'Preset Library')}</h2>
 
+      <div className="preset-panel__recall">
+        <h3 className="panel-subtitle">{t('preset.onlineLibraryTitle', 'Online Tone Library')}</h3>
+        <p className="panel-hint">
+          {t(
+            'preset.onlineLibraryHint',
+            "Livtra's RESONA tone library lives on livtramusic.com, not in this editor — its own site doesn't allow requests from other pages, so browsing or importing a tone here isn't possible yet (downloading also requires a Livtra account). Loading a downloaded tone onto the device isn't supported either — it needs the same complex profile-upload protocol as custom AMP models, which this project hasn't taken on.",
+          )}
+        </p>
+        <a className="btn btn--ghost btn--small" href="https://livtramusic.com/tones" target="_blank" rel="noopener noreferrer">
+          {t('preset.onlineLibraryLink', 'Open Tone Library ↗')}
+        </a>
+      </div>
+
       <div className="preset-panel__push">
         <button type="button" className="btn btn--accent" onClick={sendFullPatch} disabled={!connectionReady}>
           {t('preset.sendToDevice', 'Send patch to device')}
