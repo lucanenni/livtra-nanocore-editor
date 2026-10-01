@@ -1,0 +1,17 @@
+{
+  "name": "nanocore-editor-workspace",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "app"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace app",
+    "build": "npm run build --workspace app",
+    "lint": "oxlint packages app/src",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "build:mcp": "npm run build --workspace packages/mcp"
+  }
+}

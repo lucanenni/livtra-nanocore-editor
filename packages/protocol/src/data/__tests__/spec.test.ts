@@ -1,0 +1,127 @@
+import { describe, expect, it } from 'vitest';
+import { nanocoreSpec } from '../nanocoreSpec';
+import type { BlockSpec } from '../types';
+
+const EXPECTED_BLOCK_IDS = ['fx1', 'fx2', 'amp', 'cab', 'mod', 'del', 'rev', 'eq'];
+
+describe('nanocoreSpec structural integrity', () => {
+  it('has exactly the 8 documented blocks, in chain order', () => {
+    expect(nanocoreSpec.blocks.map((b) => b.id)).toEqual(EXPECTED_BLOCK_IDS);
+  });
+
+  it.each(nanocoreSpec.blocks)('block "$id": on/off and type CCs are valid MIDI CC numbers', (block) => {
+    expect(block.onOffCC).toBeGreaterThanOrEqual(0);
+    expect(block.onOffCC).toBeLessThanOrEqual(127);
+    expect(block.typeCC).toBeGreaterThanOrEqual(0);
+    expect(block.typeCC).toBeLessThanOrEqual(127);
+  });
+
+  it('every block/type on-off + type CC pair is unique across the device (no cross-block clash)', () => {
+    const seen = new Map<number, string>();
+    for (const block of nanocoreSpec.blocks) {
+      for (const cc of [block.onOffCC, block.typeCC]) {
+        const owner = seen.get(cc);
+        expect(owner, `CC${cc} used by both "${owner}" and "${block.id}"`).toBeUndefined();
+        seen.set(cc, block.id);
+      }
+    }
+  });
+
+  it.each(nanocoreSpec.blocks)('block "$id": type ids are unique, ascending, and slugs are unique', (block) => {
+    const ids = block.types.map((t) => t.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toEqual([...ids].sort((a, b) => a - b));
+    expect(ids[0]).toBe(0);
+    // NOT asserted: ids are continuous. The MIDI guide says "IDs are continuous; future types
+    // append at the end", but a firmware update confirmed MOD's new types (Chorus II, Phaser
+    // II, Jet Flanger, Velvet Vibrato) landed at ids 10/11/12/17 with gaps at 5-9/13-16 that
+    // do nothing — so this is firmware-version-dependent, not a hard invariant. See
+    // MIDI_MAPPING_NOTES.md.
+
+    const slugs = block.types.map((t) => t.slug);
+    expect(new Set(slugs).size).toBe(slugs.length);
+  });
+
+  it('AMP and CAB each expose all 30 documented preamp/cabinet models', () => {
+    const amp = nanocoreSpec.blocks.find((b) => b.id === 'amp') as BlockSpec;
+    const cab = nanocoreSpec.blocks.find((b) => b.id === 'cab') as BlockSpec;
+    expect(amp.types).toHaveLength(30);
+    expect(cab.types).toHaveLength(30);
+  });
+
+  it.each(nanocoreSpec.blocks)('block "$id": every param CC is valid and every type\'s active param set has no CC collisions', (block) => {
+    for (const type of block.types) {
+      const active = [...(block.commonParams ?? []), ...type.params];
+      // A range param with no CC at all (RangeParam.sysexParamIndex set instead — see
+      // midi/sysex.ts's SET_FIELD_OPCODE doc comment) is sent via SysEx, not CC.
+      const ccBearing = active.filter((p) => p.cc !== undefined);
+      const ccs = ccBearing.map((p) => p.cc);
+      for (const p of ccBearing) {
+        expect(p.cc, `${block.id}/${type.slug}/${p.id}`).toBeGreaterThanOrEqual(0);
+        expect(p.cc, `${block.id}/${type.slug}/${p.id}`).toBeLessThanOrEqual(127);
+      }
+      expect(new Set(ccs).size, `${block.id}/${type.slug} has duplicate CCs: ${ccs.join(',')}`).toBe(ccs.length);
+    }
+  });
+
+  it.each(nanocoreSpec.blocks)('block "$id": sysexParamIndex is >= its param\'s array position and strictly increasing', (block) => {
+    // Usually equal to the array position (appending a new param at the end of its type's own
+    // `params` gives it the right index automatically) — but not always: the device's own param
+    // array can have a gap our model doesn't otherwise represent (confirmed for FX2 Motion Wah's
+    // Sweep/Mix, which skip a reserved always-zero slot — see data/blocks/fx2.ts). What must
+    // still hold: it can never point at or before an EARLIER param's position (that would mean
+    // two params fighting over the same wire index), and two sysexParamIndex values in the same
+    // type can never collide.
+    for (const type of block.types) {
+      const active = [...(block.commonParams ?? []), ...type.params];
+      let lastSysexIndex = -1;
+      active.forEach((p, i) => {
+        if (p.kind === 'range' && p.sysexParamIndex !== undefined) {
+          expect(p.sysexParamIndex, `${block.id}/${type.slug}/${p.id}`).toBeGreaterThanOrEqual(i);
+          expect(p.sysexParamIndex, `${block.id}/${type.slug}/${p.id}`).toBeGreaterThan(lastSysexIndex);
+          expect(p.cc, `${block.id}/${type.slug}/${p.id} has both a CC and a sysexParamIndex`).toBeUndefined();
+          lastSysexIndex = p.sysexParamIndex;
+        }
+      });
+    }
+  });
+
+  it.each(nanocoreSpec.blocks)('block "$id": range params have min < max, enum params have >= 2 options', (block) => {
+    for (const type of block.types) {
+      for (const p of [...(block.commonParams ?? []), ...type.params]) {
+        if (p.kind === 'range') {
+          expect(p.min, `${block.id}/${type.slug}/${p.id}`).toBeLessThan(p.max);
+        } else {
+          expect(p.options.length, `${block.id}/${type.slug}/${p.id}`).toBeGreaterThanOrEqual(2);
+        }
+      }
+    }
+  });
+
+  it('MOD and FX2-special types (Pitch/Env Wah/Wah) both live on CC68-73, as documented', () => {
+    const mod = nanocoreSpec.blocks.find((b) => b.id === 'mod') as BlockSpec;
+    const fx2 = nanocoreSpec.blocks.find((b) => b.id === 'fx2') as BlockSpec;
+    // SysEx-only params (no working CC — e.g. Phaser II/Jet Flanger's post-firmware-update
+    // controls) have no `cc` at all; excluded here rather than asserted against this CC range.
+    const modCCs = new Set(mod.types.flatMap((t) => t.params.map((p) => p.cc)).filter((cc) => cc !== undefined));
+    for (const cc of modCCs) expect(cc).toBeGreaterThanOrEqual(68);
+    for (const cc of modCCs) expect(cc).toBeLessThanOrEqual(73);
+
+    const specialTypes = fx2.types.filter((t) => [8, 9, 10].includes(t.id));
+    expect(specialTypes).toHaveLength(3);
+    for (const t of specialTypes) {
+      for (const p of t.params) {
+        expect(p.cc).toBeGreaterThanOrEqual(68);
+        expect(p.cc).toBeLessThanOrEqual(73);
+      }
+    }
+  });
+
+  it('globalControls all reference either a CC or Program Change, with a valid 0-127 range', () => {
+    for (const gc of nanocoreSpec.globalControls) {
+      expect(gc.cc !== undefined || gc.isProgramChange).toBe(true);
+      expect(gc.min).toBeGreaterThanOrEqual(0);
+      expect(gc.max).toBeLessThanOrEqual(127);
+    }
+  });
+});

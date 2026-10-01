@@ -1,0 +1,29 @@
+{
+  "name": "@nanocore/mcp",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "MCP server for the Livtra NanoCore: lets an AI assistant read and edit the pedal (patch, effect parameters, chain order, presets, global settings, AMP/FX2 profiles) over USB MIDI, built on @nanocore/protocol.",
+  "type": "module",
+  "bin": {
+    "nanocore-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p . --noEmit"
+  },
+  "dependencies": {
+    "@julusian/midi": "^3.8.1",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@nanocore/protocol": "*",
+    "@types/node": "^24.13.3",
+    "tsup": "^8.5.1",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.10"
+  }
+}
