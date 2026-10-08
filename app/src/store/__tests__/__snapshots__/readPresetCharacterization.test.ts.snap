@@ -1,0 +1,195 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`readPresetFromDevice (characterization, real captured frames) > decodes a saved preset 1`] = `
+{
+  "activeSlot": 0,
+  "activeSlotName": "ClnArp",
+  "chainOrder": [
+    "fx1",
+    "fx2",
+    "amp",
+    "cab",
+    "del",
+    "mod",
+    "rev",
+    "eq",
+  ],
+  "patch": {
+    "amp": {
+      "on": true,
+      "params": {
+        "bass": 0,
+        "gain": 0.6000000238418579,
+        "level": 80.0000011920929,
+        "mid": 3.4000003337860107,
+        "treble": 7.799999713897705,
+      },
+      "typeId": 0,
+    },
+    "cab": {
+      "on": true,
+      "params": {
+        "high_cut": 10023.744397404149,
+        "low_cut": 117.46189881604863,
+      },
+      "typeId": 0,
+    },
+    "del": {
+      "on": false,
+      "params": {
+        "age": 50,
+        "delay": 300.8500119149685,
+        "feedback": 60.04000276327133,
+        "mix": 60.00000238418579,
+      },
+      "typeId": 0,
+    },
+    "eq": {
+      "on": false,
+      "params": {
+        "high": 0,
+        "level": 0,
+        "low": 0,
+        "mid": 0,
+      },
+      "typeId": 0,
+    },
+    "fx1": {
+      "on": true,
+      "params": {
+        "attack": 14.000000059604645,
+        "comp_threshold": -22.980000972747803,
+        "knee": 4.320000171661377,
+        "makeup": 5.760000228881836,
+        "ratio": 1,
+        "release": 129.99999523162842,
+      },
+      "typeId": 3,
+    },
+    "fx2": {
+      "on": false,
+      "params": {
+        "gain": 0.5,
+        "level": 80.0000011920929,
+        "tone": 50,
+      },
+      "typeId": 0,
+    },
+    "mod": {
+      "on": true,
+      "params": {
+        "depth": 0.4000000059604645,
+        "rate": 1.4831999826431275,
+      },
+      "typeId": 0,
+    },
+    "rev": {
+      "on": true,
+      "params": {
+        "decay": 2.4550000205636024,
+        "mix": 17.000000178813934,
+        "mod": 20.000000298023224,
+        "pre_delay": 14.40000057220459,
+        "tone": 79.00000214576721,
+      },
+      "typeId": 1,
+    },
+  },
+}
+`;
+
+exports[`readPresetFromDevice (characterization, real captured frames) > decodes a saved preset overlaid with the live 0x63 state 1`] = `
+{
+  "activeSlot": 46,
+  "activeSlotName": "ClnArp",
+  "chainOrder": [
+    "fx1",
+    "fx2",
+    "amp",
+    "cab",
+    "del",
+    "mod",
+    "rev",
+    "eq",
+  ],
+  "patch": {
+    "amp": {
+      "on": true,
+      "params": {
+        "bass": 0,
+        "gain": 0.7480000257492065,
+        "level": 80.0000011920929,
+        "mid": 3.4000003337860107,
+        "treble": 7.799999713897705,
+      },
+      "typeId": 0,
+    },
+    "cab": {
+      "on": true,
+      "params": {
+        "high_cut": 10023.744397404149,
+        "low_cut": 117.46189881604863,
+      },
+      "typeId": 0,
+    },
+    "del": {
+      "on": false,
+      "params": {
+        "age": 50,
+        "delay": 300.8500119149685,
+        "feedback": 60.04000276327133,
+        "mix": 60.00000238418579,
+      },
+      "typeId": 0,
+    },
+    "eq": {
+      "on": false,
+      "params": {
+        "high": 0,
+        "level": 0,
+        "low": 0,
+        "mid": 0,
+      },
+      "typeId": 0,
+    },
+    "fx1": {
+      "on": true,
+      "params": {
+        "attack": 14.000000059604645,
+        "comp_threshold": -7.380001544952393,
+        "knee": 4.320000171661377,
+        "makeup": 5.760000228881836,
+        "ratio": 7.327000081539154,
+        "release": 129.99999523162842,
+      },
+      "typeId": 3,
+    },
+    "fx2": {
+      "on": true,
+      "params": {
+        "boost": 0.5,
+      },
+      "typeId": 7,
+    },
+    "mod": {
+      "on": true,
+      "params": {
+        "depth": 0.4000000059604645,
+        "rate": 1.4831999826431275,
+      },
+      "typeId": 0,
+    },
+    "rev": {
+      "on": true,
+      "params": {
+        "decay": 2.4550000205636024,
+        "mix": 17.000000178813934,
+        "mod": 20.000000298023224,
+        "pre_delay": 14.40000057220459,
+        "tone": 79.00000214576721,
+      },
+      "typeId": 1,
+    },
+  },
+}
+`;
