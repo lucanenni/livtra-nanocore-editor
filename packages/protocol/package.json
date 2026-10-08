@@ -1,0 +1,22 @@
+{
+  "name": "@nanocore/protocol",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Everything about the Livtra NanoCore that does not depend on a browser: the effect-block data model, the MIDI CC/SysEx protocol (frame builders and parsers, live-state decoding, AMP/FX2 profile upload) and a transport-agnostic device layer. Shared by the web editor and the MCP server. Consumed as TypeScript source.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p . --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.10"
+  }
+}
