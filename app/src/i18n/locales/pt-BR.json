@@ -26,8 +26,6 @@
     "title": "Referência de CC"
   },
   "chain": {
-    "loadedPresetPrefix": "Patch {{number}} —",
-    "loadedPresetRename": "Renomear este patch na pedaleira (máx. 8 caracteres)",
     "moveLeft": "Mover {{name}} para antes na cadeia",
     "moveRight": "Mover {{name}} para depois na cadeia"
   },
@@ -637,5 +635,17 @@
         "description": "Baseado no gabinete Soldano SLO412 4x12 — Timbre C"
       }
     }
+  },
+  "devicePresets": {
+    "title": "Presets da pedaleira",
+    "prev": "Preset anterior",
+    "next": "Próximo preset",
+    "refresh": "Ler de novo os nomes dos presets da pedaleira",
+    "loading": "Carregando presets…",
+    "switching": "Carregando preset…",
+    "switchingNumber": "Carregando o preset {{number}}…",
+    "all": "Todos os presets",
+    "rename": "Renomear e salvar este preset na pedaleira (máx. 8 caracteres)",
+    "renameSaveFailed": "Sem resposta da pedaleira — o novo nome pode não ter sido salvo."
   }
 }

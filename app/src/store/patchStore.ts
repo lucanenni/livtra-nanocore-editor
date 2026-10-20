@@ -23,7 +23,7 @@ import type {
   UploadResult,
 } from '@nanocore/protocol';
 import { BleMidiTransport, SimulatorTransport, WebMidiTransport } from '../midi';
-import { loadPresets, savePresets } from './localPresetStorage';
+import { loadDevicePresetNames, loadPresets, saveDevicePresetNames, savePresets } from './localPresetStorage';
 
 const MAX_LOG_LENGTH = 300;
 
@@ -73,6 +73,18 @@ let unsubMessages: (() => void) | null = null;
  * `connection.connected` on a real transport. See `NanoCoreDevice.startLive` in
  * `@nanocore/protocol` for what it listens to and why the ping is required. */
 let stopLiveSession: (() => void) | null = null;
+/** How long the device gets to load a recalled preset before it's read back. */
+const PRESET_RECALL_SETTLE_MS = 250;
+
+/** Records `name` as `slot`'s saved name in the preset list (and the browser's copy of it). */
+function setPresetName(get: () => PatchStore, set: (partial: Partial<PatchStore>) => void, slot: number, name: string): void {
+  const names = get().presetNames;
+  if (!names || names[slot] === name || slot >= names.length) return;
+  const next = [...names];
+  next[slot] = name;
+  set({ presetNames: next });
+  saveDevicePresetNames(next);
+}
 let initGeneration = 0;
 
 /** A device handle for the current connection, or `null` while nothing is connected — every send
@@ -95,11 +107,12 @@ function applyChainOrder(get: () => PatchStore, set: (partial: Partial<PatchStor
  * previous session. No-op for the Simulator (callers don't start it there). */
 /** Everything read from a real device once it connects — by hand (`connectDevice`) or automatically
  * (`initTransport` finding a port named "Nanocore"). The preset first, so the patch shows up first;
- * then the catalogs that name any custom AMP/FX2 profiles (NAM captures) and CAB IRs in the model
- * lists (68 round-trips), and the global settings. */
+ * then the preset list's names (64 short reads), the catalogs that name any custom AMP/FX2 profiles
+ * (NAM captures) and CAB IRs in the model lists (68 round-trips), and the global settings. */
 function readDeviceOnConnect(get: () => PatchStore): void {
   void get()
     .readPresetFromDevice()
+    .then(() => get().readPresetNames())
     .then(() => get().readProfileCatalog())
     .then(() => get().readIrCatalog());
   void get().pollGlobalSettings();
@@ -195,6 +208,14 @@ interface PatchStore {
   profileCatalog: ProfileCatalogRecord[] | null;
   /** Same for the 30 CAB IR slots (`0x56` reads), so custom IRs show under their own names. */
   irCatalog: ProfileCatalogRecord[] | null;
+  /** The SAVED name of every device preset slot (index = slot), for the device preset list — read on
+   * connect, kept up to date by preset reads and saves, and remembered in the browser so the list
+   * shows up straight away next time. `null` before any read; an entry is `null` if it didn't decode. */
+  presetNames: (string | null)[] | null;
+  /** True while `readPresetNames` is reading the names. */
+  presetNamesLoading: boolean;
+  /** The slot `selectDevicePreset` is switching to, until its patch has been read back. */
+  presetSwitchingTo: number | null;
   profileUpload: ProfileUploadState;
   /** The device's global/device-level settings (Wireless, Loopback, Input Gain, USB/BT Volume,
    * MIDI Channel) — `null` before the first successful `pollGlobalSettings()` or if the device
@@ -261,6 +282,11 @@ interface PatchStore {
   sendFullPatch: () => void;
   recallProgram: (program: number) => void;
   stepPreset: (direction: 'prev' | 'next') => void;
+  /** Reads every preset slot's saved name into `presetNames` (read-only). */
+  readPresetNames: () => Promise<void>;
+  /** Loads device preset `slot` (0-based): Program Change, then reads that patch back into the
+   * editor. `presetSwitchingTo` is set meanwhile. */
+  selectDevicePreset: (slot: number) => Promise<void>;
   setTuner: (on: boolean) => void;
   /** Saves whatever the device currently considers its active/edited patch state to `slot` (opcode
    * `0x46` — see `midi/sysex.ts`'s `SAVE_PRESET_OPCODE` doc comment). This is NOT the same as
@@ -276,6 +302,10 @@ interface PatchStore {
    * `readPresetFromDevice` won't show it either until it's actually saved, since the name comes
    * from the `0x41` saved-state read, not the live `0x63` one). No-op without a connected output. */
   renamePresetOnDevice: (name: string) => void;
+  /** Renames the active patch and saves it to its own slot right away, as ToneCommand does (its
+   * rename is the same `0x6d` immediately followed by a `0x46` save) — so the name survives a
+   * preset change. Saves the device's whole live state, tweaks included. Resolves `true` on ack. */
+  renameAndSaveActivePreset: (name: string) => Promise<boolean>;
   /** Sends one raw MIDI CC message directly, bypassing every param/type/on-off action above — for
    * `CCReferencePanel.tsx`'s "send a test value" buttons, so someone configuring an external MIDI
    * controller can confirm a CC number reaches the device and watch it react, independent of this
@@ -319,6 +349,9 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
   activeSlotName: null,
   profileCatalog: null,
   irCatalog: null,
+  presetNames: loadDevicePresetNames(),
+  presetNamesLoading: false,
+  presetSwitchingTo: null,
   profileUpload: { status: 'idle', sent: 0, total: 0 },
   globalSettings: null,
   connection: {
@@ -467,7 +500,11 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
     if (!snapshot) return; // no reply (Simulator, older firmware, or a dropped connection)
     if (snapshot.chainOrder) set({ chainOrder: snapshot.chainOrder });
     // Display-only (see `activeSlotName`). Keep any previously-decoded name on a failed re-decode.
-    if (snapshot.name !== null) set({ activeSlotName: snapshot.name });
+    // It is the slot's SAVED name, so it also refreshes that slot in the preset list.
+    if (snapshot.name !== null) {
+      set({ activeSlotName: snapshot.name });
+      setPresetName(get, set, slot, snapshot.name);
+    }
     // Merge into the *current* patch (not the one from when the read started), so edits made while
     // the read was in flight aren't lost for blocks the snapshot knows nothing about.
     set((s) => ({ patch: applySnapshotToPatch(s.patch, snapshot) }));
@@ -568,13 +605,57 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
 
   saveToDeviceSlot: async (slot) => {
     const device = deviceFor(get());
-    return device ? device.saveToSlot(slot) : false;
+    const saved = device ? await device.saveToSlot(slot) : false;
+    // The slot now holds the live patch, name included.
+    const name = get().activeSlotName;
+    if (saved && name) setPresetName(get, set, slot, name);
+    return saved;
+  },
+
+  readPresetNames: async () => {
+    const device = deviceFor(get());
+    if (!device || get().presetNamesLoading) return;
+    set({ presetNamesLoading: true });
+    try {
+      const names = await device.readPresetNames();
+      if (names.some((n) => n !== null)) {
+        set({ presetNames: names });
+        saveDevicePresetNames(names);
+      }
+    } finally {
+      set({ presetNamesLoading: false });
+    }
+  },
+
+  selectDevicePreset: async (slot) => {
+    const device = deviceFor(get());
+    if (!device) return;
+    set({ presetSwitchingTo: slot, activeSlot: slot });
+    try {
+      device.recallProgram(slot);
+      // Give the device a moment to load it before reading it back (as the MCP server's recall does).
+      await new Promise((r) => setTimeout(r, PRESET_RECALL_SETTLE_MS));
+      await get().readPresetFromDevice();
+    } finally {
+      set({ presetSwitchingTo: null });
+    }
   },
 
   renamePresetOnDevice: (name) => {
     const device = deviceFor(get());
     if (!device) return;
     set({ activeSlotName: device.renamePreset(name) });
+  },
+
+  renameAndSaveActivePreset: async (name) => {
+    const device = deviceFor(get());
+    if (!device) return false;
+    const slot = get().activeSlot;
+    const sent = device.renamePreset(name);
+    set({ activeSlotName: sent });
+    const saved = await device.saveToSlot(slot);
+    if (saved) setPresetName(get, set, slot, sent);
+    return saved;
   },
 
   sendTestCC: (cc, value, description) => {
