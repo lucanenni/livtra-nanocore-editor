@@ -6,6 +6,7 @@ import {
   catalogSlotFor,
   customProfileName,
   readIrCatalog,
+  readProfileData,
   readProfileCatalog,
   runProfileUpload,
   sanitizeProfileName,
@@ -228,6 +229,59 @@ describe('runProfileUpload', () => {
     const transact: CommandTransact = (build, label) => (label.includes('bytes 64-') ? Promise.resolve(null) : base.transact(build, label));
     const result = await runProfileUpload({ transact, slot: 1, data, name: 'x', chunkRetries: 1 });
     expect(result).toMatchObject({ ok: false, phase: 'writing', reason: 'no-response', offset: 64 });
+  });
+});
+
+describe('readProfileData', () => {
+  const body = Array.from({ length: 150 }, (_, i) => (i * 7) & 0xff);
+  /** A pedal holding `body` in every slot, answering reads `perReply` bytes at a time. */
+  const pedal = (checksum: number, perReply = 59): CommandTransact => async (build) => {
+    const request = parseCommandMessage(build())!;
+    const [slot, lo, hi] = request.payload;
+    if (request.opcode === 0x36 || request.opcode === 0x56) {
+      const payload = Array.from({ length: 30 }, () => 0);
+      payload[0] = slot; payload[1] = 1; payload[3] = body.length;
+      [0, 8, 16, 24].forEach((shift, i) => (payload[7 + i] = (checksum >>> shift) & 0xff));
+      return { direction: 'reply', seq: request.seq, opcode: request.opcode, status: 0, payload };
+    }
+    const at = lo | (hi << 8);
+    const payload = [slot, lo, hi, body.length, 0, ...body.slice(at, at + perReply)];
+    return { direction: 'reply', seq: request.seq, opcode: request.opcode, status: 0, payload };
+  };
+
+  it('reassembles the stored body from short replies and checks its CRC-32', async () => {
+    const result = await readProfileData(pedal(crc32(body)), 5);
+    expect(result).toMatchObject({ ok: true, crcMatches: true });
+    if (result.ok) expect(Array.from(result.body)).toEqual(body);
+  });
+
+  it('reports a body that never matches the catalog checksum, after re-reading it', async () => {
+    expect(await readProfileData(pedal(crc32(body) ^ 1), 5)).toMatchObject({ ok: true, crcMatches: false, attempts: 3 });
+  });
+
+  it('re-reads a slot whose first read came back damaged', async () => {
+    const clean = pedal(crc32(body));
+    let damaged = true;
+    const transact: CommandTransact = async (build, label) => {
+      const reply = await clean(build, label);
+      if (reply && reply.opcode === 0x39 && damaged) {
+        damaged = false;
+        return { ...reply, payload: [...reply.payload.slice(0, 5), ...reply.payload.slice(5).map((b) => b ^ 0xff)] };
+      }
+      return reply;
+    };
+    expect(await readProfileData(transact, 5)).toMatchObject({ ok: true, crcMatches: true, attempts: 2 });
+  });
+
+  it('reads IR slots with 0x56/0x59', async () => {
+    const opcodes = new Set<number>();
+    const inner = pedal(crc32(body));
+    const transact: CommandTransact = (build, label) => {
+      opcodes.add(parseCommandMessage(build())!.opcode);
+      return inner(build, label);
+    };
+    expect(await readProfileData(transact, 2, true)).toMatchObject({ ok: true });
+    expect([...opcodes].sort()).toEqual([0x56, 0x59]);
   });
 });
 

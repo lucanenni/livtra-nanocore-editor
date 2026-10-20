@@ -246,6 +246,27 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
   );
 
   server.registerTool(
+    'listen',
+    {
+      title: 'Listen to what happens on the pedal',
+      description:
+        'Records, for `seconds`, everything the pedal reports on its own: preset changes, blocks switched on/off, knob turns and settings changes, plus any message it sends that is not decoded yet. ' +
+        'Use it to check that a footswitch or a wireless controller (e.g. an SK7 paired over Bluetooth) is reaching the pedal: ask the user to press its buttons while this runs. ' +
+        "The pedal does not say where a change came from (its own panel, a controller or another app), and it cannot list what is paired over Bluetooth. Read-only.",
+      inputSchema: { seconds: z.number().min(1).max(120).optional().describe('How long to listen, 1-120 s (default 20).') },
+      annotations: READ,
+    },
+    guarded(async ({ seconds }: { seconds?: number }) => {
+      const events = await session.listen(seconds ?? 20);
+      return {
+        seconds: seconds ?? 20,
+        events,
+        summary: events.length === 0 ? 'Nothing happened on the pedal.' : `${events.length} event(s) reported by the pedal.`,
+      };
+    }),
+  );
+
+  server.registerTool(
     'list_profiles',
     {
       title: 'List the AMP/FX2 profile slots',
@@ -262,6 +283,22 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
         ...(r.lastWritten ? { lastWritten: true } : {}),
       })),
     })),
+  );
+
+  server.registerTool(
+    'verify_profile',
+    {
+      title: 'Read a profile or IR slot back and check it',
+      description:
+        'Reads the contents of one AMP/FX2 profile slot (1-30 AMP, 31-38 FX2) or, with `ir`, one CAB IR slot (1-30) back from the pedal and checks it against the pedal\'s own CRC-32: `intact` false means the stored data is damaged. ' +
+        'Returns its name, size and CRC-32 — two slots with the same CRC-32 hold the same profile, and a slot keeps its CRC-32 if the same file is loaded again. Read-only; takes a few seconds.',
+      inputSchema: {
+        slot: z.number().int().min(1).max(PROFILE_SLOT_COUNT),
+        ir: z.boolean().optional().describe('true = CAB IR slot instead of an AMP/FX2 profile slot.'),
+      },
+      annotations: READ,
+    },
+    guarded(({ slot, ir }: { slot: number; ir?: boolean }) => session.verifyProfile(slot, ir ?? false)),
   );
 
   server.registerTool(
