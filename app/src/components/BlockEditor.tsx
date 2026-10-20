@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { usePatchStore } from '../store/patchStore';
-import { activeParams, customProfileName, findBlock, findType } from '@nanocore/protocol';
+import { activeParams, customProfileLabel, findBlock, findType } from '@nanocore/protocol';
 import { ParamControl } from './ParamControl';
 import { RoutingWarning } from './RoutingWarning';
 
@@ -21,7 +21,7 @@ export function BlockEditor({ blockId }: Props) {
   if (!blockState) return null;
 
   const type = findType(block, blockState.typeId);
-  const customName = customProfileName(catalog, block.id, type.id, type.name);
+  const customName = customProfileLabel(catalog, block.id, block.types, type.id);
   const params = activeParams(block, blockState.typeId);
   const isBigList = block.types.length > 6;
 
@@ -55,7 +55,7 @@ export function BlockEditor({ blockId }: Props) {
         >
           {block.types.map((ty) => (
             <option key={ty.id} value={ty.id}>
-              {customProfileName(catalog, block.id, ty.id, ty.name) ?? t(`type.${block.id}.${ty.slug}.name`, ty.name)}
+              {customProfileLabel(catalog, block.id, block.types, ty.id) ?? t(`type.${block.id}.${ty.slug}.name`, ty.name)}
             </option>
           ))}
         </select>

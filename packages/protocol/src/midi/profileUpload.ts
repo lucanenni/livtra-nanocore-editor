@@ -50,6 +50,24 @@ export function customProfileName(
   return name && name.toLowerCase() !== factoryName.trim().toLowerCase() ? name : null;
 }
 
+/** `customProfileName`, made unique within its block: the catalog keeps only 16 characters of a
+ * name, so a pack of IRs or captures often lands in several slots under the same name. When another
+ * slot of `types` holds a custom profile/IR named the same, the label gets the slot's position in the
+ * block's model list in front — "#7 Acoustic Mic IR" — the same number the editor and the MCP show. */
+export function customProfileLabel(
+  catalog: readonly ProfileCatalogRecord[] | null | undefined,
+  blockId: string,
+  types: readonly { id: number; name: string }[],
+  typeId: number,
+): string | null {
+  const type = types.find((t) => t.id === typeId);
+  const name = type ? customProfileName(catalog, blockId, typeId, type.name) : null;
+  if (!name) return null;
+  const key = name.toLowerCase();
+  const sameName = types.filter((t) => customProfileName(catalog, blockId, t.id, t.name)?.toLowerCase() === key);
+  return sameName.length > 1 ? `#${typeId + 1} ${name}` : name;
+}
+
 /** ToneCommand sends 64 data bytes per write over USB and waits for each acknowledgement. */
 export const PROFILE_CHUNK_SIZE = 64;
 /** Sanity cap, well above any profile seen (12302 B factory, ~16.7 kB in the online library). */

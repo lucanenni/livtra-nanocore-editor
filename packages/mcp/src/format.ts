@@ -1,5 +1,6 @@
 import {
   activeParams,
+  customProfileLabel,
   customProfileName,
   findBlock,
   findType,
@@ -13,9 +14,10 @@ export interface Catalogs {
   irs: ProfileCatalogRecord[] | null;
 }
 
-/** Name of the custom profile/IR loaded into the slot of `type`, or `null` for a factory slot. */
+/** Name of the custom profile/IR loaded into the slot of `type`, or `null` for a factory slot —
+ * with the slot's position in front when another slot of the block holds the same name. */
 export function customName(catalogs: Catalogs | undefined, block: BlockSpec, type: EffectType): string | null {
-  return customProfileName(block.id === 'cab' ? catalogs?.irs : catalogs?.profiles, block.id, type.id, type.name);
+  return customProfileLabel(block.id === 'cab' ? catalogs?.irs : catalogs?.profiles, block.id, block.types, type.id);
 }
 
 /** How a param's value reads to a person: real units for a range, the option's name for an enum. */
@@ -104,6 +106,13 @@ export function resolveType(block: BlockSpec, ref: string | number, catalogs?: C
       (/^\d+$/.test(ref) ? block.types.find((t) => t.id === Number(ref)) : undefined) ??
       block.types.find((t) => norm(customName(catalogs, block, t) ?? '') === n);
     if (found) return found;
+    // A bare name that several slots share (their labels carry "#N" in front) is ambiguous.
+    const catalog = block.id === 'cab' ? catalogs?.irs : catalogs?.profiles;
+    const shared = block.types.filter((t) => norm(customProfileName(catalog, block.id, t.id, t.name) ?? '') === n);
+    if (shared.length > 1) {
+      const labels = shared.map((t) => `"${customName(catalogs, block, t)}"`).join(', ');
+      throw new Error(`Several ${block.name} slots are named "${ref}": ${labels}. Use one of those.`);
+    }
   }
   throw new Error(`Unknown ${block.name} type "${ref}". Use describe_block to list them.`);
 }
