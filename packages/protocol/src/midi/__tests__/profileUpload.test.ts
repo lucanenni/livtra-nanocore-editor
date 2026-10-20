@@ -4,6 +4,7 @@ import {
   IR_SLOT_COUNT,
   PROFILE_CHUNK_SIZE,
   catalogSlotFor,
+  customProfileLabel,
   customProfileName,
   readIrCatalog,
   readProfileData,
@@ -346,5 +347,26 @@ describe('readProfileCatalog', () => {
     expect(records).toHaveLength(37);
     expect(records.map((r) => r.slot)).not.toContain(5);
     expect(records[0]).toMatchObject({ slot: 0, present: true, name: 'S0' });
+  });
+});
+
+describe('customProfileLabel', () => {
+  const record = (slot: number, name: string) => ({ slot, present: true, lastWritten: false, bodyBytes: 0, checksum: 0, name });
+  const types = [
+    { id: 0, name: 'Bog412A' },
+    { id: 1, name: 'Bog412B' },
+    { id: 2, name: 'Eng412A' },
+    { id: 3, name: 'Eng412B' },
+  ];
+  const catalog = [record(0, 'Acoustic Mic IR'), record(1, 'acoustic mic ir'), record(2, 'My Cab IR'), record(3, 'Eng412B')];
+
+  it('puts the slot number in front of a name that several slots share', () => {
+    expect(customProfileLabel(catalog, 'cab', types, 0)).toBe('#1 Acoustic Mic IR');
+    expect(customProfileLabel(catalog, 'cab', types, 1)).toBe('#2 acoustic mic ir'); // case-insensitive match
+  });
+
+  it('leaves a unique custom name alone, and a factory slot unnamed', () => {
+    expect(customProfileLabel(catalog, 'cab', types, 2)).toBe('My Cab IR');
+    expect(customProfileLabel(catalog, 'cab', types, 3)).toBeNull();
   });
 });

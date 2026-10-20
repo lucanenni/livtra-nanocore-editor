@@ -10,7 +10,8 @@ import { registerTools } from '../tools';
 
 /** A user-loaded NAM profile in AMP slot 6 (factory Fd65Dk) and an IR in CAB slot 3 (factory Eng412A). */
 const CUSTOM_PROFILES: Record<number, string> = { 5: 'My Amp NAM' };
-const CUSTOM_IRS: Record<number, string> = { 2: 'My Cab IR' };
+/** Slots 1 and 2 share a name, as a pack of IRs often does once the catalog cuts names to 16 characters. */
+const CUSTOM_IRS: Record<number, string> = { 0: 'Acoustic Mic IR', 1: 'Acoustic Mic IR', 2: 'My Cab IR' };
 
 /** A `0x36`/`0x56` catalog record (30 bytes) naming `slot`. */
 function catalogRecord(slot: number, name: string): number[] {
@@ -222,6 +223,18 @@ describe('connected', () => {
     const patch = (await call('get_patch')).json();
     expect(patch.blocks.amp.profile).toBe('My Amp NAM');
     expect(patch.blocks.cab.profile).toBe('My Cab IR');
+  });
+
+  it('numbers custom names that several slots share, and refuses the bare shared name', async () => {
+    const cabSpec = (await call('describe_block', { block: 'cab' })).json();
+    expect(cabSpec.types.slice(0, 2).map((ty: { profile?: string }) => ty.profile)).toEqual(['#1 Acoustic Mic IR', '#2 Acoustic Mic IR']);
+
+    const ambiguous = await call('set_block', { block: 'cab', type: 'acoustic mic ir' });
+    expect(ambiguous.isError).toBe(true);
+    expect(ambiguous.text).toMatch(/"#1 Acoustic Mic IR", "#2 Acoustic Mic IR"/);
+
+    const second = await call('set_block', { block: 'cab', type: '#2 Acoustic Mic IR' });
+    expect(second.json()).toMatchObject({ type: cab.types[1].name, profile: '#2 Acoustic Mic IR' });
   });
 
   it('verify_profile reads a slot back and checks it against the pedal CRC', async () => {
