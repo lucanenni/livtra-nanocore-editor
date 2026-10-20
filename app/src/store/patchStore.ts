@@ -181,6 +181,8 @@ interface PatchStore {
   /** The device's AMP/FX2 profile-slot catalog (38 records, read-only `0x36` reads) — `null` until
    * `readProfileCatalog` succeeds; cleared on disconnect. */
   profileCatalog: ProfileCatalogRecord[] | null;
+  /** Same for the 30 CAB IR slots (`0x56` reads), so custom IRs show under their own names. */
+  irCatalog: ProfileCatalogRecord[] | null;
   profileUpload: ProfileUploadState;
   /** The device's global/device-level settings (Wireless, Loopback, Input Gain, USB/BT Volume,
    * MIDI Channel) — `null` before the first successful `pollGlobalSettings()` or if the device
@@ -270,6 +272,8 @@ interface PatchStore {
   /** Reads every AMP/FX2 profile slot's catalog record into `profileCatalog` (read-only). Resolves
    * `true` if at least one slot answered. */
   readProfileCatalog: () => Promise<boolean>;
+  /** Reads every CAB IR slot's catalog record into `irCatalog` (read-only). */
+  readIrCatalog: () => Promise<boolean>;
   /** Uploads a `.ead` profile file into `slot` (0-37) with ToneCommand's exact command sequence
    * (see `midi/profileUpload.ts`), reporting progress through `profileUpload` and refreshing
    * `profileCatalog` afterwards. OVERWRITES that slot — the only way back to factory content is
@@ -302,6 +306,7 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
   activeSlot: ACTIVE_PRESET_SLOT,
   activeSlotName: null,
   profileCatalog: null,
+  irCatalog: null,
   profileUpload: { status: 'idle', sent: 0, total: 0 },
   globalSettings: null,
   connection: {
@@ -413,7 +418,12 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
     if (state.connection.transportKind !== 'simulator') {
       const transport = transportFor(state.connection.transportKind);
       startLive(get, set, transport, state.connection.outputId);
-      void get().readPresetFromDevice();
+      // The catalogs name any custom AMP/FX2 profiles (NAM captures) and CAB IRs in the model lists;
+      // read after the preset so the patch shows up first (68 round-trips).
+      void get()
+        .readPresetFromDevice()
+        .then(() => get().readProfileCatalog())
+        .then(() => get().readIrCatalog());
       void get().pollGlobalSettings();
     }
   },
@@ -421,7 +431,7 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
   disconnectDevice: () => {
     stopLiveSession?.();
     stopLiveSession = null;
-    set((s) => ({ connection: { ...s.connection, connected: false, autoConnected: false }, activeSlotName: null, profileCatalog: null, globalSettings: null }));
+    set((s) => ({ connection: { ...s.connection, connected: false, autoConnected: false }, activeSlotName: null, profileCatalog: null, irCatalog: null, globalSettings: null }));
   },
 
   disconnectBluetooth: () => {
@@ -433,6 +443,7 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
         connection: { ...s.connection, outputs: [], outputId: null, connected: false, autoConnected: false, ready: false },
         activeSlotName: null,
         profileCatalog: null,
+        irCatalog: null,
         globalSettings: null,
       }));
     }
@@ -570,6 +581,15 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
     const records = await device.readProfileCatalog();
     if (records.length === 0) return false;
     set({ profileCatalog: records });
+    return true;
+  },
+
+  readIrCatalog: async () => {
+    const device = deviceFor(get());
+    if (!device) return false;
+    const records = await device.readIrCatalog();
+    if (records.length === 0) return false;
+    set({ irCatalog: records });
     return true;
   },
 

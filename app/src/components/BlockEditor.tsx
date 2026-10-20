@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { usePatchStore } from '../store/patchStore';
-import { activeParams, findBlock, findType } from '@nanocore/protocol';
+import { activeParams, customProfileName, findBlock, findType } from '@nanocore/protocol';
 import { ParamControl } from './ParamControl';
 import { RoutingWarning } from './RoutingWarning';
 
@@ -15,10 +15,13 @@ export function BlockEditor({ blockId }: Props) {
   const setBlockOn = usePatchStore((s) => s.setBlockOn);
   const setBlockType = usePatchStore((s) => s.setBlockType);
   const setParam = usePatchStore((s) => s.setParam);
+  // AMP/FX2/CAB slots can hold user-loaded profiles (NAM captures) and IRs: name them as the device does.
+  const catalog = usePatchStore((s) => (blockId === 'cab' ? s.irCatalog : s.profileCatalog));
 
   if (!blockState) return null;
 
   const type = findType(block, blockState.typeId);
+  const customName = customProfileName(catalog, block.id, type.id, type.name);
   const params = activeParams(block, blockState.typeId);
   const isBigList = block.types.length > 6;
 
@@ -52,7 +55,7 @@ export function BlockEditor({ blockId }: Props) {
         >
           {block.types.map((ty) => (
             <option key={ty.id} value={ty.id}>
-              {t(`type.${block.id}.${ty.slug}.name`, ty.name)}
+              {customProfileName(catalog, block.id, ty.id, ty.name) ?? t(`type.${block.id}.${ty.slug}.name`, ty.name)}
             </option>
           ))}
         </select>
@@ -64,8 +67,18 @@ export function BlockEditor({ blockId }: Props) {
         </p>
       )}
 
-      {type.description && (
-        <p className="block-editor__description">{t(`type.${block.id}.${type.slug}.description`, type.description)}</p>
+      {customName ? (
+        <p className="block-editor__description">
+          {t('block.customProfile', {
+            name: customName,
+            factory: type.name,
+            defaultValue: 'Custom profile "{{name}}", loaded into the slot of the factory {{factory}} model.',
+          })}
+        </p>
+      ) : (
+        type.description && (
+          <p className="block-editor__description">{t(`type.${block.id}.${type.slug}.description`, type.description)}</p>
+        )
       )}
 
       {(block.note || type.note) && <p className="block-editor__note">{block.note ?? type.note}</p>}

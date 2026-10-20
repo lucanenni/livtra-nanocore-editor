@@ -23,7 +23,7 @@ import {
 import type { ProfileCatalogRecord } from '../midi/sysex';
 import { parseGlobalSettingsResponse } from '../midi/presetReader';
 import type { GlobalSettings } from '../midi/presetReader';
-import { readProfileCatalog, runProfileUpload } from '../midi/profileUpload';
+import { readIrCatalog, readProfileCatalog, runProfileUpload } from '../midi/profileUpload';
 import type { CommandTransact, UploadPhase, UploadResult } from '../midi/profileUpload';
 import { nanocoreSpec } from '../data/nanocoreSpec';
 import { activeParams, buildBlockDefault, findBlock, findParamSpec, findType } from '../patch/patchDefaults';
@@ -260,6 +260,11 @@ export class NanoCoreDevice {
   /** Reads every AMP/FX2 profile slot's catalog record (read-only). Empty when nothing answered. */
   readProfileCatalog(): Promise<ProfileCatalogRecord[]> {
     return readProfileCatalog(this.profileTransact());
+  }
+
+  /** Reads every CAB IR slot's catalog record (read-only). Empty when nothing answered. */
+  readIrCatalog(): Promise<ProfileCatalogRecord[]> {
+    return readIrCatalog(this.profileTransact());
   }
 
   /** Uploads a `.ead` profile file into `slot` (0-37) with ToneCommand's exact command sequence.

@@ -17,7 +17,7 @@ import {
 } from '@nanocore/protocol';
 import type { GlobalSettings, MidiTransport, PatchState, ProfileCatalogRecord, UploadResult } from '@nanocore/protocol';
 import { NodeMidiTransport } from './nodeMidiTransport';
-import { coerceParamValue, resolveBlock, resolveParam, resolveType } from './format';
+import { coerceParamValue, resolveBlock, resolveParam, resolveType, type Catalogs } from './format';
 
 /** Highest preset slot this server will write (the spec's `presetSlots`, 1-based on the device). */
 export const MAX_SAVE_SLOT = nanocoreSpec.meta.presetSlots;
@@ -51,6 +51,9 @@ export class NanoCoreSession {
   /** Same for the chain order: the pedal only reports the SAVED order, so one set from here is
    * remembered and re-applied after every read, until the slot changes. */
   private chainOverride: string[] | null = null;
+  /** The pedal's profile and IR slot catalogs, read once per connection when first needed (68
+   * round-trips) so custom NAM profiles and IRs can be shown and selected by name. */
+  catalogs: Catalogs = { profiles: null, irs: null };
 
   constructor(openTransport: () => MidiTransport = () => new NodeMidiTransport()) {
     this.openTransport = openTransport;
@@ -92,6 +95,7 @@ export class NanoCoreSession {
     this.portName = match.name;
     this.modelOverrides.clear();
     this.chainOverride = null;
+    this.catalogs = { profiles: null, irs: null };
     this.startLive();
     try {
       await this.refresh();
@@ -109,6 +113,16 @@ export class NanoCoreSession {
     this.stopLive = null;
     this.device = null;
     this.portName = null;
+    this.catalogs = { profiles: null, irs: null };
+  }
+
+  /** Reads the catalogs `blockId` needs (both when omitted) unless already read this connection.
+   * A catalog the pedal doesn't answer stays empty until the next connect. */
+  async loadCatalogs(blockId?: string): Promise<Catalogs> {
+    const device = this.requireDevice();
+    if (this.catalogs.profiles === null && blockId !== 'cab') this.catalogs.profiles = await device.readProfileCatalog();
+    if (this.catalogs.irs === null && (blockId === undefined || blockId === 'cab')) this.catalogs.irs = await device.readIrCatalog();
+    return this.catalogs;
   }
 
   /** Closes the MIDI ports too (process shutdown). */
@@ -170,11 +184,13 @@ export class NanoCoreSession {
     this.patch = patch;
   }
 
-  setBlock(blockRef: string, change: { on?: boolean; type?: string | number }): void {
+  async setBlock(blockRef: string, change: { on?: boolean; type?: string | number }): Promise<void> {
     const device = this.requireDevice();
     const block = resolveBlock(blockRef);
-    // Resolve everything before sending anything, so a bad request changes nothing.
-    const type = change.type !== undefined ? resolveType(block, change.type) : null;
+    // Resolve everything before sending anything, so a bad request changes nothing. AMP/FX2/CAB
+    // types can also be named after the custom profile or IR loaded into their slot.
+    if (change.type !== undefined && ['amp', 'fx2', 'cab'].includes(block.id)) await this.loadCatalogs(block.id);
+    const type = change.type !== undefined ? resolveType(block, change.type, this.catalogs) : null;
     if (change.on === undefined && !type) throw new Error('Nothing to change: pass "on" and/or "type".');
     if (type) {
       const prev = this.patch[block.id];
@@ -285,6 +301,7 @@ export class NanoCoreSession {
   async profileCatalog(): Promise<Array<ProfileCatalogRecord & { kind: 'AMP' | 'FX2'; factoryName: string }>> {
     const records = await this.requireDevice().readProfileCatalog();
     if (records.length === 0) throw new Error('The NanoCore did not answer the profile catalog read.');
+    this.catalogs.profiles = records;
     return records.map((r) => ({ ...r, kind: r.slot < PROFILE_FIRST_FX2_SLOT ? 'AMP' : 'FX2', factoryName: factoryProfileName(r.slot) }));
   }
 
@@ -294,6 +311,8 @@ export class NanoCoreSession {
     if (!Number.isInteger(number) || number < 1 || number > PROFILE_SLOT_COUNT) throw new Error(`Profile slot must be 1-${PROFILE_SLOT_COUNT}.`);
     const check = validateProfileFile(data);
     if (!check.ok) throw new Error(`Not a valid .ead profile file (${check.problem}).`);
-    return device.uploadProfile({ slot: number - 1, data, name: sanitizeProfileName(name) });
+    const result = await device.uploadProfile({ slot: number - 1, data, name: sanitizeProfileName(name) });
+    this.catalogs.profiles = null; // re-read on next use, with the new slot name
+    return result;
   }
 }

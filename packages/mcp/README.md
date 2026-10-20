@@ -47,7 +47,7 @@ at a time. Then ask the assistant to connect.
 | `connect` / `disconnect` | Connect to the pedal (port named "Nanocore") and read its patch / release it |
 | `get_patch` | The live patch: preset number and name, chain order, every block's on/off, effect type and parameters in real units |
 | `describe_block` | Every effect type of a block with its parameters, units, ranges and options |
-| `set_block` | Block on/off and/or effect type (by name) |
+| `set_block` | Block on/off and/or effect type (by name — for AMP/FX2/CAB also by the name of a NAM profile or IR loaded into a slot) |
 | `set_param` | One parameter, by label, in real units (or an option name) |
 | `set_chain_order` | Order of the 8 blocks |
 | `rename_patch` | Rename the live patch (8 characters) |

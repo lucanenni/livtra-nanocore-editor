@@ -4,6 +4,7 @@ import {
   buildProfileBeginSysEx,
   buildProfileCatalogReadSysEx,
   buildProfileChunkSysEx,
+  buildIrCatalogReadSysEx,
   buildProfileFinalizeSysEx,
   buildProfileNameSysEx,
   buildStorageInfoSysEx,
@@ -18,6 +19,35 @@ import {
  * 2026-09-30 — see docs/MIDI_MAPPING_NOTES.md, "AMP/FX2 profile upload". */
 export const PROFILE_SLOT_COUNT = 38;
 export const PROFILE_FIRST_FX2_SLOT = 30;
+/** CAB IR slots: one per `data/blocks/cab.ts` model (slot = model id), read with `0x56`. */
+export const IR_SLOT_COUNT = 30;
+
+/** Catalog slot holding effect type `typeId` of `blockId` — a profile slot for AMP models and FX2
+ * drives/boosts, an IR slot for CAB models — or `null` for a type with no slot. */
+export function catalogSlotFor(blockId: string, typeId: number): number | null {
+  if (!Number.isInteger(typeId) || typeId < 0) return null;
+  if (blockId === 'amp' && typeId < PROFILE_FIRST_FX2_SLOT) return typeId;
+  if (blockId === 'fx2' && typeId < PROFILE_SLOT_COUNT - PROFILE_FIRST_FX2_SLOT) return PROFILE_FIRST_FX2_SLOT + typeId;
+  if (blockId === 'cab' && typeId < IR_SLOT_COUNT) return typeId;
+  return null;
+}
+
+/** The name a user-loaded file (NAM capture, IR…) gave the slot behind `typeId`, or `null` while
+ * that slot still holds the factory model `factoryName` — the device reports factory slots under
+ * the same names as the spec (Pey51501, Bog412A…), so any other name is a custom one. `catalog` is
+ * the one `blockId` lives in: the IR catalog for CAB, the profile catalog otherwise. */
+export function customProfileName(
+  catalog: readonly ProfileCatalogRecord[] | null | undefined,
+  blockId: string,
+  typeId: number,
+  factoryName: string,
+): string | null {
+  const slot = catalogSlotFor(blockId, typeId);
+  if (slot === null || !catalog) return null;
+  const record = catalog.find((r) => r.slot === slot);
+  const name = record?.present ? record.name.trim() : '';
+  return name && name.toLowerCase() !== factoryName.trim().toLowerCase() ? name : null;
+}
 
 /** ToneCommand sends 64 data bytes per write over USB and waits for each acknowledgement. */
 export const PROFILE_CHUNK_SIZE = 64;
@@ -131,11 +161,27 @@ export function sanitizeProfileName(name: string): string {
   return cleaned || 'profile';
 }
 
-/** Reads every slot's catalog record (read-only). Slots whose read fails are skipped. */
-export async function readProfileCatalog(transact: CommandTransact): Promise<ProfileCatalogRecord[]> {
+/** Reads every slot's catalog record (read-only). Slots whose read fails are skipped; no reply
+ * at all to the first slot means nothing is answering, so the rest aren't tried. */
+export function readProfileCatalog(transact: CommandTransact): Promise<ProfileCatalogRecord[]> {
+  return readCatalog(transact, PROFILE_SLOT_COUNT, buildProfileCatalogReadSysEx, 'Read profile catalog');
+}
+
+/** Same as `readProfileCatalog`, for the 30 CAB IR slots. */
+export function readIrCatalog(transact: CommandTransact): Promise<ProfileCatalogRecord[]> {
+  return readCatalog(transact, IR_SLOT_COUNT, buildIrCatalogReadSysEx, 'Read IR catalog');
+}
+
+async function readCatalog(
+  transact: CommandTransact,
+  slotCount: number,
+  build: (slot: number) => number[],
+  label: string,
+): Promise<ProfileCatalogRecord[]> {
   const records: ProfileCatalogRecord[] = [];
-  for (let slot = 0; slot < PROFILE_SLOT_COUNT; slot += 1) {
-    const reply = await transact(() => buildProfileCatalogReadSysEx(slot), `Read profile catalog: slot ${slot + 1}`);
+  for (let slot = 0; slot < slotCount; slot += 1) {
+    const reply = await transact(() => build(slot), `${label}: slot ${slot + 1}`);
+    if (!reply && slot === 0) return records;
     if (reply && reply.status === 0) {
       const record = parseProfileCatalogRecord(reply.payload);
       if (record) records.push(record);

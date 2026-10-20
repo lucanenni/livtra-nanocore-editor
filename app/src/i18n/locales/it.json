@@ -48,7 +48,8 @@
     "on": "Attivo",
     "off": "Spento",
     "type": "Tipo",
-    "power": "Alimentazione"
+    "power": "Alimentazione",
+    "customProfile": "Profilo personalizzato \"{{name}}\", caricato nello slot del modello di fabbrica {{factory}}."
   },
   "routing": {
     "warning": "FX2 è impostato su {{type}}, che riutilizza i CC parametro di MOD (68-73). Modificare i parametri MOD ora cambierà in realtà {{type}} di FX2."

@@ -1,10 +1,22 @@
 import {
   activeParams,
+  customProfileName,
   findBlock,
   findType,
   nanocoreSpec,
 } from '@nanocore/protocol';
-import type { BlockSpec, EffectType, ParamSpec, PatchState } from '@nanocore/protocol';
+import type { BlockSpec, EffectType, ParamSpec, PatchState, ProfileCatalogRecord } from '@nanocore/protocol';
+
+/** What the pedal's AMP/FX2 profile and CAB IR slots hold — `null` for a catalog not read yet. */
+export interface Catalogs {
+  profiles: ProfileCatalogRecord[] | null;
+  irs: ProfileCatalogRecord[] | null;
+}
+
+/** Name of the custom profile/IR loaded into the slot of `type`, or `null` for a factory slot. */
+export function customName(catalogs: Catalogs | undefined, block: BlockSpec, type: EffectType): string | null {
+  return customProfileName(block.id === 'cab' ? catalogs?.irs : catalogs?.profiles, block.id, type.id, type.name);
+}
 
 /** How a param's value reads to a person: real units for a range, the option's name for an enum. */
 function paramValueView(spec: ParamSpec, value: number): { value: number | string; unit?: string } {
@@ -14,7 +26,7 @@ function paramValueView(spec: ParamSpec, value: number): { value: number | strin
 }
 
 /** One block of the patch as the assistant sees it, params keyed by their on-device label. */
-export function describeBlockState(blockId: string, patch: PatchState) {
+export function describeBlockState(blockId: string, patch: PatchState, catalogs?: Catalogs) {
   const block = findBlock(blockId);
   const state = patch[blockId];
   const type = findType(block, state.typeId);
@@ -22,12 +34,13 @@ export function describeBlockState(blockId: string, patch: PatchState) {
   for (const spec of activeParams(block, state.typeId)) {
     params[spec.label] = paramValueView(spec, state.params[spec.id] ?? 0);
   }
-  return { name: block.name, on: state.on, type: type.name, params };
+  const profile = customName(catalogs, block, type);
+  return { name: block.name, on: state.on, type: type.name, ...(profile ? { profile } : {}), params };
 }
 
-export function describePatch(patch: PatchState, chainOrder: string[]) {
+export function describePatch(patch: PatchState, chainOrder: string[], catalogs?: Catalogs) {
   const blocks: Record<string, ReturnType<typeof describeBlockState>> = {};
-  for (const block of nanocoreSpec.blocks) blocks[block.id] = describeBlockState(block.id, patch);
+  for (const block of nanocoreSpec.blocks) blocks[block.id] = describeBlockState(block.id, patch, catalogs);
   return { chainOrder, blocks };
 }
 
@@ -44,19 +57,23 @@ function paramSpecView(spec: ParamSpec) {
 }
 
 /** The catalogue of one block: every effect type with its parameters and valid ranges. */
-export function describeBlockSpec(block: BlockSpec) {
+export function describeBlockSpec(block: BlockSpec, catalogs?: Catalogs) {
   return {
     id: block.id,
     name: block.name,
     ...(block.warning ? { warning: block.warning } : {}),
     commonParams: (block.commonParams ?? []).map(paramSpecView),
-    types: block.types.map((t) => ({
-      id: t.id,
-      name: t.name,
-      ...(t.description ? { description: t.description } : {}),
-      ...(t.warning ? { warning: t.warning } : {}),
-      params: t.params.map(paramSpecView),
-    })),
+    types: block.types.map((t) => {
+      const profile = customName(catalogs, block, t);
+      return {
+        id: t.id,
+        name: t.name,
+        ...(profile ? { profile } : {}),
+        ...(t.description ? { description: t.description } : {}),
+        ...(t.warning ? { warning: t.warning } : {}),
+        params: t.params.map(paramSpecView),
+      };
+    }),
   };
 }
 
@@ -74,14 +91,18 @@ export function resolveBlock(ref: string): BlockSpec {
   return found;
 }
 
-/** Resolves an effect type of `block` by name, slug or numeric id. */
-export function resolveType(block: BlockSpec, ref: string | number): EffectType {
+/** Resolves an effect type of `block` by name, slug, numeric id, or the name of a custom
+ * profile/IR loaded into its slot. */
+export function resolveType(block: BlockSpec, ref: string | number, catalogs?: Catalogs): EffectType {
   if (typeof ref === 'number') {
     const byId = block.types.find((t) => t.id === ref);
     if (byId) return byId;
   } else {
     const n = norm(ref);
-    const found = block.types.find((t) => norm(t.name) === n || norm(t.slug) === n) ?? (/^\d+$/.test(ref) ? block.types.find((t) => t.id === Number(ref)) : undefined);
+    const found =
+      block.types.find((t) => norm(t.name) === n || norm(t.slug) === n) ??
+      (/^\d+$/.test(ref) ? block.types.find((t) => t.id === Number(ref)) : undefined) ??
+      block.types.find((t) => norm(customName(catalogs, block, t) ?? '') === n);
     if (found) return found;
   }
   throw new Error(`Unknown ${block.name} type "${ref}". Use describe_block to list them.`);
