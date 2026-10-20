@@ -23,7 +23,7 @@ import {
 import type { ProfileCatalogRecord } from '../midi/sysex';
 import { parseGlobalSettingsResponse } from '../midi/presetReader';
 import type { GlobalSettings } from '../midi/presetReader';
-import { readIrCatalog, readProfileCatalog, runProfileUpload } from '../midi/profileUpload';
+import { readIrCatalog, readProfileCatalog, readProfileData, runProfileUpload, type ProfileReadResult } from '../midi/profileUpload';
 import type { CommandTransact, UploadPhase, UploadResult } from '../midi/profileUpload';
 import { nanocoreSpec } from '../data/nanocoreSpec';
 import { activeParams, buildBlockDefault, findBlock, findParamSpec, findType } from '../patch/patchDefaults';
@@ -260,6 +260,12 @@ export class NanoCoreDevice {
   /** Reads every AMP/FX2 profile slot's catalog record (read-only). Empty when nothing answered. */
   readProfileCatalog(): Promise<ProfileCatalogRecord[]> {
     return readProfileCatalog(this.profileTransact());
+  }
+
+  /** Reads the stored body of profile slot `slot` (0-37), or CAB IR slot `slot` (0-29) with `ir`,
+   * and checks its CRC-32 against the catalog (read-only). */
+  readProfileData(slot: number, ir = false): Promise<ProfileReadResult> {
+    return readProfileData(this.profileTransact(), slot, ir);
   }
 
   /** Reads every CAB IR slot's catalog record (read-only). Empty when nothing answered. */

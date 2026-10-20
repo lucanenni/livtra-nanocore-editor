@@ -565,8 +565,19 @@ export const PROFILE_OPCODE = {
   NAME: 0x35,
   CATALOG: 0x36,
   APPLY: 0x37,
+  /** Payload-less, used only on ToneCommand's error paths after `BEGIN` — evidently "abort the
+   * write in progress" (`0x54` for IRs). Not sent by this project. */
+  ABORT: 0x34,
+  /** Payload-less, retried in a loop around write recovery ("AMP write recovery SYNC") — evidently
+   * "report the write session's state" (`0x5a` for IRs). Not sent by this project. */
+  SYNC: 0x38,
+  /** Read-only: `[slot, offsetLo, offsetHi, length≤200]` → a slice of the slot's STORED body
+   * (what the device keeps, not a re-uploadable `.ead`). */
+  READ: 0x39,
   /** CAB IR slots' twin of `CATALOG`: same 30-byte record, slots 0-29 (31+ answer status 3). */
   IR_CATALOG: 0x56,
+  /** `READ`'s IR twin. */
+  IR_READ: 0x59,
 } as const;
 
 /** Builds one request frame with an explicit sequence number (exposed so tests can compare
@@ -647,6 +658,13 @@ export function buildIrCatalogReadSysEx(slot: number): number[] {
   return buildCommandFrame(PROFILE_OPCODE.IR_CATALOG, [slot & 0xff]);
 }
 
+/** Read-only: up to `length` (≤ 200) bytes of the stored body of profile slot `slot` from
+ * `offset`. Reply payload: `[slot, offsetLo, offsetHi, totalLo, totalHi, ...data]`. Confirmed on
+ * real hardware 2026-10-20 (12242 bytes whose CRC-32 equals the catalog record's checksum). `ir` reads a CAB IR slot instead (`0x59`). */
+export function buildProfileReadSysEx(slot: number, offset: number, length: number, ir = false): number[] {
+  return buildCommandFrame(ir ? PROFILE_OPCODE.IR_READ : PROFILE_OPCODE.READ, [slot & 0xff, offset & 0xff, (offset >> 8) & 0xff, length & 0xff]);
+}
+
 export interface CommandMessage {
   direction: 'request' | 'reply';
   seq: number;
@@ -707,9 +725,11 @@ export interface ProfileCatalogRecord {
   present: boolean;
   /** Set on the most recently written slot only — not a persistent "differs from factory" flag. */
   lastWritten: boolean;
-  /** 12242 (file length − 60) for every profile seen so far. */
+  /** Size of the body the device stores: 12242 (file length − 60) for every AMP/FX2 profile seen
+   * so far, up to 4096 for an IR. */
   bodyBytes: number;
-  /** Not the CRC-32 the finalize command carries; algorithm not identified. */
+  /** CRC-32 of the stored body (what `READ` returns) — not of the uploaded file, which is why it
+   * differs from the CRC-32 the finalize command carries. Confirmed 2026-10-20. */
   checksum: number;
   name: string;
 }
