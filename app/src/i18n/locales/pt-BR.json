@@ -1,0 +1,642 @@
+{
+  "app": {
+    "noHardwareNotice": "Nenhuma NanoCore encontrada — conecte-a por USB (ou pareie por Bluetooth) e ela se conecta automaticamente. Sem o equipamento? Mude para o Simulador e monte um patch offline.",
+    "subtitle": "Editor online não oficial para o mini multiefeitos Livtra NanoCore",
+    "title": "NanoCore Editor"
+  },
+  "block": {
+    "customProfile": "Perfil personalizado \"{{name}}\", carregado no slot do modelo de fábrica {{factory}}.",
+    "noParams": "Este tipo de efeito não tem parâmetros ajustáveis — ele se ajusta sozinho.",
+    "off": "Desligado",
+    "on": "Ligado",
+    "power": "Liga/desliga",
+    "type": "Tipo"
+  },
+  "ccRef": {
+    "colCC": "CC",
+    "colRange": "Faixa",
+    "colScope": "Bloco",
+    "colTarget": "Controla",
+    "colTest": "Enviar valor de teste",
+    "filterLabel": "Filtrar a tabela de referência de CC",
+    "filterPlaceholder": "Filtrar por número de CC, bloco ou parâmetro…",
+    "hint": "Não conectado — conecte a NanoCore para enviar valores de teste a partir desta tabela. De qualquer forma, ela funciona como referência.",
+    "hintLive": "Todos os CCs que este editor conhece, em ordem. Envie um valor de teste e veja a pedaleira reagir — útil para configurar uma controladora MIDI de pé externa para tocar ao vivo.",
+    "noMatches": "Nenhum CC corresponde a esse filtro.",
+    "title": "Referência de CC"
+  },
+  "chain": {
+    "loadedPresetPrefix": "Patch {{number}} —",
+    "loadedPresetRename": "Renomear este patch na pedaleira (máx. 8 caracteres)",
+    "moveLeft": "Mover {{name}} para antes na cadeia",
+    "moveRight": "Mover {{name}} para depois na cadeia"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "reset": "Zerar patch"
+  },
+  "connection": {
+    "autoConnected": "NanoCore encontrada e conectada automaticamente.",
+    "bluetoothHint": "Abre o seletor de dispositivos do navegador (só Chrome/Edge/Opera, exige HTTPS ou localhost) e conecta direto ao serviço Bluetooth MIDI da NanoCore — sem parear no sistema. Se ela não aparecer, desligue e ligue o Bluetooth na pedaleira e confira se nada mais (ex.: o app oficial no celular) já está usando a conexão. Já conectado? Selecionar de novo não reabre o seletor — use Desconectar abaixo antes para escolher outro dispositivo.",
+    "channel": "Canal",
+    "channelHint": "Precisa ser igual ao Canal MIDI configurado na NanoCore (canal 0 na pedaleira = Omni, qualquer canal funciona).",
+    "connectDevice": "Conectar",
+    "connectHint": "Escolha o dispositivo certo acima e clique em Conectar — isso também lê o patch que está carregado na pedaleira. Nada é enviado à pedaleira antes de você conectar.",
+    "connectedHint": "Conectado — toda mudança feita aqui vai direto para a pedaleira. Desconecte para parar de enviar sem trocar de porta.",
+    "disconnect": "Desconectar",
+    "disconnectDevice": "Desconectar",
+    "noBluetoothOutput": "Ainda não conectado — clique no botão de transporte Bluetooth acima para abrir o seletor de dispositivos.",
+    "noOutputs": "Nenhuma saída MIDI encontrada. Conecte a NanoCore por USB e atualize.",
+    "output": "Saída",
+    "pairingHint": "USB e Bluetooth funcionam. Para usar Bluetooth aqui, pareie a NanoCore no sistema antes (no macOS: Configuração de Áudio e MIDI → Estúdio MIDI → Bluetooth) — desligue e ligue o Bluetooth na pedaleira para ela voltar a ser anunciada e confira se nada mais (ex.: o app oficial no celular) já está usando a conexão. Depois de pareada, ela aparece abaixo como qualquer outra porta. (Ou use o transporte \"Bluetooth\" acima para parear direto por esta página.)",
+    "readDone": "Lido ✓",
+    "readFromDevice": "Ler da pedaleira",
+    "reading": "Lendo…",
+    "refresh": "Atualizar",
+    "statusConnected": "Conectado",
+    "statusError": "Erro",
+    "statusInitializing": "Conectando…",
+    "statusNotReady": "Não está pronto",
+    "statusPickDevice": "Não conectado",
+    "title": "Conexão MIDI",
+    "transport": "Transporte",
+    "transportBluetooth": "Bluetooth (parear por esta página)",
+    "transportSimulator": "Simulador (sem equipamento)",
+    "transportWebmidi": "Web MIDI (USB / Bluetooth pareado no sistema)"
+  },
+  "enum": {
+    "saw": "Dente de serra",
+    "sine": "Senoidal",
+    "square": "Quadrada",
+    "triangle": "Triangular"
+  },
+  "global": {
+    "btVolume": "Volume BT",
+    "firmware": "Firmware",
+    "hint": "Não conectado — isto é só uma referência local, nada daqui é transmitido até você conectar. Depois de conectado, estes viram controles ao vivo da pedaleira.",
+    "hintLive": "Ao vivo — mostra e controla a pedaleira diretamente.",
+    "inputGain": "Ganho de entrada",
+    "loopback": "Loopback",
+    "midiChannel": "Canal MIDI",
+    "midiChannelHint": "0 = Omni (recebe em todos os canais)",
+    "title": "Configurações globais",
+    "usbVolume": "Volume USB",
+    "wireless": "Sem fio (Bluetooth)"
+  },
+  "info": {
+    "bluetooth": "Bluetooth",
+    "bluetoothIntro": "A NanoCore tem um módulo Bluetooth de modo duplo totalmente independente. Os dois modos podem ser ligados ou desligados separadamente, sem interferir um no outro.",
+    "bluetoothMode": {
+      "NanoCore Audio (BT Audio)": "Recebe áudio de mídia de um celular ou tablet. Depois de conectado, a música do celular pode ser usada como playback, passando pelo processador de efeitos.",
+      "NanoCore MIDI (Wireless MIDI)": "Conecta ao app oficial para celular para sincronizar, controlar e editar parâmetros nos dois sentidos — a versão sem fio deste editor."
+    },
+    "bluetoothNote": "O módulo NanoCore MIDI fica oculto até o primeiro pareamento feito dentro do app oficial; ele só aparece nas configurações de Bluetooth do celular depois que esse pareamento inicial dá certo.",
+    "companionSoftware": "Software oficial",
+    "companionSoftwarePlatforms": "Computador (Windows, macOS) e celular (Android, iOS).",
+    "companionSoftwareText": "A Livtra também oferece um app oficial gratuito para gerenciar o aparelho por completo: ajuste de timbres, importação/exportação de presets, importação de arquivos NAM (Neural Amp Modeler), carregamento de IRs de terceiros e restauração de fábrica.",
+    "firmware": "Versão da documentação: firmware {{fw}}",
+    "hint": "Material de referência da documentação da própria Livtra — nada nesta página é editável ou transmitido; está aqui para você não precisar procurar no PDF.",
+    "sources": "Documentos de origem",
+    "spec": {
+      "A/D/A Conversion": "Conversão A/D/A",
+      "Bluetooth Frequency Band": "Faixa de frequência Bluetooth",
+      "Built-in Battery": "Bateria interna",
+      "Dimensions": "Dimensões",
+      "Effect Modules": "Módulos de efeito",
+      "Headphone Output": "Saída de fone",
+      "Included Accessories": "Acessórios inclusos",
+      "Input": "Entrada",
+      "Max RF Power": "Potência máx. de RF",
+      "Output": "Saída",
+      "Power Requirement": "Alimentação",
+      "Presets": "Presets",
+      "Sample Rate": "Taxa de amostragem",
+      "Signal-to-Noise Ratio": "Relação sinal-ruído",
+      "USB Interface": "Interface USB",
+      "USB Recording": "Gravação por USB",
+      "Weight": "Peso"
+    },
+    "specValue": {
+      "Built-in Battery": "Bateria de lítio de 1300 mAh, permite usar enquanto carrega",
+      "Included Accessories": "Cabo USB-C, manual do usuário, clipe para prender na roupa"
+    },
+    "specifications": "Especificações",
+    "title": "Sobre a NanoCore",
+    "usbAudio": "Interface de áudio USB",
+    "usbAudioText": "O aparelho é uma interface de áudio USB class-compliant, sem driver — ligue-o a um computador e ele aparece sozinho como \"Nanocore\". Também conecta direto a celulares/tablets por USB OTG, para gravar e fazer lives com qualidade em qualquer lugar."
+  },
+  "language": {
+    "label": "Idioma"
+  },
+  "log": {
+    "cc": "CC{{cc}}",
+    "clear": "Limpar",
+    "empty": "Nada enviado ainda. Mexa em um controle para ver aqui as mensagens MIDI enviadas.",
+    "pc": "PC",
+    "sysex": "SysEx",
+    "sysexBytes": "{{count}}B",
+    "title": "Atividade MIDI"
+  },
+  "nav": {
+    "ccref": "Referência de CC",
+    "chain": "Cadeia de efeitos",
+    "global": "Configurações globais",
+    "info": "Sobre",
+    "log": "Atividade MIDI",
+    "presets": "Presets",
+    "profiles": "Perfis AMP/FX2",
+    "sections": "Seções",
+    "tuner": "Afinador"
+  },
+  "param": {
+    "age": "Idade",
+    "attack": "Ataque",
+    "bass": "Graves",
+    "bit_depth": "Resolução (bits)",
+    "boost": "Boost",
+    "comp_threshold": "Limiar",
+    "crossover": "Crossover",
+    "decay": "Decaimento",
+    "delay": "Delay",
+    "depth": "Profundidade",
+    "env": "Envelope",
+    "exactValue": "{{label}} (valor exato)",
+    "feedback": "Feedback",
+    "filter": "Filtro",
+    "fine": "Ajuste fino",
+    "freq": "Freq.",
+    "gain": "Gain",
+    "gate_threshold": "Limiar do gate",
+    "high": "Agudos",
+    "high_cut": "Corte de agudos",
+    "interval": "Intervalo",
+    "knee": "Knee",
+    "level": "Nível",
+    "lf_damp": "Amortecimento de graves",
+    "lofi_mix": "Mix LoFi",
+    "low": "Graves",
+    "low_cut": "Corte de graves",
+    "makeup": "Ganho de compensação",
+    "mid": "Médios",
+    "mix": "Mix",
+    "mod": "Modulação",
+    "mod_depth": "Profundidade da modulação",
+    "mod_rate": "Velocidade da modulação",
+    "pitch": "Afinação",
+    "pre_delay": "Pre Delay",
+    "q": "Q",
+    "rate": "Velocidade",
+    "ratio": "Razão",
+    "release": "Release",
+    "shape": "Forma",
+    "smear": "Smear",
+    "smooth": "Suavização",
+    "sweep": "Varredura",
+    "threshold": "Limiar",
+    "time": "Tempo",
+    "tone": "Tonalidade",
+    "treble": "Agudos",
+    "wave": "Onda"
+  },
+  "preset": {
+    "confirmDelete": "Apagar o preset \"{{name}}\"?",
+    "delete": "Apagar",
+    "dirty": "Alterações não salvas",
+    "empty": "Nenhum preset salvo ainda. Monte um patch e clique em \"Salvar como novo preset\".",
+    "export": "Exportar todos (.json)",
+    "exportCurrent": "Exportar o patch atual (.json)",
+    "import": "Importar (.json)",
+    "importCurrent": "Importar patch (.json)",
+    "importError": "Falha ao importar: {{error}}",
+    "importPatchResult": "Patch carregado no editor.",
+    "importResult": "{{count}} preset(s) importado(s).",
+    "load": "Carregar",
+    "newName": "Nome do preset",
+    "next": "Próximo",
+    "onlineLibraryHint": "A biblioteca de timbres RESONA da Livtra fica em livtramusic.com, não neste editor — o site deles não aceita pedidos vindos de outras páginas, então ainda não dá para navegar ou importar um timbre por aqui (baixar também exige uma conta Livtra). Carregar um timbre na pedaleira também ainda não é suportado aqui (o protocolo de envio está documentado nas notas MIDI do projeto).",
+    "onlineLibraryLink": "Abrir a biblioteca de timbres ↗",
+    "onlineLibraryTitle": "Biblioteca de timbres online",
+    "prev": "Anterior",
+    "programNumber": "Número do preset (0-127)",
+    "recall": "Carregar",
+    "recallHint": "O Program Change só diz à NanoCore qual dos presets gravados nela deve carregar — ele não traz os parâmetros resultantes de volta para este editor.",
+    "recallOffsetHint": "Confirmado no equipamento: o número que a pedaleira mostra é 1 a mais que o daqui — enviar 0 carrega o que a pedaleira mostra como preset \"1\", enviar 5 carrega o \"6\", e assim por diante.",
+    "recallTitle": "Carregar preset da pedaleira",
+    "rename": "Renomear",
+    "renameButton": "Renomear",
+    "renameHint": "Renomeia o patch ativo/em edição na pedaleira (ao vivo, como qualquer outro ajuste — até 8 caracteres, o limite real da pedaleira). Isso NÃO fica gravado sozinho: use \"Salvar em um slot da pedaleira\" abaixo em seguida, senão se perde na próxima troca de preset.",
+    "renamePlaceholder": "Novo nome do patch (máx. 8 caracteres)",
+    "renameTitle": "Renomear patch na pedaleira",
+    "save": "Salvar como novo preset",
+    "saveFailed": "Sem resposta da pedaleira — talvez não tenha salvado.",
+    "saveHint": "Salva em um slot o que a pedaleira tem carregado agora (o preset carregado mais os ajustes ao vivo) — NÃO envia antes o patch deste editor para a pedaleira. Envie o patch primeiro se quiser salvar o que está vendo aqui. Mesma numeração do carregamento acima (começa em 0, +1 na pedaleira).",
+    "saveOk": "Salvo no slot {{n}}.",
+    "saveSlotNumber": "Número do slot (0-127)",
+    "saveTitle": "Salvar em um slot da pedaleira",
+    "saveToSlotButton": "Salvar",
+    "saving": "Salvando…",
+    "sendToDevice": "Enviar patch para a pedaleira",
+    "sendToDeviceHint": "Transmite o liga/desliga, o tipo e os CCs de parâmetro de cada bloco do patch atual. Lembre de salvar na pedaleira depois (segure o MASTER) se quiser que ele fique gravado.",
+    "title": "Biblioteca de presets",
+    "update": "Atualizar"
+  },
+  "profiles": {
+    "chooseFile": "Escolher arquivo .ead…",
+    "colName": "Nome",
+    "colNote": "Obs.",
+    "colSlot": "Slot",
+    "confirm": "Sobrescrever o slot {{slot}} (\"{{current}}\") com \"{{name}}\"?\n\nEste editor não consegue devolver o perfil de fábrica — só o \"Restore Factory Content\" do ToneCommand consegue (ele regrava todos os slots de AMP e FX2). Mantenha o cabo conectado até terminar.",
+    "done": "Enviado para o slot {{slot}}.",
+    "errNoResponse": "Sem resposta da pedaleira durante \"{{phase}}\". Tente de novo; se continuar falhando, desligue e ligue a NanoCore.",
+    "errSlot": "A pedaleira não tem esse slot.",
+    "errStatus": "A pedaleira recusou o envio durante \"{{phase}}\" (status {{status}}).",
+    "hint": "A NanoCore tem 38 slots de perfil: 30 modelos de AMP e 8 drives do FX2. Veja o que há neles, ou envie um arquivo de perfil .ead para um deles usando os mesmos comandos do ToneCommand.",
+    "kindAmp": "AMP",
+    "kindFx2": "FX2",
+    "lastWritten": "último gravado",
+    "name": "Nome do slot",
+    "phase": {
+      "applying": "aplicando",
+      "begin": "iniciando",
+      "finalize": "finalizando",
+      "info": "verificando a pedaleira",
+      "naming": "nomeando o slot",
+      "writing": "gravando"
+    },
+    "problem": {
+      "bad-magic": "Isso não parece um perfil .ead (cabeçalho do arquivo errado).",
+      "bad-version": "Versão de perfil não suportada.",
+      "length-mismatch": "O tamanho do arquivo não bate com o cabeçalho — ele pode estar incompleto ou danificado.",
+      "too-large": "Esse arquivo é maior que qualquer perfil já visto.",
+      "too-short": "Esse arquivo é pequeno demais para ser um perfil."
+    },
+    "read": "Ler os slots da pedaleira",
+    "readFailed": "Sem resposta da pedaleira.",
+    "reading": "Lendo…",
+    "slot": "Slot",
+    "title": "Perfis AMP/FX2",
+    "upload": "Enviar para o slot",
+    "uploadHint": "Sobrescreve o slot escolhido. Este editor não restaura o conteúdo de fábrica — para isso use o \"Restore Factory Content\" do ToneCommand. Testado só por USB.",
+    "uploadTitle": "Enviar um perfil",
+    "uploading": "Enviando…"
+  },
+  "routing": {
+    "warning": "O FX2 está em {{type}}, que reutiliza os CCs de parâmetro do MOD (68-73). Mexer nos parâmetros do MOD agora vai, na verdade, alterar o {{type}} do FX2."
+  },
+  "tuner": {
+    "note": "Envia o CC80 (0 = desliga, 127 = liga) para abrir/fechar o afinador da pedaleira à distância. A referência de afinação (padrão 440 Hz) só pode ser ajustada na própria pedaleira — não há CC documentado para ela.",
+    "title": "Afinador",
+    "toggle": "Afinador"
+  },
+  "type": {
+    "del": {
+      "bbd": {
+        "name": "BBD",
+        "description": "Delay analógico BBD clássico; textura quente de delay de fita vintage."
+      },
+      "digital": {
+        "name": "Digital",
+        "description": "Delay digital limpo; timbre claro e transparente, serve para vários estilos."
+      },
+      "duck": {
+        "name": "Duck",
+        "description": "Delay com ducking; abaixa as repetições automaticamente enquanto você toca, para não embolar."
+      },
+      "ice": {
+        "name": "Ice",
+        "description": "Delay com pitch shift; repetições com a afinação deslocada para um clima etéreo."
+      },
+      "lofi": {
+        "name": "LoFi",
+        "description": "Delay lo-fi; a distorção por redução de bits cria uma textura de fita vintage desgastada."
+      },
+      "mod_delay": {
+        "name": "Mod Delay",
+        "description": "Delay modulado; repetições com ondulação para um timbre com mais camadas."
+      },
+      "reverse": {
+        "name": "Reverse",
+        "description": "Delay reverso; toca as repetições ao contrário para um efeito espacial onírico."
+      },
+      "smear": {
+        "name": "Smear",
+        "description": "Delay smear; suaviza e borra as repetições para uma difusão espacial suave."
+      }
+    },
+    "eq": {
+      "eq3": {
+        "name": "EQ de 3 bandas",
+        "description": "Ajuste rápido de graves, médios e agudos."
+      },
+      "eq6": {
+        "name": "EQ de 6 bandas",
+        "description": "Ajuste fino paramétrico do timbre em várias bandas."
+      },
+      "eq8": {
+        "name": "EQ de 8 bandas",
+        "description": "EQ de faixa completa; modelagem precisa do timbre em todo o espectro de frequências."
+      }
+    },
+    "fx1": {
+      "auto_gate": {
+        "name": "Auto Gate",
+        "description": "Noise gate adaptativo que ajusta o limiar sozinho conforme o nível do sinal muda."
+      },
+      "compressor": {
+        "name": "Compressor",
+        "description": "Suaviza as variações de volume e estabiliza o timbre."
+      },
+      "gate": {
+        "name": "Gate",
+        "description": "Elimina ruídos de baixo nível e limpa o sinal de entrada."
+      },
+      "gate_compressor": {
+        "name": "Gate + Compressor (NC-Com)",
+        "description": "Combinação de Noise Gate + Compressor; cuida do ruído de fundo e da faixa dinâmica ao mesmo tempo."
+      }
+    },
+    "fx2": {
+      "ds2": {
+        "name": "DS2",
+        "description": "Baseado na modelagem do pedal Boss DS-2."
+      },
+      "envelope_wah": {
+        "name": "Envelope Wah",
+        "description": "Varredura de filtro disparada automaticamente pela dinâmica da sua palhetada."
+      },
+      "fiman": {
+        "name": "Fiman",
+        "description": "Baseado na modelagem do pedal Friedman Marty Friedman."
+      },
+      "klone": {
+        "name": "Klone",
+        "description": "Baseado na modelagem do pedal Ryra The Klone."
+      },
+      "ocd": {
+        "name": "OCD",
+        "description": "Baseado na modelagem do pedal Fulltone OCD."
+      },
+      "pifuzz": {
+        "name": "PIFUZZ",
+        "description": "Baseado na modelagem do pedal EHX Big Muff Pi."
+      },
+      "pitch": {
+        "name": "Pitch",
+        "description": "Efeito de pitch shift; altera a afinação do sinal."
+      },
+      "range": {
+        "name": "Range",
+        "description": "Baseado na modelagem do pedal Dallas-Arbiter Rangemaster."
+      },
+      "scream": {
+        "name": "Scream",
+        "description": "Baseado na modelagem do pedal Ibanez TS9."
+      },
+      "wah": {
+        "name": "Wah",
+        "description": "Filtro com varredura cíclica seguindo uma forma de onda definida."
+      },
+      "xac": {
+        "name": "XAC",
+        "description": "Baseado na modelagem do pedal Xotic AC Booster."
+      }
+    },
+    "mod": {
+      "chorus": {
+        "name": "Chorus",
+        "description": "Chorus clássico; abre o palco sonoro para um timbre mais cheio e encorpado."
+      },
+      "flanger": {
+        "name": "Flanger",
+        "description": "Flanger; a filtragem em pente cria uma textura metálica, etérea e flutuante."
+      },
+      "phaser": {
+        "name": "Phaser",
+        "description": "Phaser; filtragem com varredura periódica para um timbre que gira e se move."
+      },
+      "tremolo": {
+        "name": "Tremolo",
+        "description": "Tremolo de volume; o volume oscila ciclicamente conforme a forma de onda."
+      },
+      "vibrato": {
+        "name": "Vibrato",
+        "description": "Vibrato de afinação; oscila levemente a afinação para enriquecer o timbre."
+      }
+    },
+    "rev": {
+      "cloud": {
+        "name": "Cloud",
+        "description": "Reverb ambiente Cloud; decaimento longuíssimo com modulação suave, sensação de flutuar."
+      },
+      "concert": {
+        "name": "Concert",
+        "description": "Reverb de sala de concerto; transparente e definido, ideal para solos."
+      },
+      "hall": {
+        "name": "Hall",
+        "description": "Reverb Hall; simula uma grande sala de concerto, com espaço amplo e imponente."
+      },
+      "plate": {
+        "name": "Plate",
+        "description": "Reverb Plate; timbre vintage clássico de placa metálica, quente e suave."
+      },
+      "room": {
+        "name": "Room",
+        "description": "Reverb Room; simula um ambiente interno pequeno, com som compacto e natural."
+      },
+      "shimmer": {
+        "name": "Shimmer",
+        "description": "Reverb Shimmer; harmônicos com pitch shift criam um clima etéreo e onírico."
+      },
+      "spring": {
+        "name": "Spring",
+        "description": "Reverb de mola; emula o reverb de mola de amplificadores vintage, com textura de rock retrô."
+      }
+    },
+    "amp": {
+      "adn900": {
+        "description": "Baseado na modelagem do pré-amplificador Ashdown ABM900 EVO II"
+      },
+      "apsvtcl": {
+        "description": "Baseado na modelagem do pré-amplificador Ampeg SVT-CL"
+      },
+      "apsvtvr": {
+        "description": "Baseado na modelagem do pré-amplificador Ampeg SVTVR"
+      },
+      "bogxtc1": {
+        "description": "Baseado na modelagem do pré-amplificador Bogner XTC — Timbre 1"
+      },
+      "bogxtc2": {
+        "description": "Baseado na modelagem do pré-amplificador Bogner XTC — Timbre 2"
+      },
+      "engp1": {
+        "description": "Baseado na modelagem do pré-amplificador ENGL Powerball E645 — Timbre 1"
+      },
+      "engp2": {
+        "description": "Baseado na modelagem do pré-amplificador ENGL Powerball E645 — Timbre 2"
+      },
+      "fd59bm": {
+        "description": "Baseado na modelagem do pré-amplificador Fender '59 Bassman"
+      },
+      "fd65dk": {
+        "description": "Baseado na modelagem do pré-amplificador Fender '65 Darkface"
+      },
+      "hiw103": {
+        "description": "Baseado na modelagem do pré-amplificador Hiwatt DR103"
+      },
+      "hiw320": {
+        "description": "Baseado na modelagem do pré-amplificador Hiwatt Jupiter 320"
+      },
+      "mar8001": {
+        "description": "Baseado na modelagem do pré-amplificador Marshall JCM800 — Timbre 1"
+      },
+      "mar8002": {
+        "description": "Baseado na modelagem do pré-amplificador Marshall JCM800 — Timbre 2"
+      },
+      "mardsl1": {
+        "description": "Baseado na modelagem do pré-amplificador Marshall DSL50 — Timbre 1"
+      },
+      "mardsl2": {
+        "description": "Baseado na modelagem do pré-amplificador Marshall DSL50 — Timbre 2"
+      },
+      "marsup": {
+        "description": "Baseado na modelagem do pré-amplificador Marshall Super Bass"
+      },
+      "mesr1": {
+        "description": "Baseado na modelagem do pré-amplificador Mesa Boogie Rectifier — Timbre 1"
+      },
+      "mesr2": {
+        "description": "Baseado na modelagem do pré-amplificador Mesa Boogie Rectifier — Timbre 2"
+      },
+      "mesr3": {
+        "description": "Baseado na modelagem do pré-amplificador Mesa Boogie Rectifier — Timbre 3"
+      },
+      "ogg120": {
+        "description": "Baseado na modelagem do pré-amplificador Orange Graphic 120"
+      },
+      "pey51501": {
+        "description": "Baseado na modelagem do pré-amplificador Peavey 5150 — Timbre 1"
+      },
+      "pey51502": {
+        "description": "Baseado na modelagem do pré-amplificador Peavey 5150 — Timbre 2"
+      },
+      "pey6505": {
+        "description": "Baseado na modelagem do pré-amplificador Peavey 6505"
+      },
+      "rant21": {
+        "description": "Baseado na modelagem do pré-amplificador Randall T2 — Timbre 1"
+      },
+      "rant22": {
+        "description": "Baseado na modelagem do pré-amplificador Randall T2 — Timbre 2"
+      },
+      "rojc120": {
+        "description": "Baseado na modelagem do pré-amplificador Roland JC-120"
+      },
+      "slo1001": {
+        "description": "Baseado na modelagem do pré-amplificador Soldano SLO-100 — Timbre 1"
+      },
+      "slo1002": {
+        "description": "Baseado na modelagem do pré-amplificador Soldano SLO-100 — Timbre 2"
+      },
+      "slo1003": {
+        "description": "Baseado na modelagem do pré-amplificador Soldano SLO-100 — Timbre 3"
+      },
+      "vxac30": {
+        "description": "Baseado na modelagem do pré-amplificador VOX AC30"
+      }
+    },
+    "cab": {
+      "ac30212": {
+        "description": "Baseado no gabinete VOX AC30 2x12"
+      },
+      "adn410": {
+        "description": "Baseado no gabinete Ashdown 4x10"
+      },
+      "ap410": {
+        "description": "Baseado no gabinete Ampeg SVT 4x10"
+      },
+      "ap810": {
+        "description": "Baseado no gabinete Ampeg 8x10"
+      },
+      "bog412a": {
+        "description": "Baseado no gabinete Bogner 4x12 — Timbre A"
+      },
+      "bog412b": {
+        "description": "Baseado no gabinete Bogner 4x12 — Timbre B"
+      },
+      "eng412a": {
+        "description": "Baseado no gabinete ENGL E412 Pro Vintage30 4x12 — Timbre A"
+      },
+      "eng412b": {
+        "description": "Baseado no gabinete ENGL E412 Pro Vintage30 4x12 — Timbre B"
+      },
+      "fd59bm410": {
+        "description": "Baseado no gabinete Fender 1959 Bassman 4x10"
+      },
+      "fdtr212": {
+        "description": "Baseado no gabinete Fender Twin Reverb Darkface 2x12"
+      },
+      "hiw412": {
+        "description": "Baseado no gabinete Hiwatt Brilliant 4x12"
+      },
+      "hiwb410": {
+        "description": "Baseado no gabinete Hiwatt B410 4x10"
+      },
+      "mar412": {
+        "description": "Baseado no gabinete Marshall 4x12"
+      },
+      "mar412a": {
+        "description": "Baseado no gabinete Marshall V30 4x12 — Timbre A"
+      },
+      "mar412b": {
+        "description": "Baseado no gabinete Marshall V30 4x12 — Timbre B"
+      },
+      "mar96412a": {
+        "description": "Baseado no gabinete Marshall 1960B 4x12 — Timbre A"
+      },
+      "mar96412b": {
+        "description": "Baseado no gabinete Marshall 1960B 4x12 — Timbre B"
+      },
+      "mes412a": {
+        "description": "Baseado no gabinete Mesa/Boogie Oversized V30 4x12 — Timbre A"
+      },
+      "mes412b": {
+        "description": "Baseado no gabinete Mesa/Boogie Oversized V30 4x12 — Timbre B"
+      },
+      "mes412c": {
+        "description": "Baseado no gabinete Mesa/Boogie Oversized V30 4x12 — Timbre C"
+      },
+      "og412": {
+        "description": "Baseado no gabinete Orange Vintage30 4x12"
+      },
+      "pey412a": {
+        "description": "Baseado no gabinete Peavey 5150 4x12 — Timbre A"
+      },
+      "pey412b": {
+        "description": "Baseado no gabinete Peavey 5150 4x12 — Timbre B"
+      },
+      "peyvk412": {
+        "description": "Baseado no gabinete Peavey Valveking 4x12"
+      },
+      "ran112a": {
+        "description": "Baseado no gabinete Randall RD112 1x12 — Timbre A"
+      },
+      "ran112b": {
+        "description": "Baseado no gabinete Randall RD112 1x12 — Timbre B"
+      },
+      "ran112c": {
+        "description": "Baseado no gabinete Randall RD112 1x12 — Timbre C"
+      },
+      "slo412a": {
+        "description": "Baseado no gabinete Soldano SLO412 4x12 — Timbre A"
+      },
+      "slo412b": {
+        "description": "Baseado no gabinete Soldano SLO412 4x12 — Timbre B"
+      },
+      "slo412c": {
+        "description": "Baseado no gabinete Soldano SLO412 4x12 — Timbre C"
+      }
+    }
+  }
+}
