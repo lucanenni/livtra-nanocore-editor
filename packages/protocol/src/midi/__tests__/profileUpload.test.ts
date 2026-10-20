@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { crc32 } from '../crc32';
 import {
+  IR_SLOT_COUNT,
   PROFILE_CHUNK_SIZE,
+  catalogSlotFor,
+  customProfileName,
+  readIrCatalog,
   readProfileCatalog,
   runProfileUpload,
   sanitizeProfileName,
@@ -227,7 +231,53 @@ describe('runProfileUpload', () => {
   });
 });
 
+describe('readIrCatalog', () => {
+  it('reads the 30 CAB IR slots with 0x56', async () => {
+    const opcodes = new Set<number>();
+    const transact: CommandTransact = async (build) => {
+      const request = parseCommandMessage(build())!;
+      opcodes.add(request.opcode);
+      const payload = Array.from({ length: 30 }, () => 0);
+      payload[0] = request.payload[0]; payload[1] = 1;
+      return { direction: 'reply', seq: request.seq, opcode: request.opcode, status: 0, payload };
+    };
+    expect(await readIrCatalog(transact)).toHaveLength(IR_SLOT_COUNT);
+    expect([...opcodes]).toEqual([0x56]);
+  });
+});
+
+describe('customProfileName', () => {
+  const record = (slot: number, name: string, present = true) => ({ slot, present, lastWritten: false, bodyBytes: 0, checksum: 0, name });
+
+  it('maps AMP, FX2 and CAB types onto their catalog slots', () => {
+    expect(catalogSlotFor('amp', 5)).toBe(5);
+    expect(catalogSlotFor('fx2', 7)).toBe(37);
+    expect(catalogSlotFor('fx2', 8)).toBeNull(); // FX2 types past the drives/boosts have no slot
+    expect(catalogSlotFor('cab', 29)).toBe(29);
+    expect(catalogSlotFor('rev', 0)).toBeNull();
+  });
+
+  it('names a slot only when it no longer holds the factory model', () => {
+    const catalog = [record(5, 'My Amp NAM'), record(0, 'BogXTC1'), record(31, 'klone'), record(6, 'Hiw103 ', false)];
+    expect(customProfileName(catalog, 'amp', 5, 'Fd65Dk')).toBe('My Amp NAM');
+    expect(customProfileName(catalog, 'amp', 0, 'BogXTC1')).toBeNull();
+    expect(customProfileName(catalog, 'fx2', 1, 'Klone')).toBeNull(); // case-insensitive
+    expect(customProfileName(catalog, 'amp', 6, 'Hiw103')).toBeNull(); // not present
+    expect(customProfileName(null, 'amp', 5, 'Fd65Dk')).toBeNull();
+  });
+});
+
 describe('readProfileCatalog', () => {
+  it('gives up when the first slot gets no reply at all', async () => {
+    let calls = 0;
+    const transact: CommandTransact = async () => {
+      calls += 1;
+      return null;
+    };
+    expect(await readProfileCatalog(transact)).toEqual([]);
+    expect(calls).toBe(1);
+  });
+
   it('reads all 38 slots and skips the ones that fail', async () => {
     const transact: CommandTransact = async (build) => {
       const request = parseCommandMessage(build())!;

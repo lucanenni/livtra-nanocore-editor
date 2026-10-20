@@ -565,6 +565,8 @@ export const PROFILE_OPCODE = {
   NAME: 0x35,
   CATALOG: 0x36,
   APPLY: 0x37,
+  /** CAB IR slots' twin of `CATALOG`: same 30-byte record, slots 0-29 (31+ answer status 3). */
+  IR_CATALOG: 0x56,
 } as const;
 
 /** Builds one request frame with an explicit sequence number (exposed so tests can compare
@@ -637,6 +639,12 @@ export function buildProfileApplySysEx(slot: number): number[] {
 /** Read-only: one slot's catalog record (see `parseProfileCatalogRecord`). */
 export function buildProfileCatalogReadSysEx(slot: number): number[] {
   return buildCommandFrame(PROFILE_OPCODE.CATALOG, [slot & 0xff]);
+}
+
+/** Read-only: one CAB IR slot's catalog record — same layout as the profile one (confirmed on real
+ * hardware 2026-10-20: names Bog412A…Mar412, matching `data/blocks/cab.ts` by index). */
+export function buildIrCatalogReadSysEx(slot: number): number[] {
+  return buildCommandFrame(PROFILE_OPCODE.IR_CATALOG, [slot & 0xff]);
 }
 
 export interface CommandMessage {

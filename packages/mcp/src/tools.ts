@@ -95,12 +95,14 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
       title: 'Read the current patch',
       description:
         "Reads what the pedal is playing right now (live edits included, saved or not): the preset number and name, the effect chain order, and for each of the 8 blocks whether it is on, its effect type and every parameter in real units. " +
-        'Caveat: the pedal cannot report an AMP or CAB model, or an effect chain order, that was changed but not yet saved, so right after a preset recall or reconnect those show the saved values.',
+        'Caveat: the pedal cannot report an AMP or CAB model, or an effect chain order, that was changed but not yet saved, so right after a preset recall or reconnect those show the saved values. ' +
+        'An AMP, FX2 or CAB block whose slot holds a user-loaded NAM profile or IR also shows its name as `profile` (`type` is then the factory model that slot replaced).',
       annotations: READ,
     },
     guarded(async () => {
       await session.refresh();
-      return { preset: { number: session.activeSlot + 1, name: session.presetName }, ...describePatch(session.patch, session.chainOrder) };
+      await session.loadCatalogs();
+      return { preset: { number: session.activeSlot + 1, name: session.presetName }, ...describePatch(session.patch, session.chainOrder, session.catalogs) };
     }),
   );
 
@@ -108,11 +110,17 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
     'describe_block',
     {
       title: 'List a block\'s effects and parameters',
-      description: 'Lists every effect type of a block with its parameters, units, ranges and options — what set_block and set_param accept. Without `block`, gives an overview of all 8 blocks.',
+      description:
+        'Lists every effect type of a block with its parameters, units, ranges and options — what set_block and set_param accept. Without `block`, gives an overview of all 8 blocks. ' +
+        'When connected, AMP/FX2/CAB types whose slot holds a user-loaded NAM profile or IR also carry its name as `profile`.',
       inputSchema: { block: BLOCK_ARG.optional() },
       annotations: READ,
     },
-    guarded(({ block }: { block?: string }) => (block ? describeBlockSpec(resolveBlock(block)) : { blocks: blockOverview() })),
+    guarded(async ({ block }: { block?: string }) => {
+      if (!block) return { blocks: blockOverview() };
+      const spec = resolveBlock(block);
+      return describeBlockSpec(spec, session.connected ? await session.loadCatalogs(spec.id) : undefined);
+    }),
   );
 
   server.registerTool(
@@ -120,7 +128,7 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
     {
       title: 'Switch a block on/off or change its effect type',
       description:
-        'Turns a block on or off and/or selects its effect type (by name, e.g. "Hall"). The change is live; it is lost on the next preset change unless saved with save_to_slot. ' +
+        'Turns a block on or off and/or selects its effect type (by name, e.g. "Hall", or for AMP/FX2/CAB by the name of a NAM profile or IR loaded into a slot). The change is live; it is lost on the next preset change unless saved with save_to_slot. ' +
         'Choosing an AMP or CAB model is sent as a SysEx command (the only way the pedal accepts it).',
       inputSchema: {
         block: BLOCK_ARG,
@@ -129,9 +137,9 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
       },
       annotations: EDIT,
     },
-    guarded(({ block, on, type }: { block: string; on?: boolean; type?: string | number }) => {
-      session.setBlock(block, { on, type });
-      return describePatch(session.patch, session.chainOrder).blocks[resolveBlock(block).id];
+    guarded(async ({ block, on, type }: { block: string; on?: boolean; type?: string | number }) => {
+      await session.setBlock(block, { on, type });
+      return describePatch(session.patch, session.chainOrder, session.catalogs).blocks[resolveBlock(block).id];
     }),
   );
 
@@ -189,7 +197,7 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
     },
     guarded(async ({ number }: { number: number }) => {
       await session.recall(number);
-      return { preset: { number: session.activeSlot + 1, name: session.presetName }, ...describePatch(session.patch, session.chainOrder) };
+      return { preset: { number: session.activeSlot + 1, name: session.presetName }, ...describePatch(session.patch, session.chainOrder, session.catalogs) };
     }),
   );
 

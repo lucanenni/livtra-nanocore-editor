@@ -1067,7 +1067,11 @@ so a restore reproduces the original flash content.
 
 **IR/cabinet catalog:** after amp operations the app also sent `0x50` (no payload) once and `0x56`
 (`slot`) for 30 slots — evidently the cabinet twin of `0x30`/`0x36`. The cabinet *upload* side was
-not captured.
+not captured. **Confirmed 2026-10-20 on real hardware (read-only probe):** a `0x56` reply carries
+the same 30-byte record as `0x36` — slots 0–29 named Bog412A…Mar412, matching `cab.ts` by index;
+slot 30+ answers status 3 with no payload. `0x50` answers like `0x30` (third u32 = 30 slots). The
+editor and the MCP server read both catalogs on connect / first use and show any slot whose name
+differs from the factory model's under its own name (a user-loaded NAM profile or IR).
 
 **Practical notes.** `0x30` and `0x36` are safe reads (this project's tooling sends them while
 developing); everything that writes (`0x31`–`0x35`, `0x37`) overwrites a slot — use ToneCommand's

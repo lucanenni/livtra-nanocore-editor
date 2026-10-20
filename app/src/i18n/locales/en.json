@@ -48,7 +48,8 @@
     "on": "On",
     "off": "Off",
     "type": "Type",
-    "power": "Power"
+    "power": "Power",
+    "customProfile": "Custom profile \"{{name}}\", loaded into the slot of the factory {{factory}} model."
   },
   "routing": {
     "warning": "FX2 is set to {{type}}, which reuses MOD's parameter CCs (68-73). Editing MOD parameters right now will actually change FX2's {{type}} instead."
