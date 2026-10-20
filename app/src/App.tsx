@@ -12,6 +12,7 @@ import { TunerPanel } from './components/TunerPanel';
 import { ActivityLog } from './components/ActivityLog';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { InfoPanel } from './components/InfoPanel';
+import { Icon } from './components/Icon';
 import { usePatchStore } from './store/patchStore';
 import { nanocoreSpec } from '@nanocore/protocol';
 
@@ -146,7 +147,8 @@ function App() {
                 aria-pressed={tab === tb.id}
                 onClick={() => setTab(tb.id)}
               >
-                {tb.label}
+                <Icon name={tb.id} />
+                <span>{tb.label}</span>
               </button>
             ))}
           </nav>

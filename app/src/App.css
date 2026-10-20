@@ -76,6 +76,9 @@
 }
 
 .app-tabs__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-align: left;
   padding: 10px 12px;
   border: none;
@@ -87,6 +90,15 @@
 
 .app-tabs__item:hover:not(.app-tabs__item--active) {
   background: var(--bg-inset);
+}
+
+.app-tabs__item .icon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.app-tabs__item--active .icon {
+  color: inherit;
 }
 
 .app-tabs__item--active {
@@ -422,9 +434,12 @@ input[type='checkbox'] {
 }
 
 .chain-view__block {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  min-width: 56px;
   border: 1px solid transparent;
   background: transparent;
   border-radius: 8px;
@@ -443,10 +458,24 @@ input[type='checkbox'] {
 }
 
 .chain-view__dot {
-  width: 8px;
-  height: 8px;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--border);
+}
+
+/* Off blocks fade their icon, on ones show it in the accent — the dot alone is easy to miss. */
+.chain-view__icon {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.chain-view__icon--on {
+  color: var(--accent);
+  opacity: 1;
 }
 
 .chain-view__dot--on {

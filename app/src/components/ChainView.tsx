@@ -3,6 +3,7 @@ import type { DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { findBlock } from '@nanocore/protocol';
 import { usePatchStore } from '../store/patchStore';
+import { Icon } from './Icon';
 
 interface Props {
   selected: string;
@@ -94,6 +95,7 @@ export function ChainView({ selected, onSelect }: Props) {
                 onClick={() => onSelect(block.id)}
               >
                 <span className={`chain-view__dot ${state?.on ? 'chain-view__dot--on' : ''}`} aria-hidden />
+                <Icon name={block.id} size={22} className={`chain-view__icon ${state?.on ? 'chain-view__icon--on' : ''}`} />
                 <span className="chain-view__label" aria-hidden>
                   {blockName}
                 </span>

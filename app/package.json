@@ -18,6 +18,7 @@
   "dependencies": {
     "@nanocore/protocol": "*",
     "i18next": "^26.3.6",
+    "lucide-react": "^0.468.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.11",
