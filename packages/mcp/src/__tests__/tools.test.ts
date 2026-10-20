@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { amp, buildReplyFrame, cab, fx2, parseActiveSlotFromAmpProfile, parseCommandMessage } from '@nanocore/protocol';
+import { amp, buildReplyFrame, cab, crc32, fx2, parseActiveSlotFromAmpProfile, parseCommandMessage } from '@nanocore/protocol';
 import { FakeTransport } from '@nanocore/protocol/testing/FakeTransport';
 import { LIVE_FX2_TYPE7, SLOT0_CLNARP_P1, SLOT0_CLNARP_P2, hex } from '@nanocore/protocol/testing/realCaptures';
 import { NanoCoreSession } from '../session';
@@ -17,6 +17,11 @@ function catalogRecord(slot: number, name: string): number[] {
   const payload = Array.from({ length: 30 }, () => 0);
   payload[0] = slot;
   payload[1] = 1;
+  // 300-byte body of `slot` repeated (what 0x39/0x59 serve below), with its CRC-32.
+  const crc = crc32(Array.from({ length: 300 }, () => slot));
+  payload[3] = 300 & 0xff;
+  payload[4] = 300 >> 8;
+  [0, 8, 16, 24].forEach((shift, i) => (payload[7 + i] = (crc >>> shift) & 0xff));
   Array.from(name).forEach((ch, i) => (payload[14 + i] = ch.charCodeAt(0)));
   return payload;
 }
@@ -35,6 +40,13 @@ function scriptedDevice(): FakeTransport {
       const slot = command.payload[0];
       const factory = slot < 30 ? amp.types[slot].name : fx2.types.find((ty) => ty.id === slot - 30)!.name;
       return [buildReplyFrame(command.seq, 0x36, 0, catalogRecord(slot, CUSTOM_PROFILES[slot] ?? factory))];
+    }
+    if (command?.opcode === 0x39 || command?.opcode === 0x59) {
+      // Body of every slot: 300 bytes of `slot`, 59 bytes per reply like the real pedal.
+      const [slot, lo, hi] = command.payload;
+      const at = lo | (hi << 8);
+      const data = Array.from({ length: Math.min(59, 300 - at) }, () => slot);
+      return [buildReplyFrame(command.seq, command.opcode, 0, [slot, lo, hi, 300 & 0xff, 300 >> 8, ...data])];
     }
     if (command?.opcode === 0x56) {
       const slot = command.payload[0];
@@ -87,7 +99,7 @@ describe('tool catalogue', () => {
   it('exposes the tools and marks the overwriting ones destructive', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
-    for (const n of ['connect', 'get_patch', 'set_block', 'set_param', 'set_chain_order', 'rename_patch', 'save_to_slot', 'recall_preset', 'get_global_settings', 'set_global_setting', 'list_profiles', 'upload_profile', 'describe_block']) {
+    for (const n of ['verify_profile', 'listen', 'connect', 'get_patch', 'set_block', 'set_param', 'set_chain_order', 'rename_patch', 'save_to_slot', 'recall_preset', 'get_global_settings', 'set_global_setting', 'list_profiles', 'upload_profile', 'describe_block']) {
       expect(names).toContain(n);
     }
     const destructive = tools.filter((t) => t.annotations?.destructiveHint).map((t) => t.name).sort();
@@ -202,7 +214,29 @@ describe('connected', () => {
     expect(patch.blocks.cab.profile).toBe('My Cab IR');
   });
 
-  it('set_chain_order sends the prime message and the order, and rejects a bad list', async () => {
+  it('verify_profile reads a slot back and checks it against the pedal CRC', async () => {
+    const amp6 = await call('verify_profile', { slot: 6 });
+    expect(amp6.isError).toBe(false);
+    expect(amp6.json()).toMatchObject({ slot: 6, kind: 'AMP', name: 'Duke A2 2', factoryName: 'Fd65Dk', bytes: 300, intact: true });
+    const ir3 = await call('verify_profile', { slot: 3, ir: true });
+    expect(ir3.json()).toMatchObject({ kind: 'IR', name: 'My Cab IR', factoryName: 'Eng412A', intact: true });
+    expect((await call('verify_profile', { slot: 31, ir: true })).text).toMatch(/IR slot must be 1-30/);
+  });
+
+    it('listen reports what the pedal pushes on its own, and nothing else', async () => {
+    const listening = call('listen', { seconds: 1 });
+    await new Promise((r) => setTimeout(r, 100));
+    // MOD switched on from the pedal (a real captured 0x02 push), a reply to some request (not a
+    // push, ignored), then a push this server can't decode.
+    transport.push(hex('f0 7d 4e 43 72 00 02 61 00 02 00 05 01 f7'));
+    transport.push(hex('f0 7d 4e 43 71 00 02 05 00 41 00 01 00 00 00 f7'));
+    transport.push(hex('f0 7d 4e 43 72 00 02 61 00 7e 00 00 00 f7'));
+    const result = (await listening).json();
+    expect(result.events.map((e: { kind: string }) => e.kind)).toEqual(['block', 'unknown']);
+    expect(result.events[0]).toMatchObject({ block: 'mod', on: true });
+  });
+
+    it('set_chain_order sends the prime message and the order, and rejects a bad list', async () => {
     transport.sent.length = 0;
     const order = ['eq', 'fx1', 'mod', 'fx2', 'amp', 'cab', 'del', 'rev'];
     const r = await call('set_chain_order', { order });

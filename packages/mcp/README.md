@@ -55,6 +55,8 @@ at a time. Then ask the assistant to connect.
 | `save_to_slot` | Save the live patch into preset 1-64 — **overwrites**, needs `confirm: true` |
 | `get_global_settings` / `set_global_setting` | Wireless, loopback, input gain, USB/BT volume, MIDI channel |
 | `list_profiles` | The 38 AMP/FX2 profile slots and their names |
+| `verify_profile` | Read one profile or IR slot back and check it against the pedal's CRC-32 (name, size, CRC-32, `intact`) |
+| `listen` | Record for N seconds what the pedal reports on its own (preset changes, blocks on/off, knob turns, settings) — e.g. to check a footswitch or controller reaches it |
 | `upload_profile` | Load a local `.ead` file into a profile slot — **overwrites**, needs `confirm: true` |
 
 Edits are **live**: like turning a knob on the pedal, they are lost at the next preset change until

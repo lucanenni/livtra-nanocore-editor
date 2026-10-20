@@ -2,13 +2,19 @@ import {
   ACTIVE_PRESET_SLOT,
   GLOBAL_SETTING_FIELD,
   NanoCoreDevice,
+  IR_SLOT_COUNT,
   PROFILE_FIRST_FX2_SLOT,
   PROFILE_SLOT_COUNT,
   amp,
+  cab,
   applySnapshotToPatch,
   buildDefaultPatch,
   findBlock,
   fx2,
+  parseActiveSlotChangedPush,
+  parseBlockOnOffChangedPush,
+  parseGlobalSettingsPush,
+  parseParamValueChangedPush,
   nanocoreSpec,
   remapParamsForType,
   resolveParamPush,
@@ -27,6 +33,18 @@ export function factoryProfileName(slot: number): string {
   if (slot < PROFILE_FIRST_FX2_SLOT) return amp.types[slot]?.name ?? `Slot ${slot + 1}`;
   return fx2.types.find((t) => t.id === slot - PROFILE_FIRST_FX2_SLOT)?.name ?? `Slot ${slot + 1}`;
 }
+
+/** Something the pedal reported on its own while `listen` was running. */
+export type ListenEvent = { atMs: number } & (
+  | { kind: 'preset'; number: number; note?: string }
+  | { kind: 'block'; block: string; on: boolean }
+  | { kind: 'knob'; block: string; param: string; value: number }
+  | { kind: 'settings'; settings: GlobalSettings }
+  | { kind: 'unknown'; bytes: string }
+);
+
+/** Device->host pushes carry direction byte 0x72 (replies to our own requests are 0x71). */
+const PUSH_DIRECTION = 0x72;
 
 export type SettingName = 'wireless' | 'loopback' | 'input_gain_db' | 'usb_volume' | 'bt_volume' | 'midi_channel';
 
@@ -303,6 +321,75 @@ export class NanoCoreSession {
     if (records.length === 0) throw new Error('The NanoCore did not answer the profile catalog read.');
     this.catalogs.profiles = records;
     return records.map((r) => ({ ...r, kind: r.slot < PROFILE_FIRST_FX2_SLOT ? 'AMP' : 'FX2', factoryName: factoryProfileName(r.slot) }));
+  }
+
+  /** Records everything the pedal pushes on its own for `seconds`: preset changes, blocks switched
+   * on/off, knob turns, settings changes — whatever their source (panel, footswitch, a wireless
+   * controller like the SK7, or another app) — plus any push this server can't decode. Read-only. */
+  async listen(seconds: number): Promise<ListenEvent[]> {
+    const device = this.requireDevice();
+    const transport = await this.ensureTransport();
+    const events: ListenEvent[] = [];
+    const start = Date.now();
+    const stop = transport.onSysExReceived(device.outputId, (bytes) => {
+      if (bytes[4] !== PUSH_DIRECTION) return;
+      const atMs = Date.now() - start;
+      const slot = parseActiveSlotChangedPush(bytes);
+      if (slot !== null) {
+        // Toggling Wireless sends a look-alike of this push (see startLiveSession); flag it.
+        events.push({ atMs, kind: 'preset', number: slot + 1, ...(slot <= 1 ? { note: 'may be the Wireless toggle if a settings event follows' } : {}) });
+        return;
+      }
+      const block = parseBlockOnOffChangedPush(bytes);
+      if (block) {
+        events.push({ atMs, kind: 'block', block: block.blockId, on: block.on });
+        return;
+      }
+      const settings = parseGlobalSettingsPush(bytes);
+      if (settings) {
+        events.push({ atMs, kind: 'settings', settings });
+        return;
+      }
+      const knob = parseParamValueChangedPush(bytes);
+      if (knob) {
+        const state = this.patch[knob.blockId];
+        const resolved = state ? resolveParamPush(state.typeId, knob) : null;
+        events.push({ atMs, kind: 'knob', block: knob.blockId, param: resolved?.paramId ?? `#${knob.paramIndex}`, value: resolved?.value ?? knob.value });
+        return;
+      }
+      events.push({ atMs, kind: 'unknown', bytes: bytes.map((b) => b.toString(16).padStart(2, '0')).join(' ') });
+    });
+    try {
+      await new Promise((r) => setTimeout(r, seconds * 1000));
+    } finally {
+      stop();
+    }
+    return events;
+  }
+
+  /** Reads profile slot `number` (1-38), or CAB IR slot `number` (1-30) with `ir`, back from the
+   * pedal and checks it against the pedal's own CRC-32. Read-only. */
+  async verifyProfile(number: number, ir = false) {
+    const device = this.requireDevice();
+    const count = ir ? IR_SLOT_COUNT : PROFILE_SLOT_COUNT;
+    if (!Number.isInteger(number) || number < 1 || number > count) throw new Error(`${ir ? 'IR' : 'Profile'} slot must be 1-${count}.`);
+    const result = await device.readProfileData(number - 1, ir);
+    if (!result.ok) {
+      const where = result.offset !== undefined ? ` at byte ${result.offset}` : '';
+      if (result.reason === 'empty-slot') throw new Error(`Slot ${number} is empty.`);
+      if (result.reason === 'device-status') throw new Error(`The NanoCore refused the read${where} (status ${result.status}).`);
+      throw new Error(`The NanoCore did not answer the read${where}.`);
+    }
+    const factoryName = ir ? (cab.types[number - 1]?.name ?? '') : factoryProfileName(number - 1);
+    return {
+      slot: number,
+      kind: ir ? 'IR' : number - 1 < PROFILE_FIRST_FX2_SLOT ? 'AMP' : 'FX2',
+      name: result.record.name,
+      factoryName,
+      bytes: result.body.length,
+      crc32: result.crc.toString(16).padStart(8, '0'),
+      intact: result.crcMatches,
+    };
   }
 
   /** Uploads a `.ead` file into profile slot `number` (1-based). Overwrites that slot. */

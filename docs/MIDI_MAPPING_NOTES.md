@@ -1068,6 +1068,34 @@ slot 30+ answers status 3 with no payload. `0x50` answers like `0x30` (third u32
 editor and the MCP server read both catalogs on connect / first use and show any slot whose name
 differs from the factory model's under its own name (a user-loaded NAM profile or IR).
 
+**Reading a slot back, and the catalog checksum — resolved 2026-10-20** (from ToneCommand 1.3.0's
+post-import readback in `liblivtra.dylib`, then confirmed on real hardware, read-only):
+
+| Opcode (AMP/FX2 · IR) | Payload | Reply payload |
+| --- | --- | --- |
+| `0x39` · `0x59` | `slot, offsetLo, offsetHi, length (≤200)` | `slot, offsetLo, offsetHi, totalLo, totalHi, data…` (≤59 data bytes over USB) |
+
+It returns the slot's **stored body** (`bodyBytes` long: 12242 for profiles, up to 4096 for IRs), and
+the catalog record's "checksum" is simply the **CRC-32 of that body** — e.g. slot 6 read back as 12242
+bytes with CRC-32 `9bffdaf2`, equal to its record. The body is not the uploaded `.ead`: the 60-byte
+SAPF header is `magic, version, …, 16-byte nonce @0x08, u32 length @0x18` and the file ends with a
+32-byte tag over an encrypted body — the app checks the tag and decrypts with derived keys, and the
+device stores the decrypted body (it starts `DDPB`, `0xbb80` = 48 kHz). So a read-back slot can be
+verified or compared, but not uploaded again; this project does not touch the encryption. Over USB
+about 1 read in 50 came back with wrong bytes and the next read of the same slot was clean (cause
+not found), so `readProfileData` re-reads on a CRC mismatch.
+
+Two more payload-less opcodes appear only on ToneCommand's write paths, never sent here: `0x34`
+(`0x54` for IRs) on the error paths after `0x31` — evidently "abort the write" — and `0x38` (`0x5a`),
+retried in a loop during write recovery — evidently "write-session status". **There is no per-slot
+"restore factory" command** for the NanoCore: the app's "clears the user AMP override for slot"
+text belongs to a file-based Livtra device (paths `models/amp/`, `ir/slots/`, `.factory.bak`).
+
+**Bluetooth link state is not reported** (tested 2026-10-20): with a Bluetooth audio device
+connecting and disconnecting (the pedal's screen showed both), the `0x68` ping reply, the `0x65`
+settings poll and the unsolicited pushes stayed byte-identical and nothing new was pushed; the app
+itself only knows `wirelessEnabled`.
+
 **Practical notes.** `0x30` and `0x36` are safe reads (this project's tooling sends them while
 developing); everything that writes (`0x31`–`0x35`, `0x37`) overwrites a slot — use ToneCommand's
 restore to put factory content back. Captured over **USB only**: other transports may chunk

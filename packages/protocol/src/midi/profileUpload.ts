@@ -5,6 +5,7 @@ import {
   buildProfileCatalogReadSysEx,
   buildProfileChunkSysEx,
   buildIrCatalogReadSysEx,
+  buildProfileReadSysEx,
   buildProfileFinalizeSysEx,
   buildProfileNameSysEx,
   buildStorageInfoSysEx,
@@ -170,6 +171,54 @@ export function readProfileCatalog(transact: CommandTransact): Promise<ProfileCa
 /** Same as `readProfileCatalog`, for the 30 CAB IR slots. */
 export function readIrCatalog(transact: CommandTransact): Promise<ProfileCatalogRecord[]> {
   return readCatalog(transact, IR_SLOT_COUNT, buildIrCatalogReadSysEx, 'Read IR catalog');
+}
+
+export type ProfileReadResult =
+  | { ok: true; record: ProfileCatalogRecord; body: Uint8Array; crc: number; crcMatches: boolean; attempts: number }
+  | { ok: false; reason: 'no-catalog' | 'empty-slot' | 'no-response' | 'device-status' | 'bad-reply'; status?: number; offset?: number };
+
+/** Largest slice ToneCommand asks for per read; the device may answer with less. */
+const PROFILE_READ_CHUNK = 200;
+
+/** Reads the stored body of a profile slot (or of a CAB IR slot with `ir`) and checks it against
+ * the catalog record's CRC-32. Read-only. The body is what the device keeps after decrypting the
+ * uploaded `.ead` — useful to verify or compare slots, not to upload again.
+ *
+ * A read now and then comes back with a few wrong bytes (about 1 in 50 over USB, cause not found)
+ * while the very next read of the same slot is clean, so a mismatch is re-read up to `attempts`
+ * times: only a slot that never matches is reported as `crcMatches: false`. */
+export async function readProfileData(transact: CommandTransact, slot: number, ir = false, attempts = 3): Promise<ProfileReadResult> {
+  let result: ProfileReadResult = { ok: false, reason: 'no-catalog' };
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    result = await readProfileDataOnce(transact, slot, ir, attempt);
+    if (!result.ok || result.crcMatches) return result;
+  }
+  return result;
+}
+
+async function readProfileDataOnce(transact: CommandTransact, slot: number, ir: boolean, attempt: number): Promise<ProfileReadResult> {
+  const label = ir ? 'IR' : 'profile';
+  const info = await transact(() => (ir ? buildIrCatalogReadSysEx(slot) : buildProfileCatalogReadSysEx(slot)), `Read ${label} catalog: slot ${slot + 1}`);
+  const record = info && info.status === 0 ? parseProfileCatalogRecord(info.payload) : null;
+  if (!record) return { ok: false, reason: 'no-catalog', ...(info ? { status: info.status ?? undefined } : {}) };
+  if (!record.present || record.bodyBytes === 0) return { ok: false, reason: 'empty-slot' };
+
+  const body = new Uint8Array(record.bodyBytes);
+  let offset = 0;
+  while (offset < record.bodyBytes) {
+    const at = offset;
+    const length = Math.min(PROFILE_READ_CHUNK, record.bodyBytes - at);
+    const reply = await transact(() => buildProfileReadSysEx(slot, at, length, ir), `Read ${label} data: slot ${slot + 1} @${at}`);
+    if (!reply) return { ok: false, reason: 'no-response', offset: at };
+    if (reply.status !== 0) return { ok: false, reason: 'device-status', status: reply.status ?? undefined, offset: at };
+    const p = reply.payload;
+    const data = p.slice(5, 5 + (record.bodyBytes - at));
+    if (p[0] !== slot || (p[1] | (p[2] << 8)) !== at || data.length === 0) return { ok: false, reason: 'bad-reply', offset: at };
+    body.set(data, at);
+    offset += data.length;
+  }
+  const crc = crc32(body);
+  return { ok: true, record, body, crc, crcMatches: crc === record.checksum, attempts: attempt };
 }
 
 async function readCatalog(
