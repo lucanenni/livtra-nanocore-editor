@@ -93,6 +93,18 @@ function applyChainOrder(get: () => PatchStore, set: (partial: Partial<PatchStor
 /** Starts the live session: the device's own unsolicited pushes (footswitch/panel changes, knob
  * turns, global settings) are folded into the store as they arrive. Idempotent — replaces any
  * previous session. No-op for the Simulator (callers don't start it there). */
+/** Everything read from a real device once it connects — by hand (`connectDevice`) or automatically
+ * (`initTransport` finding a port named "Nanocore"). The preset first, so the patch shows up first;
+ * then the catalogs that name any custom AMP/FX2 profiles (NAM captures) and CAB IRs in the model
+ * lists (68 round-trips), and the global settings. */
+function readDeviceOnConnect(get: () => PatchStore): void {
+  void get()
+    .readPresetFromDevice()
+    .then(() => get().readProfileCatalog())
+    .then(() => get().readIrCatalog());
+  void get().pollGlobalSettings();
+}
+
 function startLive(
   get: () => PatchStore,
   set: (partial: Partial<PatchStore>) => void,
@@ -379,7 +391,7 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
       const autoOutputId = nanocore?.id ?? outputs[0]?.id ?? null;
       if (connected && kind !== 'simulator' && autoOutputId) {
         startLive(get, set, transport, autoOutputId);
-        void get().readPresetFromDevice();
+        readDeviceOnConnect(get);
       }
     } catch (err) {
       if (myGeneration !== initGeneration) return;
@@ -418,13 +430,7 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
     if (state.connection.transportKind !== 'simulator') {
       const transport = transportFor(state.connection.transportKind);
       startLive(get, set, transport, state.connection.outputId);
-      // The catalogs name any custom AMP/FX2 profiles (NAM captures) and CAB IRs in the model lists;
-      // read after the preset so the patch shows up first (68 round-trips).
-      void get()
-        .readPresetFromDevice()
-        .then(() => get().readProfileCatalog())
-        .then(() => get().readIrCatalog());
-      void get().pollGlobalSettings();
+      readDeviceOnConnect(get);
     }
   },
 

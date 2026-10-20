@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePatchStore } from '../patchStore';
 import { nanocoreSpec } from '@nanocore/protocol';
 
@@ -301,5 +301,34 @@ describe('single-patch export/import (distinct from the preset library)', () => 
     const result = usePatchStore.getState().importPatch(JSON.stringify(patch));
     expect(result.ok).toBe(true);
     expect(typeof usePatchStore.getState().patch.fx1.params.threshold).toBe('number');
+  });
+});
+
+describe('patchStore reads on connect', () => {
+  const original = navigator.requestMIDIAccess;
+  afterEach(() => {
+    (navigator as { requestMIDIAccess?: unknown }).requestMIDIAccess = original;
+    vi.restoreAllMocks();
+  });
+
+  it('auto-connecting to a port named "Nanocore" reads the NAM/IR catalogs and the global settings too', async () => {
+    const output = { id: 'out-1', name: 'Nanocore', type: 'output', state: 'connected', send: vi.fn() };
+    const ports = (list: unknown[]) => ({ forEach: (cb: (p: unknown, k: string) => void) => list.forEach((p, i) => cb(p, String(i))), values: () => list[Symbol.iterator]() });
+    (navigator as { requestMIDIAccess?: unknown }).requestMIDIAccess = vi.fn(async () => ({ inputs: ports([]), outputs: ports([output]), onstatechange: null }));
+    const reads = {
+      readPresetFromDevice: vi.fn(async () => {}),
+      readProfileCatalog: vi.fn(async () => true),
+      readIrCatalog: vi.fn(async () => true),
+      pollGlobalSettings: vi.fn(async () => {}),
+    };
+    usePatchStore.setState(reads);
+
+    await usePatchStore.getState().initTransport('webmidi');
+    await vi.waitFor(() => expect(reads.readIrCatalog).toHaveBeenCalled());
+
+    expect(usePatchStore.getState().connection.autoConnected).toBe(true);
+    expect(reads.readPresetFromDevice).toHaveBeenCalled();
+    expect(reads.readProfileCatalog).toHaveBeenCalled();
+    expect(reads.pollGlobalSettings).toHaveBeenCalled();
   });
 });
