@@ -136,8 +136,6 @@
     "sysexBytes": "{{count}}B"
   },
   "chain": {
-    "loadedPresetPrefix": "Patch {{number}} —",
-    "loadedPresetRename": "Rename this patch on the device (max 8 characters)",
     "moveLeft": "Move {{name}} earlier in the chain",
     "moveRight": "Move {{name}} later in the chain"
   },
@@ -226,5 +224,17 @@
       "length-mismatch": "The file's length does not match its header — it may be truncated or damaged.",
       "too-large": "That file is larger than any profile seen so far."
     }
+  },
+  "devicePresets": {
+    "title": "Device presets",
+    "prev": "Previous preset",
+    "next": "Next preset",
+    "refresh": "Re-read the preset names from the device",
+    "loading": "Loading presets…",
+    "switching": "Loading preset…",
+    "switchingNumber": "Loading preset {{number}}…",
+    "all": "All presets",
+    "rename": "Rename and save this preset on the device (max 8 characters)",
+    "renameSaveFailed": "No response from the device — the new name may not have been saved."
   }
 }

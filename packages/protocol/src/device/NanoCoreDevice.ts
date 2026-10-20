@@ -21,7 +21,7 @@ import {
   parseReadPresetWindow,
 } from '../midi/sysex';
 import type { ProfileCatalogRecord } from '../midi/sysex';
-import { parseGlobalSettingsResponse } from '../midi/presetReader';
+import { parseGlobalSettingsResponse, parsePresetName } from '../midi/presetReader';
 import type { GlobalSettings } from '../midi/presetReader';
 import { readIrCatalog, readProfileCatalog, readProfileData, runProfileUpload, type ProfileReadResult } from '../midi/profileUpload';
 import type { CommandTransact, UploadPhase, UploadResult } from '../midi/profileUpload';
@@ -36,6 +36,8 @@ import type { LiveHandlers } from './live';
 
 /** Bytes a saved-preset read asks for per request (page 1 = offset 0, page 2 = offset 200). */
 const PRESET_PAGE_BYTES = 200;
+/** Enough of a preset to hold its name, and no more than one Bluetooth reply carries. */
+const PRESET_NAME_WINDOW_BYTES = 59;
 /** Safety stop for walking a preset in windows (a real preset is ~265 bytes). */
 const PRESET_MAX_BYTES = 2048;
 const READ_PRESET_OPCODE_TAG = 0x41;
@@ -224,6 +226,27 @@ export class NanoCoreDevice {
     const page = (offset: number, chunk: number[]) =>
       buildReplyFrame(head.seq, READ_PRESET_OPCODE_TAG, 0, [slot, offset & 0xff, offset >> 8, ...head.tag, ...chunk]);
     return { page1: page(0, data.slice(0, PRESET_PAGE_BYTES)), page2: page(PRESET_PAGE_BYTES, data.slice(PRESET_PAGE_BYTES)) };
+  }
+
+  /** Reads the SAVED name of each preset slot from 0 to `count - 1` (read-only), `null` where a slot's
+   * name didn't decode. The name sits in the first 59 bytes of a preset — the most a Bluetooth reply
+   * carries — so one short window per slot is enough on either transport (64 slots ≈ 65 ms over USB).
+   * Stops early when the first slot gets no reply at all (Simulator, older firmware). */
+  async readPresetNames(count: number = nanocoreSpec.meta.presetSlots): Promise<(string | null)[]> {
+    const names: (string | null)[] = [];
+    for (let slot = 0; slot < count; slot += 1) {
+      const reply = await this.request(
+        buildReadPresetWindowSysEx(slot, 0, PRESET_NAME_WINDOW_BYTES),
+        (bytes) => {
+          const w = parseReadPresetWindow(bytes);
+          return w !== null && w.slot === slot && w.offset === 0;
+        },
+        `Read preset name (slot ${slot})`,
+      );
+      if (!reply && slot === 0) return [];
+      names.push(reply ? parsePresetName(reply) : null);
+    }
+    return names;
   }
 
   /** Reads the device-wide settings (Wireless, Loopback, Input Gain, volumes, MIDI channel). */

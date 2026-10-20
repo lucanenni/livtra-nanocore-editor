@@ -4,6 +4,7 @@ import './App.css';
 import { ChainView } from './components/ChainView';
 import { BlockEditor } from './components/BlockEditor';
 import { ConnectionPanel } from './components/ConnectionPanel';
+import { PresetBrowser } from './components/PresetBrowser';
 import { PresetPanel } from './components/PresetPanel';
 import { GlobalSettingsPanel } from './components/GlobalSettingsPanel';
 import { CCReferencePanel } from './components/CCReferencePanel';
@@ -17,60 +18,6 @@ import { usePatchStore } from './store/patchStore';
 import { nanocoreSpec } from '@nanocore/protocol';
 
 type Tab = 'chain' | 'presets' | 'profiles' | 'global' | 'ccref' | 'tuner' | 'log' | 'info';
-
-/** The preset currently loaded on the device (from `readPresetFromDevice`), shown above the
- * chain — editable in place: renaming here sends the live rename SysEx directly (see
- * `patchStore.ts`'s `renamePresetOnDevice`), the same one-does-both flow as everything else in
- * this banner. The device's own display numbers presets from 1, so show `activeSlot + 1`. */
-function LoadedPresetBanner() {
-  const { t } = useTranslation();
-  const connected = usePatchStore((s) => s.connection.connected);
-  const activeSlot = usePatchStore((s) => s.activeSlot);
-  const activeSlotName = usePatchStore((s) => s.activeSlotName);
-  const renamePresetOnDevice = usePatchStore((s) => s.renamePresetOnDevice);
-  const [draft, setDraft] = useState(activeSlotName ?? '');
-  const [focused, setFocused] = useState(false);
-
-  // Keep the input in sync with the device's own name (a fresh read, a reconnect, a preset
-  // recall) — but not while the user is actively editing, or every keystroke's local state would
-  // get clobbered by the stale value still in the store until the rename round-trips.
-  useEffect(() => {
-    if (!focused) setDraft(activeSlotName ?? '');
-  }, [activeSlotName, focused]);
-
-  if (!connected || !activeSlotName) return null;
-
-  const commit = () => {
-    const trimmed = draft.trim();
-    if (trimmed && trimmed !== activeSlotName) renamePresetOnDevice(trimmed);
-    else setDraft(activeSlotName);
-  };
-
-  return (
-    <p className="loaded-preset">
-      {t('chain.loadedPresetPrefix', { number: activeSlot + 1, defaultValue: 'Patch {{number}} —' })}{' '}
-      <input
-        className="loaded-preset__name-input"
-        value={draft}
-        maxLength={8}
-        onFocus={() => setFocused(true)}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          setFocused(false);
-          commit();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') e.currentTarget.blur();
-          else if (e.key === 'Escape') {
-            setDraft(activeSlotName);
-            e.currentTarget.blur();
-          }
-        }}
-        aria-label={t('chain.loadedPresetRename', 'Rename this patch on the device (max 8 characters)') ?? ''}
-      />
-    </p>
-  );
-}
 
 function App() {
   const { t } = useTranslation();
@@ -157,7 +104,7 @@ function App() {
         <main className="app-main">
           {tab === 'chain' && (
             <>
-              <LoadedPresetBanner />
+              <PresetBrowser />
               <ChainView selected={selectedBlock} onSelect={setSelectedBlock} />
               <BlockEditor blockId={selectedBlock} />
             </>

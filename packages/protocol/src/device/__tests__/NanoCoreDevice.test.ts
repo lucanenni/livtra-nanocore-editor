@@ -9,7 +9,8 @@ import { segmentReply } from '../../testing/segmentReply';
 import { createReplyReassembler } from '../../midi/segmentedReplies';
 import { BLE_EMPTY_PRESET_WINDOWS, BLE_PRESET_WINDOWS, LIVE_FX2_TYPE7, SLOT0_CLNARP_P1, SLOT0_CLNARP_P2, USB_PRESET_PAGE1, USB_PRESET_PAGE2, hex } from '../../testing/realCaptures';
 import { findBlock, findType } from '../../patch/patchDefaults';
-import { parseReadPresetWindow } from '../../midi/sysex';
+import { parseCommandMessage, parseReadPresetWindow } from '../../midi/sysex';
+import { buildReplyFrame } from '../../midi/segmentedReplies';
 import { unpack7BitSafe } from '../../midi/safePacking';
 
 afterEach(() => vi.useRealTimers());
@@ -242,5 +243,39 @@ describe('startLive (device pushes)', () => {
     t.push(hex('f0 7d 4e 43 72 00 02 28 01 01 00 29 f7')); // a non-ambiguous slot goes straight through
     expect(onSlotChanged).toHaveBeenLastCalledWith(41);
     stop();
+  });
+});
+
+describe('NanoCoreDevice.readPresetNames', () => {
+  /** A pedal answering each name window with the real page 1 of preset 1 ("ClnArp"), retagged with
+   * the requested slot and cut to the requested length — except for `silent` slots. */
+  function pedal(silent: number[] = []) {
+    const t = new FakeTransport();
+    const page1 = parseReadPresetWindow(SLOT0_CLNARP_P1)!;
+    t.onSysEx = (bytes) => {
+      const request = parseCommandMessage(bytes);
+      if (!request || request.opcode !== 0x41) return [];
+      const [slot, offLo, offHi, length] = request.payload;
+      if (silent.includes(slot)) return [];
+      return [buildReplyFrame(request.seq, 0x41, 0, [slot, offLo, offHi, ...page1.tag, ...page1.data.slice(0, length)])];
+    };
+    return t;
+  }
+
+  it('reads every slot\'s saved name from one 59-byte window each', async () => {
+    const t = pedal();
+    const names = await new NanoCoreDevice(t, 'nc').readPresetNames(3);
+    expect(names).toEqual(['ClnArp', 'ClnArp', 'ClnArp']);
+    const lengths = t.sent.map((m) => (m.kind === 'sysex' && m.bytes ? parseCommandMessage(m.bytes)!.payload[3] : -1));
+    expect(lengths).toEqual([59, 59, 59]);
+  });
+
+  it('gives up when the first slot does not answer', async () => {
+    vi.useFakeTimers();
+    const t = pedal([0]);
+    const pending = new NanoCoreDevice(t, 'nc').readPresetNames(64);
+    await vi.runAllTimersAsync();
+    expect(await pending).toEqual([]);
+    expect(t.sent).toHaveLength(1);
   });
 });

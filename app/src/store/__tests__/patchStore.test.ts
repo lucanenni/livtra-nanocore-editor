@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePatchStore } from '../patchStore';
-import { nanocoreSpec } from '@nanocore/protocol';
+import { NanoCoreDevice, nanocoreSpec } from '@nanocore/protocol';
 
 async function ready() {
   await usePatchStore.getState().initTransport('simulator');
@@ -311,12 +311,13 @@ describe('patchStore reads on connect', () => {
     vi.restoreAllMocks();
   });
 
-  it('auto-connecting to a port named "Nanocore" reads the NAM/IR catalogs and the global settings too', async () => {
+  it('auto-connecting to a port named "Nanocore" reads the preset names, the NAM/IR catalogs and the global settings too', async () => {
     const output = { id: 'out-1', name: 'Nanocore', type: 'output', state: 'connected', send: vi.fn() };
     const ports = (list: unknown[]) => ({ forEach: (cb: (p: unknown, k: string) => void) => list.forEach((p, i) => cb(p, String(i))), values: () => list[Symbol.iterator]() });
     (navigator as { requestMIDIAccess?: unknown }).requestMIDIAccess = vi.fn(async () => ({ inputs: ports([]), outputs: ports([output]), onstatechange: null }));
     const reads = {
       readPresetFromDevice: vi.fn(async () => {}),
+      readPresetNames: vi.fn(async () => {}),
       readProfileCatalog: vi.fn(async () => true),
       readIrCatalog: vi.fn(async () => true),
       pollGlobalSettings: vi.fn(async () => {}),
@@ -328,7 +329,33 @@ describe('patchStore reads on connect', () => {
 
     expect(usePatchStore.getState().connection.autoConnected).toBe(true);
     expect(reads.readPresetFromDevice).toHaveBeenCalled();
+    expect(reads.readPresetNames).toHaveBeenCalled();
     expect(reads.readProfileCatalog).toHaveBeenCalled();
     expect(reads.pollGlobalSettings).toHaveBeenCalled();
+  });
+});
+
+describe('patchStore.renameAndSaveActivePreset', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('renames the live patch, saves it to the active slot and updates that slot in the preset list', async () => {
+    const save = vi.spyOn(NanoCoreDevice.prototype, 'saveToSlot').mockResolvedValue(true);
+    usePatchStore.setState({ activeSlot: 5, activeSlotName: 'Old', presetNames: Array(64).fill('preset') });
+
+    expect(await usePatchStore.getState().renameAndSaveActivePreset('LongName12')).toBe(true);
+
+    expect(save).toHaveBeenCalledWith(5);
+    const state = usePatchStore.getState();
+    expect(state.activeSlotName).toBe('LongName'); // the device's 8-character cap
+    expect(state.presetNames![5]).toBe('LongName');
+    expect(state.log.some((m) => m.description === 'Rename patch -> "LongName"')).toBe(true);
+  });
+
+  it('leaves the preset list alone when the save is not acknowledged', async () => {
+    vi.spyOn(NanoCoreDevice.prototype, 'saveToSlot').mockResolvedValue(false);
+    usePatchStore.setState({ activeSlot: 5, presetNames: Array(64).fill('preset') });
+
+    expect(await usePatchStore.getState().renameAndSaveActivePreset('Lead')).toBe(false);
+    expect(usePatchStore.getState().presetNames![5]).toBe('preset');
   });
 });

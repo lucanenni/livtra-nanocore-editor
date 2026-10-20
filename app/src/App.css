@@ -183,6 +183,20 @@ input[type='search'] {
   background: var(--bg-elevated);
 }
 
+/* A small chevron for disclosure buttons, centered on the text (a ▾ glyph sits on the baseline). */
+.chevron {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.chevron--up {
+  transform: translateY(1px) rotate(-135deg);
+}
+
 input[type='range'] {
   width: 100%;
   accent-color: var(--accent);
@@ -318,40 +332,6 @@ input[type='checkbox'] {
   font-size: 0.85rem;
   font-weight: 600;
   margin: 8px 0 0;
-}
-
-.loaded-preset {
-  margin: 0;
-  padding: 8px 14px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: 0.01em;
-}
-
-.loaded-preset__name-input {
-  font: inherit;
-  font-weight: 700;
-  color: inherit;
-  letter-spacing: inherit;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  padding: 1px 4px;
-  width: 9ch;
-}
-
-.loaded-preset__name-input:hover {
-  border-color: var(--border);
-}
-
-.loaded-preset__name-input:focus {
-  outline: none;
-  border-color: var(--accent, var(--border));
-  background: var(--bg);
 }
 
 .connection-panel__channel-input {
@@ -903,4 +883,164 @@ input[type='checkbox'] {
 
 .language-switcher select {
   font-size: 0.85rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-turn 0.7s linear infinite;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+/* Preset browser above the effect chain: ◀ current preset ▶, plus a grid of every device preset. */
+.preset-browser {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preset-browser__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-browser__current {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 11em;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.preset-browser__number {
+  font-family: var(--mono);
+  color: var(--text-muted);
+}
+
+.preset-browser__name-input {
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  width: 9ch;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+
+.preset-browser__name-input:hover {
+  border-color: var(--border);
+}
+
+.preset-browser__name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg);
+}
+
+.preset-browser__loading,
+.preset-browser__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+.preset-browser__spacer {
+  flex: 1;
+}
+
+.preset-browser__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preset-browser__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* Numbered down each column, then across — reads like the device's own list. */
+  column-width: 118px;
+  column-gap: 4px;
+}
+
+.preset-browser__grid > li {
+  break-inside: avoid;
+  margin-bottom: 4px;
+}
+
+.preset-browser__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.preset-browser__item:hover:not(:disabled):not(.preset-browser__item--active) {
+  border-color: var(--accent);
+}
+
+.preset-browser__item:disabled {
+  cursor: default;
+}
+
+.preset-browser__item--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+}
+
+.preset-browser__item--empty:not(.preset-browser__item--active) .preset-browser__item-name {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.preset-browser__item-number {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.preset-browser__item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
