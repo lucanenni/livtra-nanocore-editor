@@ -170,6 +170,15 @@ Reconnecting (or recalling the preset again) re-syncs everything regardless,
 as a fallback. See `docs/MIDI_MAPPING_NOTES.md`'s "Live device state via
 opcode 0x63" section for the protocol details.
 
+**Device presets bar.** Above the effect chain, a bar like the official app's
+shows the preset loaded on the device: ◀ ▶ step through the device's presets,
+the name is editable in place, and **All presets** opens a grid of all 64
+slots by number and saved name to jump straight to one. The names are read on
+connect (one short read per slot) and remembered in the browser, so the grid
+shows up straight away next time. Renaming from this bar also saves the preset
+to its slot, as the official app does — otherwise the pedal would drop the new
+name at the next preset change.
+
 **Local preset library.** "Presets" in this editor are named patches saved in
 the browser's `localStorage` (`Presets → Save as new preset`),
 exportable/importable as JSON so they survive a cleared cache or move between
@@ -183,14 +192,16 @@ what's on screen. **Rename patch on device** (also under Presets) renames the
 device's own currently active/edited patch, up to its real 8-character limit
 — also reverse-engineered from a real capture (opcode `0x6d`, field `0x08`).
 Like any other live tweak, it isn't persisted until you Save to device slot
-afterward. **Online Tone Library** (also under Presets) is a plain link out to
+afterward (the presets bar above the chain renames and saves in one go). **Online Tone Library** (also under Presets) is a plain link out to
 Livtra's own RESONA tone library at livtramusic.com — its API doesn't allow
 requests from other pages (no CORS), and this editor has no backend to route
 around that, so browsing/importing it inline isn't possible; downloading also
 needs a Livtra account. The **AMP/FX2 Profiles** tab loads a local `.ead` profile file into
 one of the 38 AMP/FX2 slots (it overwrites that slot; restore with the official app's "Restore
 Factory Content"). The protocol is documented in `docs/MIDI_MAPPING_NOTES.md`, which also has the
-library investigation.
+library investigation. User-loaded profiles and IRs show up in the AMP/FX2/CAB model lists under
+their own names; since the pedal keeps only 16 characters of a name, slots that end up with the same
+name get their slot number in front (`#7 …`) so they can be told apart.
 
 **CC Reference.** A full table of every CC this editor's data model knows
 about — on/off, type-select, and every parameter, for all 8 blocks plus the
@@ -210,8 +221,10 @@ profiles — built on the same protocol package as the editor. See
 ## Translations
 
 The UI is built to be translated from the start via `react-i18next`.
-`app/src/i18n/locales/en.json` is the reference; `it.json` ships a full
-translation of the interface chrome as a working example. Effect/parameter
+`app/src/i18n/locales/en.json` is the reference; `it.json` and `pt-BR.json` ship
+full translations of the interface chrome (pt-BR keeps knob/parameter labels in
+English, as they are printed on the hardware), and a test checks that pt-BR
+covers every key the English and Italian files have. Effect/parameter
 names and descriptions (hundreds of strings pulled straight from the manual)
 aren't duplicated into every locale file — they're looked up as
 `t(key, englishDefault)`, so English always works even for keys a locale
@@ -297,6 +310,9 @@ setting Shape/Mix/Level or the rest of your patch.
   the device's own panel does, so there's no traffic to reverse-engineer.
 - CC68-73 are **shared** between MOD and FX2's Pitch/Envelope Wah/Wah types;
   the editor warns when this conflict is live in the current patch.
+- The **installed firmware version** can't be read over MIDI — it shows only on
+  the pedal's own screen. The About section explains updating with Livtra's own
+  updater (ToneCommand Editor / Upgrader); this editor never writes firmware.
 
 ## License
 
