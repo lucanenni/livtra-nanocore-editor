@@ -1,6 +1,12 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { nanocoreSpec } from '@nanocore/protocol';
 import { usePatchStore } from '../store/patchStore';
+
+/** Preset numbers in this panel are the ones the device's display shows (1-based); the store and
+ * the MIDI layer take the 0-based slot/program number, so convert only at the call. */
+const PRESET_COUNT = nanocoreSpec.meta.presetSlots;
+const toSlotIndex = (displayNumber: number) => Math.min(PRESET_COUNT, Math.max(1, Math.round(displayNumber) || 1)) - 1;
 
 function downloadJSON(filename: string, contents: string) {
   const blob = new Blob([contents], { type: 'application/json' });
@@ -37,9 +43,9 @@ export function PresetPanel() {
   const connectionReady = usePatchStore((s) => s.connection.ready && !!s.connection.outputId);
 
   const [newName, setNewName] = useState('');
-  const [programNumber, setProgramNumber] = useState(0);
+  const [programNumber, setProgramNumber] = useState(1);
   const [renameValue, setRenameValue] = useState('');
-  const [saveSlotNumber, setSaveSlotNumber] = useState(0);
+  const [saveSlotNumber, setSaveSlotNumber] = useState(1);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
@@ -205,7 +211,7 @@ export function PresetPanel() {
         <p className="panel-hint">
           {t(
             'preset.recallOffsetHint',
-            'Confirmed on hardware: the device\'s own preset display is 1 higher than the number here — sending 0 recalls what the device shows as preset "1", sending 5 recalls "6", and so on.',
+            'Numbers here are the ones on the device\'s display — entering 50 loads preset 50 (the editor sends Program Change 49, since MIDI counts from 0).',
           )}
         </p>
         <div className="preset-panel__recall-row">
@@ -214,13 +220,13 @@ export function PresetPanel() {
           </button>
           <input
             type="number"
-            min={0}
-            max={127}
+            min={1}
+            max={PRESET_COUNT}
             value={programNumber}
             onChange={(e) => setProgramNumber(Number(e.target.value))}
-            aria-label={t('preset.programNumber', 'Preset number (0-127)') ?? ''}
+            aria-label={t('preset.programNumber', { max: PRESET_COUNT, defaultValue: 'Preset number (1-{{max}})' }) ?? ''}
           />
-          <button type="button" className="btn btn--small" onClick={() => recallProgram(programNumber)} disabled={!connectionReady}>
+          <button type="button" className="btn btn--small" onClick={() => recallProgram(toSlotIndex(programNumber))} disabled={!connectionReady}>
             {t('preset.recall', 'Recall')}
           </button>
           <button type="button" className="btn btn--small" onClick={() => stepPreset('next')} disabled={!connectionReady}>
@@ -265,17 +271,17 @@ export function PresetPanel() {
         <p className="panel-hint">
           {t(
             'preset.saveHint',
-            'Saves whatever the device currently has loaded (recalled preset plus any live tweaks) into a slot — it does NOT first push this editor\'s own patch to the device. Send the patch first if you want to save what you see here. Same 0-indexed / +1-on-the-device numbering as recall above.',
+            'Saves whatever the device currently has loaded (recalled preset plus any live tweaks) into a slot — it does NOT first push this editor\'s own patch to the device. Send the patch first if you want to save what you see here. Uses the device\'s own preset numbers, like recall above.',
           )}
         </p>
         <div className="preset-panel__recall-row">
           <input
             type="number"
-            min={0}
-            max={127}
+            min={1}
+            max={PRESET_COUNT}
             value={saveSlotNumber}
             onChange={(e) => setSaveSlotNumber(Number(e.target.value))}
-            aria-label={t('preset.saveSlotNumber', 'Save slot number (0-127)') ?? ''}
+            aria-label={t('preset.saveSlotNumber', { max: PRESET_COUNT, defaultValue: 'Save slot number (1-{{max}})' }) ?? ''}
           />
           <button
             type="button"
@@ -284,11 +290,12 @@ export function PresetPanel() {
             onClick={async () => {
               setSaving(true);
               setSaveStatus(null);
-              const ok = await saveToDeviceSlot(saveSlotNumber);
+              const slot = toSlotIndex(saveSlotNumber);
+              const ok = await saveToDeviceSlot(slot);
               setSaving(false);
               setSaveStatus(
                 ok
-                  ? t('preset.saveOk', 'Saved to slot {{n}}.', { n: saveSlotNumber + 1 }) ?? null
+                  ? t('preset.saveOk', 'Saved to slot {{n}}.', { n: slot + 1 }) ?? null
                   : t('preset.saveFailed', 'No response from the device — save may not have happened.') ?? null,
               );
             }}
