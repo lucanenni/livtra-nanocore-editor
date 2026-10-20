@@ -611,7 +611,12 @@ Still genuinely open:
   EQ's bands aren't tied to a type either), so the cycling technique above doesn't apply. Read a
   genuinely never-saved device slot directly instead (recalled via the device's own panel — a
   Program Change to a slot past the 40 factory ones does NOT reach it, confirmed by a 10-attempt
-  wait with no change; only the physical panel can). **EQ's flat-0dB default was already correct,
+  wait with no change; only the physical panel can — **no longer true on firmware 1.11, re-tested
+  2026-10-20**: PC 2, 39, 40, 44, 49 and 63 each made the live profile (`0x63`) report display presets
+  3, 40, 41, 45, 50 and 64). Also seen in that test: a PC-driven change does not reliably send the
+  `0x01` slot-changed push — some changes sent none, and the `0x01` pushes that did arrive carried
+  0x54/0x64 rather than the slot (the PC'd slots were 2 and 40), so treat the live profile, not that
+  push, as the source of truth after a Program Change. **EQ's flat-0dB default was already correct,
   no change.** AMP and CAB both defaulted to fully-open/maxed rather than a middling value — AMP's
   `gain` resets to its maximum (not 0.5) and `level` to 80 (not 50); CAB's `low_cut`/`high_cut`
   both reset fully open (20 Hz / 20000 Hz — i.e. no filtering at all), not a middling cutoff.
