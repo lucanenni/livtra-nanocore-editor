@@ -2,20 +2,44 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { parseActiveSlotFromAmpProfile } from '@nanocore/protocol';
+import { amp, buildReplyFrame, cab, fx2, parseActiveSlotFromAmpProfile, parseCommandMessage } from '@nanocore/protocol';
 import { FakeTransport } from '@nanocore/protocol/testing/FakeTransport';
 import { LIVE_FX2_TYPE7, SLOT0_CLNARP_P1, SLOT0_CLNARP_P2, hex } from '@nanocore/protocol/testing/realCaptures';
 import { NanoCoreSession } from '../session';
 import { registerTools } from '../tools';
 
+/** A user-loaded NAM profile in AMP slot 6 (factory Fd65Dk) and an IR in CAB slot 3 (factory Eng412A). */
+const CUSTOM_PROFILES: Record<number, string> = { 5: 'Duke A2 2' };
+const CUSTOM_IRS: Record<number, string> = { 2: 'My Cab IR' };
+
+/** A `0x36`/`0x56` catalog record (30 bytes) naming `slot`. */
+function catalogRecord(slot: number, name: string): number[] {
+  const payload = Array.from({ length: 30 }, () => 0);
+  payload[0] = slot;
+  payload[1] = 1;
+  Array.from(name).forEach((ch, i) => (payload[14 + i] = ch.charCodeAt(0)));
+  return payload;
+}
+
 /** A scripted NanoCore behind a FakeTransport: answers the patch read with real captured frames
- * (live profile + the two saved pages), the global-settings poll, and a preset save. */
+ * (live profile + the two saved pages), the global-settings poll, a preset save, and the profile
+ * and IR catalogs. */
 function scriptedDevice(): FakeTransport {
   const t = new FakeTransport();
   const liveSlot = parseActiveSlotFromAmpProfile(LIVE_FX2_TYPE7) ?? 0;
   const retag = (frame: number[]) => frame.map((b, i) => (i === 15 ? liveSlot : b));
   let page = 0;
   t.onSysEx = (b) => {
+    const command = parseCommandMessage(b);
+    if (command?.opcode === 0x36) {
+      const slot = command.payload[0];
+      const factory = slot < 30 ? amp.types[slot].name : fx2.types.find((ty) => ty.id === slot - 30)!.name;
+      return [buildReplyFrame(command.seq, 0x36, 0, catalogRecord(slot, CUSTOM_PROFILES[slot] ?? factory))];
+    }
+    if (command?.opcode === 0x56) {
+      const slot = command.payload[0];
+      return [buildReplyFrame(command.seq, 0x56, 0, catalogRecord(slot, CUSTOM_IRS[slot] ?? cab.types[slot].name))];
+    }
     switch (b[9]) {
       case 0x63:
         return [LIVE_FX2_TYPE7];
@@ -158,6 +182,24 @@ describe('connected', () => {
     expect(set.json().type).toBe(target);
     const patch = (await call('get_patch')).json(); // re-reads the (saved) state from the device
     expect(patch.blocks.amp.type).toBe(target);
+  });
+
+  it('names custom NAM profiles and IRs, and selects them by that name', async () => {
+    const ampSpec = (await call('describe_block', { block: 'amp' })).json();
+    expect(ampSpec.types.find((ty: { id: number }) => ty.id === 5)).toMatchObject({ name: 'Fd65Dk', profile: 'Duke A2 2' });
+    expect(ampSpec.types.find((ty: { id: number }) => ty.id === 0).profile).toBeUndefined();
+
+    const setAmp = await call('set_block', { block: 'amp', type: 'duke a2 2' });
+    expect(setAmp.isError).toBe(false);
+    expect(setAmp.json()).toMatchObject({ type: 'Fd65Dk', profile: 'Duke A2 2' });
+
+    const setCab = await call('set_block', { block: 'cab', type: 'My Cab IR' });
+    expect(setCab.isError).toBe(false);
+    expect(setCab.json()).toMatchObject({ type: 'Eng412A', profile: 'My Cab IR' });
+
+    const patch = (await call('get_patch')).json();
+    expect(patch.blocks.amp.profile).toBe('Duke A2 2');
+    expect(patch.blocks.cab.profile).toBe('My Cab IR');
   });
 
   it('set_chain_order sends the prime message and the order, and rejects a bad list', async () => {
