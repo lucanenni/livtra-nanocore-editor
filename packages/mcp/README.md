@@ -1,8 +1,9 @@
 # @nanocore/mcp
 
 An [MCP](https://modelcontextprotocol.io) server that lets an AI assistant work on a Livtra NanoCore
-directly: read what the pedal is playing, change effects and parameters, reorder the chain, rename and
-save presets, change the global settings, and load AMP/FX2 profiles — over USB MIDI, through the same
+(or Mosaic, which speaks the same SysEx protocol — see the main [README](../../README.md)) directly:
+read what the pedal is playing, change effects and parameters, reorder the chain, rename and save
+presets, change the global settings, and load AMP/FX2 profiles — over USB MIDI, through the same
 protocol layer as the web editor (`@nanocore/protocol`).
 
 **Status:** verified on a real NanoCore over USB (2026-10-01): connect and patch/global-settings reads, parameter and block edits read back from a fresh connection, chain reorder and AMP model change confirmed on the pedal's display, preset recall, and `save_to_slot` (rename + edit saved to a slot, then recalled from a fresh connection). Also tested end to end against a scripted pedal that replays real captured frames. `upload_profile` too (a `.ead` into slot 30: the 199 requests are byte-identical to the official app's, every reply status 0, the catalog shows the new name). Also over Bluetooth (the pedal paired in Audio MIDI Setup): the same reads, edits and upload work; the device splits its replies into segments there, which the protocol layer reassembles (see `docs/MIDI_MAPPING_NOTES.md`). An upload takes about 17 s that way.
@@ -44,7 +45,7 @@ at a time. Then ask the assistant to connect.
 | Tool | What it does |
 | --- | --- |
 | `list_midi_ports` | MIDI ports on this computer |
-| `connect` / `disconnect` | Connect to the pedal (port named "Nanocore") and read its patch / release it |
+| `connect` / `disconnect` | Connect to the pedal (port named "Nanocore" or "Mosaic") and read its patch / release it |
 | `get_patch` | The live patch: preset number and name, chain order, every block's on/off, effect type and parameters in real units |
 | `describe_block` | Every effect type of a block with its parameters, units, ranges and options |
 | `set_block` | Block on/off and/or effect type (by name — for AMP/FX2/CAB also by the name of a NAM profile or IR loaded into a slot) |

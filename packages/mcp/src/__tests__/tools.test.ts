@@ -343,7 +343,14 @@ describe('connect', () => {
     transport.listOutputs = () => [{ id: 'x', name: 'Some Audio Interface' }];
     const r = await call('connect');
     expect(r.isError).toBe(true);
-    expect(r.text).toMatch(/No NanoCore found/);
+    expect(r.text).toMatch(/No known Livtra pedal found/);
     expect(r.text).toMatch(/Some Audio Interface/);
+  });
+
+  it('auto-connects to a Mosaic the same way as a NanoCore, with no port given', async () => {
+    transport.listOutputs = () => [{ id: 'y', name: 'Mosaic' }];
+    const r = await call('connect');
+    expect(r.isError).toBe(false);
+    expect(r.json()).toMatchObject({ connected: 'Mosaic' });
   });
 });

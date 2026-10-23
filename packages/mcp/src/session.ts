@@ -10,6 +10,7 @@ import {
   applySnapshotToPatch,
   buildDefaultPatch,
   findBlock,
+  findKnownDeviceOutput,
   fx2,
   parseActiveSlotChangedPush,
   parseBlockOnOffChangedPush,
@@ -94,18 +95,21 @@ export class NanoCoreSession {
     return (await this.ensureTransport()).listOutputs().map((p) => p.name);
   }
 
-  /** Connects to `port` (case-insensitive name or substring), or to the port named like the
-   * NanoCore when omitted. Reads the device's current patch once connected. */
+  /** Connects to `port` (case-insensitive name or substring), or to a port named like a known
+   * Livtra pedal (NanoCore, Mosaic — see `KNOWN_DEVICE_NAMES`) when omitted. Reads the device's
+   * current patch once connected. */
   async connect(port?: string, channel = 1): Promise<{ port: string }> {
     const transport = await this.ensureTransport();
     const outputs = transport.listOutputs();
-    const needle = (port ?? 'nanocore').toLowerCase();
-    const match = outputs.find((o) => o.name.toLowerCase() === needle) ?? outputs.find((o) => o.name.toLowerCase().includes(needle));
+    const needle = port?.toLowerCase();
+    const match = needle
+      ? (outputs.find((o) => o.name.toLowerCase() === needle) ?? outputs.find((o) => o.name.toLowerCase().includes(needle)))
+      : findKnownDeviceOutput(outputs);
     if (!match) {
       throw new Error(
         port
           ? `No MIDI port matching "${port}". Available: ${outputs.map((o) => o.name).join(', ') || 'none'}.`
-          : `No NanoCore found among the MIDI ports (${outputs.map((o) => o.name).join(', ') || 'none'}). Plug it in over USB, or pass the port name.`,
+          : `No known Livtra pedal found among the MIDI ports (${outputs.map((o) => o.name).join(', ') || 'none'}). Plug it in over USB, or pass the port name.`,
       );
     }
     this.disconnect();
