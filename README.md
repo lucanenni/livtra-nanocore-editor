@@ -223,7 +223,9 @@ incremental (add matching `type.*` / `param.*` keys as you go).
 ## CI
 
 A GitHub Actions workflow (`.github/workflows/ci.yml`) runs lint, the type check,
-the full Vitest suite (both workspaces), and a production build on every push/PR to `main`. It started
+the full Vitest suite (both workspaces), and a production build on every push/PR to `main`, on
+**Node 24** (jsdom 30, the app's test environment, requires Node `^22.22.2 || ^24.15.0 || >=26` —
+below that every app test file fails at import). It started
 **disabled by default** (added while the repo was still private, to opt in
 rather than spend the free plan's Actions minutes automatically) — now that
 the repo is public, Actions minutes are unlimited on standard runners
