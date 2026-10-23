@@ -89,12 +89,19 @@ function App() {
     // stays fully usable either way.
     const canWebMidi =
       typeof navigator !== 'undefined' && typeof navigator.requestMIDIAccess === 'function';
+    // StrictMode (dev only) runs this effect twice; without `cancelled`, this run's fallback can
+    // fire after the second run has already connected to a real device — overwriting it with the
+    // Simulator. The cleanup below sets it before the next run starts.
+    let cancelled = false;
     void (async () => {
       await initTransport(canWebMidi ? 'webmidi' : 'simulator');
-      if (canWebMidi && !usePatchStore.getState().connection.ready) {
+      if (!cancelled && canWebMidi && !usePatchStore.getState().connection.ready) {
         await initTransport('simulator');
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [initTransport]);
 
   const tabs: { id: Tab; label: string }[] = [
