@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { buildCCReference, type CCReferenceEntry } from '@nanocore/protocol';
 import { usePatchStore } from '../store/patchStore';
 
@@ -17,9 +18,45 @@ function testValuesFor(entry: CCReferenceEntry) {
   return entry.kind === 'on-off' ? ON_OFF_TEST_VALUES : GENERIC_TEST_VALUES;
 }
 
-function matchesFilter(entry: CCReferenceEntry, needle: string): boolean {
+/** An entry's texts in the current language (the English ones in `entry` are the fallbacks). */
+function translated(entry: CCReferenceEntry, t: TFunction) {
+  const scope = entry.blockId ? t(`block.${entry.blockId}.name`, entry.scope) : t('ccRef.global', entry.scope);
+  const target =
+    entry.kind === 'on-off'
+      ? t('ccRef.onOff', entry.target)
+      : entry.kind === 'type'
+        ? t('ccRef.typeSelect', entry.target)
+        : entry.kind === 'global' && entry.globalId
+          ? t(`ccRef.control.${entry.globalId}.name`, entry.target)
+          : entry.params
+            ? entry.params.map((p) => t(`param.${p.id}`, p.label)).join(' / ')
+            : entry.target;
+
+  let rangeText = entry.rangeText;
+  if (entry.kind === 'on-off') rangeText = t('ccRef.rangeOnOff', entry.rangeText);
+  else if (entry.kind === 'type') rangeText = t('ccRef.rangeType', { max: entry.rangeText.match(/^0-(\d+)/)?.[1] ?? '', defaultValue: entry.rangeText });
+  else if (entry.kind === 'param' && !entry.range) rangeText = t('ccRef.rangeVaries', entry.rangeText);
+  else if (entry.range?.kind === 'enum') rangeText = entry.range.options.map((o) => t(`enum.${o.toLowerCase()}`, o)).join(' / ');
+  else if (entry.range?.kind === 'range') {
+    const unit = entry.range.unit ? ` ${entry.range.unit}` : '';
+    rangeText = t('ccRef.rangeFromTo', { min: `${entry.range.min}${unit}`, max: `${entry.range.max}${unit}`, defaultValue: entry.rangeText });
+  }
+
+  const note =
+    entry.kind === 'type'
+      ? entry.note && t('ccRef.typeSysexNote', entry.note)
+      : entry.kind === 'global' && entry.globalId
+        ? entry.note && t(`ccRef.control.${entry.globalId}.description`, entry.note)
+        : entry.note && entry.blockId
+          ? t(`block.${entry.blockId}.note`, entry.note)
+          : entry.note;
+
+  return { entry, scope, target, rangeText, note };
+}
+
+function matchesFilter(row: ReturnType<typeof translated>, needle: string): boolean {
   if (!needle) return true;
-  const haystack = `${entry.cc} ${entry.scope} ${entry.target}`.toLowerCase();
+  const haystack = `${row.entry.cc} ${row.scope} ${row.target} ${row.entry.scope} ${row.entry.target}`.toLowerCase();
   return haystack.includes(needle);
 }
 
@@ -39,8 +76,9 @@ export function CCReferencePanel() {
     (s) => s.connection.ready && !!s.connection.outputId && s.connection.connected,
   );
   const entries = useMemo(() => buildCCReference(), []);
+  const rows = useMemo(() => entries.map((e) => translated(e, t)), [entries, t]);
   const needle = filter.trim().toLowerCase();
-  const visible = useMemo(() => entries.filter((e) => matchesFilter(e, needle)), [entries, needle]);
+  const visible = useMemo(() => rows.filter((r) => matchesFilter(r, needle)), [rows, needle]);
 
   return (
     <section className="cc-reference">
@@ -78,12 +116,12 @@ export function CCReferencePanel() {
             </tr>
           </thead>
           <tbody>
-            {visible.map((entry, i) => (
-              <tr key={`${entry.cc}-${entry.scope}-${i}`} title={entry.note}>
+            {visible.map(({ entry, scope, target, rangeText, note }, i) => (
+              <tr key={`${entry.cc}-${entry.scope}-${i}`} title={note || undefined}>
                 <td className="cc-reference__cc">{entry.cc}</td>
-                <td>{entry.scope}</td>
-                <td>{entry.target}</td>
-                <td className="cc-reference__range">{entry.rangeText}</td>
+                <td>{scope}</td>
+                <td>{target}</td>
+                <td className="cc-reference__range">{rangeText}</td>
                 <td className="cc-reference__actions">
                   {testValuesFor(entry).map(({ label, value }) => (
                     <button
@@ -93,7 +131,7 @@ export function CCReferencePanel() {
                       disabled={!connectionReady}
                       onClick={() => sendTestCC(entry.cc, value, `Test: ${entry.scope} — ${entry.target} = ${label} (CC${entry.cc}=${value})`)}
                     >
-                      {label}
+                      {entry.kind === 'on-off' ? (label === 'On' ? t('block.on', 'On') : t('block.off', 'Off')) : label}
                     </button>
                   ))}
                 </td>

@@ -42,14 +42,24 @@
     "disconnectDevice": "Disconnetti",
     "connectHint": "Scegli il device giusto qui sopra, poi Connetti — questo legge anche la patch realmente caricata sul dispositivo. Non viene inviato nulla al device prima di connettersi.",
     "connectedHint": "Connesso — ogni modifica qui ora va direttamente al device. Disconnetti per smettere di inviare senza cambiare porta.",
-    "autoConnected": "{{name}} trovato e connesso automaticamente."
+    "autoConnected": "{{name}} trovato e connesso automaticamente.",
+    "simulatorOutput": "NanoCore simulata (nessun hardware necessario)"
   },
   "block": {
     "on": "Attivo",
     "off": "Spento",
     "type": "Tipo",
     "power": "Alimentazione",
-    "customProfile": "Profilo personalizzato \"{{name}}\", caricato nello slot del modello di fabbrica {{factory}}."
+    "customProfile": "Profilo personalizzato \"{{name}}\", caricato nello slot del modello di fabbrica {{factory}}.",
+    "amp": {
+      "note": "È confermato sull'hardware reale che la selezione del modello NON funziona tramite il typeCC documentato (43) — l'editor invia invece un comando SysEx (ricavato per reverse engineering dal traffico dell'app ufficiale, non dal manuale). Vedi docs/MIDI_MAPPING_NOTES.md."
+    },
+    "cab": {
+      "note": "È confermato sull'hardware reale che la selezione del cabinet NON funziona tramite il typeCC documentato (44) — l'editor invia invece un comando SysEx (ricavato per reverse engineering dal traffico dell'app ufficiale, non dal manuale). Vedi docs/MIDI_MAPPING_NOTES.md."
+    },
+    "mod": {
+      "note": "I CC68-73 sono condivisi con FX2. Se FX2 è impostato su Pitch, Envelope Wah o Wah, questi CC controllano FX2 invece di MOD — vedi docs/MIDI_MAPPING_NOTES.md."
+    }
   },
   "routing": {
     "warning": "FX2 è impostato su {{type}}, che riutilizza i CC parametro di MOD (68-73). Modificare i parametri MOD ora cambierà in realtà {{type}} di FX2."
@@ -124,7 +134,37 @@
     "colTarget": "Controlla",
     "colRange": "Range",
     "colTest": "Invia valore di test",
-    "noMatches": "Nessun CC corrisponde al filtro."
+    "noMatches": "Nessun CC corrisponde al filtro.",
+    "global": "Globale",
+    "onOff": "On/Off",
+    "typeSelect": "Selezione tipo / modello",
+    "rangeOnOff": "0-63 = Off, 64-127 = On",
+    "rangeType": "0-{{max}} (id esatto del tipo, non scalato)",
+    "rangeVaries": "Dipende dal tipo attivo del blocco",
+    "rangeFromTo": "da {{min}} a {{max}}",
+    "typeSysexNote": "Questo editor lo invia sempre via SysEx, non con questo CC (il SysEx è il modo in cui la pedaliera viene davvero programmata) — vedi docs/MIDI_MAPPING_NOTES.md. Confermato di nuovo funzionante da apparecchi esterni solo CC dopo un aggiornamento firmware di settembre 2026.",
+    "control": {
+      "tuner": {
+        "name": "Accordatore",
+        "description": "Il valore 0-63 spegne l'accordatore, 64-127 lo accende. Usa 0 / 127."
+      },
+      "prev_preset": {
+        "name": "Preset precedente",
+        "description": "Trigger momentaneo: invia 127 per passare al preset precedente, 0 al rilascio."
+      },
+      "next_preset": {
+        "name": "Preset successivo",
+        "description": "Trigger momentaneo: invia 127 per passare al preset successivo, 0 al rilascio."
+      },
+      "bank_select_msb": {
+        "name": "Bank Select MSB",
+        "description": "Bank Select MSB. Il firmware attuale usa normalmente il banco 0."
+      },
+      "bank_select_lsb": {
+        "name": "Bank Select LSB",
+        "description": "Bank Select LSB. Il firmware attuale usa normalmente il banco 0."
+      }
+    }
   },
   "log": {
     "title": "Attività MIDI",
@@ -186,7 +226,15 @@
     },
     "specValue": {
       "Built-in Battery": "Batteria al litio 1300 mAh, supporta la ricarica pass-through",
-      "Included Accessories": "Cavo USB-C, manuale utente, clip da cintura"
+      "Included Accessories": "Cavo USB-C, manuale utente, clip da cintura",
+      "Bluetooth Frequency Band": "2400–2483,5 MHz (banda ISM a 2,4 GHz)",
+      "Effect Modules": "Fino a 8+1 moduli effetto",
+      "Presets": "64 slot preset, 40 preset di fabbrica",
+      "Input": "Jack TS sbilanciato da 6,35 mm (1/4\"), impedenza 1 MΩ",
+      "Output": "Jack TS sbilanciato da 6,35 mm (1/4\"), impedenza 100 Ω",
+      "Headphone Output": "Jack TRS stereo da 3,5 mm (1/8\"), impedenza 16 Ω",
+      "Dimensions": "90,5 × 55,5 × 36,7 mm (L×P×A)",
+      "Power Requirement": "USB-C, 5 V CC 1 A"
     }
   },
   "param": {
@@ -237,7 +285,12 @@
     "tone": "Tone",
     "treble": "Treble",
     "wave": "Wave",
-    "exactValue": "{{label}} (valore esatto)"
+    "exactValue": "{{label}} (valore esatto)",
+    "sensitivity": "Sensitivity",
+    "voice": "Voice",
+    "amount": "Amount",
+    "phase": "Phase",
+    "hf_damp": "HF Damp"
   },
   "enum": {
     "sine": "Sinusoidale",
@@ -299,15 +352,23 @@
       },
       "pitch": {
         "name": "Pitch",
-        "description": "Effetto pitch shift; modifica l'intonazione del segnale."
+        "description": "Effetto pitch shift; modifica l'intonazione del segnale.",
+        "note": "Condivide i CC68-73 con il blocco MOD. Quando FX2 è impostato su Pitch, Envelope Wah o Wah, questi sei CC controllano questo effetto invece di MOD — vedi docs/MIDI_MAPPING_NOTES.md. Suggerimento — lo stesso trucco del pedale del tipo Wah funziona anche qui per un effetto stile Digitech Whammy: mappa un pedale d'espressione MIDI esterno direttamente sul CC68 (Pitch, -12~12 semitoni) a livello MIDI (non tramite questo editor, che invia soltanto) per piegare l'intonazione col piede in tempo reale."
       },
       "envelope_wah": {
         "name": "Envelope Wah",
-        "description": "Wah auto-innescato che segue la dinamica dell'esecuzione."
+        "description": "Wah auto-innescato che segue la dinamica dell'esecuzione.",
+        "note": "Condivide i CC68-73 con il blocco MOD. Quando FX2 è impostato su Pitch, Envelope Wah o Wah, questi sei CC controllano questo effetto invece di MOD — vedi docs/MIDI_MAPPING_NOTES.md."
       },
       "wah": {
         "name": "Wah",
-        "description": "Filtro wah ciclico con forma d'onda impostabile."
+        "description": "Filtro wah ciclico con forma d'onda impostabile.",
+        "note": "Condivide i CC68-73 con il blocco MOD. Quando FX2 è impostato su Pitch, Envelope Wah o Wah, questi sei CC controllano questo effetto invece di MOD — vedi docs/MIDI_MAPPING_NOTES.md. Suggerimento — per emulare un classico wah a pedale: imposta Rate e Sweep a 0 (disattiva lo sweep ciclico automatico), poi mappa un pedale d'espressione MIDI esterno direttamente sul CC68 (Freq, confermato 163Hz-3.5kHz sull'hardware) a livello MIDI. Questo editor invia soltanto e non ascolta l'ingresso MIDI, quindi il pedale non passa dall'app — collegalo direttamente al bus MIDI della NanoCore (hub USB-MIDI, o MIDI via Bluetooth della NanoCore) su un canale corrispondente, e la posizione del piede controlla Freq in tempo reale come un vero pedale."
+      },
+      "motion_wah": {
+        "name": "Motion Wah",
+        "description": "Filtro wah ciclico, da un aggiornamento firmware successivo.",
+        "note": "Condivide i CC68-73 con il blocco MOD. Quando FX2 è impostato su Pitch, Envelope Wah o Wah, questi sei CC controllano questo effetto invece di MOD — vedi docs/MIDI_MAPPING_NOTES.md."
       }
     },
     "mod": {
@@ -330,6 +391,22 @@
       "vibrato": {
         "name": "Vibrato",
         "description": "Vibrato di intonazione; fa fluttuare leggermente il pitch per arricchire il timbro."
+      },
+      "velvet_vibrato": {
+        "name": "Velvet Vibrato",
+        "description": "Versione più ricca e a più voci del Vibrato, da un aggiornamento firmware successivo."
+      },
+      "chorus_ii": {
+        "name": "Chorus II",
+        "description": "Algoritmo di chorus alternativo, da un aggiornamento firmware successivo."
+      },
+      "phaser_ii": {
+        "name": "Phaser II",
+        "description": "Algoritmo di phaser alternativo, da un aggiornamento firmware successivo."
+      },
+      "jet_flanger": {
+        "name": "Jet Flanger",
+        "description": "Algoritmo di flanger alternativo, da un aggiornamento firmware successivo."
       }
     },
     "del": {

@@ -42,7 +42,8 @@
     "statusPickDevice": "Not connected",
     "statusInitializing": "Connecting…",
     "statusError": "Error",
-    "statusNotReady": "Not ready"
+    "statusNotReady": "Not ready",
+    "simulatorOutput": "Simulated NanoCore (no hardware needed)"
   },
   "block": {
     "on": "On",
@@ -124,7 +125,14 @@
     "colTarget": "Controls",
     "colRange": "Range",
     "colTest": "Send test value",
-    "noMatches": "No CC matches that filter."
+    "noMatches": "No CC matches that filter.",
+    "global": "Global",
+    "onOff": "On/Off",
+    "typeSelect": "Type / Model select",
+    "rangeOnOff": "0-63 = Off, 64-127 = On",
+    "rangeType": "0-{{max}} (exact type id, not scaled)",
+    "rangeVaries": "Varies by the block’s active type",
+    "rangeFromTo": "{{min}} to {{max}}"
   },
   "log": {
     "title": "MIDI Activity",

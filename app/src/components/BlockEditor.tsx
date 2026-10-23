@@ -63,7 +63,9 @@ export function BlockEditor({ blockId }: Props) {
 
       {(block.warning || type.warning) && (
         <p className="block-editor__warning" role="alert">
-          {block.warning ?? type.warning}
+          {block.warning
+            ? t(`block.${block.id}.warning`, block.warning)
+            : type.warning && t(`type.${block.id}.${type.slug}.warning`, type.warning)}
         </p>
       )}
 
@@ -81,7 +83,11 @@ export function BlockEditor({ blockId }: Props) {
         )
       )}
 
-      {(block.note || type.note) && <p className="block-editor__note">{block.note ?? type.note}</p>}
+      {(block.note || type.note) && (
+        <p className="block-editor__note">
+          {block.note ? t(`block.${block.id}.note`, block.note) : type.note && t(`type.${block.id}.${type.slug}.note`, type.note)}
+        </p>
+      )}
 
       {block.id === 'mod' && <RoutingWarning />}
 
