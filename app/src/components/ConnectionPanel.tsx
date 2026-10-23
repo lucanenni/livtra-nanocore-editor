@@ -82,14 +82,14 @@ export function ConnectionPanel() {
           <p className="connection-panel__hint">
             {t(
               'connection.bluetoothHint',
-              "Opens the browser's device picker (Chrome/Edge/Opera only, requires HTTPS or localhost) and connects directly to the NanoCore's Bluetooth MIDI service — no OS-level pairing needed. Toggle Bluetooth off/on on the device first if it doesn't show up, and make sure nothing else (e.g. the official phone app) already holds the connection. Already connected? Selecting this again won't re-prompt — use Disconnect below first to pick a different device.",
+              "Opens the browser's device picker (Chrome/Edge/Opera only, requires HTTPS or localhost) and connects directly to your pedal's Bluetooth MIDI service — no OS-level pairing needed. Toggle Bluetooth off/on on the device first if it doesn't show up, and make sure nothing else (e.g. the official phone app) already holds the connection. Already connected? Selecting this again won't re-prompt — use Disconnect below first to pick a different device.",
             )}
           </p>
         ) : (
           <p className="connection-panel__hint">
             {t(
               'connection.pairingHint',
-              'USB and Bluetooth both work. For Bluetooth here, pair the NanoCore at the OS level first (on macOS: Audio MIDI Setup → MIDI Studio → Bluetooth) — toggle Bluetooth off/on on the device to wake its advertising, and make sure nothing else (e.g. the official phone app) already holds the connection. Once paired, it shows up below like any other port. (Or use the "Bluetooth" transport above to pair directly from this page instead.)',
+              'USB and Bluetooth both work. For Bluetooth here, pair your pedal at the OS level first (on macOS: Audio MIDI Setup → MIDI Studio → Bluetooth) — toggle Bluetooth off/on on the device to wake its advertising, and make sure nothing else (e.g. the official phone app) already holds the connection. Once paired, it shows up below like any other port. (Or use the "Bluetooth" transport above to pair directly from this page instead.)',
             )}
           </p>
         )}
@@ -115,7 +115,9 @@ export function ConnectionPanel() {
       {connection.error && <p className="connection-panel__error">{connection.error}</p>}
       {connection.autoConnected && (
         <p className="connection-panel__success">
-          {t('connection.autoConnected', 'NanoCore found and connected automatically.')}
+          {t('connection.autoConnected', '{{name}} found and connected automatically.', {
+            name: connection.outputs.find((o) => o.id === connection.outputId)?.name ?? 'Device',
+          })}
         </p>
       )}
 
@@ -127,7 +129,7 @@ export function ConnectionPanel() {
           <span className="connection-panel__hint">
             {connection.transportKind === 'bluetooth'
               ? t('connection.noBluetoothOutput', 'Not connected yet — click the Bluetooth transport button above to open the device picker.')
-              : t('connection.noOutputs', 'No MIDI outputs found. Connect your NanoCore via USB and refresh.')}
+              : t('connection.noOutputs', 'No MIDI outputs found. Connect your pedal via USB and refresh.')}
           </span>
         ) : (
           <>
@@ -202,7 +204,7 @@ export function ConnectionPanel() {
           className="connection-panel__channel-input"
         />
       </div>
-      <p className="connection-panel__hint">{t('connection.channelHint', "Must match the NanoCore's own MIDI Channel setting (device channel 0 = Omni, any channel works).")}</p>
+      <p className="connection-panel__hint">{t('connection.channelHint', "Must match the device's own MIDI Channel setting (device channel 0 = Omni, any channel works).")}</p>
     </section>
   );
 }

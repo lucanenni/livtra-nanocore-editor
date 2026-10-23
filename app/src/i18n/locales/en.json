@@ -1,8 +1,8 @@
 {
   "app": {
     "title": "NanoCore Editor",
-    "subtitle": "Unofficial online editor for the Livtra NanoCore mini multi-effect processor",
-    "noHardwareNotice": "No NanoCore found — plug it in over USB (or pair Bluetooth) and it connects automatically. No hardware? Switch to the Simulator to build a patch offline."
+    "subtitle": "Unofficial online editor for Livtra multi-effect pedals (NanoCore, Mosaic)",
+    "noHardwareNotice": "No device found — plug it in over USB (or pair Bluetooth) and it connects automatically. No hardware? Switch to the Simulator to build a patch offline."
   },
   "nav": {
     "chain": "Effect Chain",
@@ -21,11 +21,11 @@
     "transportWebmidi": "Web MIDI (USB / OS-paired Bluetooth)",
     "transportSimulator": "Simulator (no hardware needed)",
     "transportBluetooth": "Bluetooth (pair from this page)",
-    "pairingHint": "USB and Bluetooth both work. For Bluetooth here, pair the NanoCore at the OS level first (on macOS: Audio MIDI Setup → MIDI Studio → Bluetooth) — toggle Bluetooth off/on on the device to wake its advertising, and make sure nothing else (e.g. the official phone app) already holds the connection. Once paired, it shows up below like any other port. (Or use the \"Bluetooth\" transport above to pair directly from this page instead.)",
-    "bluetoothHint": "Opens the browser's device picker (Chrome/Edge/Opera only, requires HTTPS or localhost) and connects directly to the NanoCore's Bluetooth MIDI service — no OS-level pairing needed. Toggle Bluetooth off/on on the device first if it doesn't show up, and make sure nothing else (e.g. the official phone app) already holds the connection. Already connected? Selecting this again won't re-prompt — use Disconnect below first to pick a different device.",
+    "pairingHint": "USB and Bluetooth both work. For Bluetooth here, pair your pedal at the OS level first (on macOS: Audio MIDI Setup → MIDI Studio → Bluetooth) — toggle Bluetooth off/on on the device to wake its advertising, and make sure nothing else (e.g. the official phone app) already holds the connection. Once paired, it shows up below like any other port. (Or use the \"Bluetooth\" transport above to pair directly from this page instead.)",
+    "bluetoothHint": "Opens the browser's device picker (Chrome/Edge/Opera only, requires HTTPS or localhost) and connects directly to your pedal's Bluetooth MIDI service — no OS-level pairing needed. Toggle Bluetooth off/on on the device first if it doesn't show up, and make sure nothing else (e.g. the official phone app) already holds the connection. Already connected? Selecting this again won't re-prompt — use Disconnect below first to pick a different device.",
     "disconnect": "Disconnect",
     "output": "Output",
-    "noOutputs": "No MIDI outputs found. Connect your NanoCore via USB and refresh.",
+    "noOutputs": "No MIDI outputs found. Connect your pedal via USB and refresh.",
     "noBluetoothOutput": "Not connected yet — click the Bluetooth transport button above to open the device picker.",
     "readFromDevice": "Read from device",
     "reading": "Reading…",
@@ -34,9 +34,9 @@
     "disconnectDevice": "Disconnect",
     "connectHint": "Pick the right device above, then Connect — this also reads back whatever patch is actually loaded on it. Nothing is sent to the device before you connect.",
     "connectedHint": "Connected — every change here now goes straight to the device. Disconnect to stop sending without picking a different port.",
-    "autoConnected": "NanoCore found and connected automatically.",
+    "autoConnected": "{{name}} found and connected automatically.",
     "channel": "Channel",
-    "channelHint": "Must match the NanoCore's own MIDI Channel setting (device channel 0 = Omni, any channel works).",
+    "channelHint": "Must match the device's own MIDI Channel setting (device channel 0 = Omni, any channel works).",
     "refresh": "Refresh",
     "statusConnected": "Connected",
     "statusPickDevice": "Not connected",
@@ -75,7 +75,7 @@
     "dirty": "Unsaved changes",
     "confirmDelete": "Delete preset \"{{name}}\"?",
     "recallTitle": "Recall device preset",
-    "recallHint": "Program Change only tells the NanoCore which of its own stored presets to load — it does not read the resulting parameters back into this editor.",
+    "recallHint": "Program Change only tells the device which of its own stored presets to load — it does not read the resulting parameters back into this editor.",
     "recallOffsetHint": "Confirmed on hardware: the device's own preset display is 1 higher than the number here — sending 0 recalls what the device shows as preset \"1\", sending 5 recalls \"6\", and so on.",
     "programNumber": "Preset number (0-127)",
     "recall": "Recall",
@@ -115,7 +115,7 @@
   },
   "ccRef": {
     "title": "CC Reference",
-    "hint": "Not connected — connect the NanoCore to send test values from this table. It still works as a plain reference either way.",
+    "hint": "Not connected — connect your pedal to send test values from this table. It still works as a plain reference either way.",
     "hintLive": "Every CC this editor knows about, in order. Send a test value and watch the device react — handy for setting up an external MIDI foot controller for live use.",
     "filterPlaceholder": "Filter by CC number, block, or parameter…",
     "filterLabel": "Filter the CC reference table",
@@ -210,7 +210,7 @@
     "done": "Uploaded to slot {{slot}}.",
     "errSlot": "The device does not have that slot.",
     "errStatus": "The device rejected the upload during \"{{phase}}\" (status {{status}}).",
-    "errNoResponse": "No reply from the device during \"{{phase}}\". Retry; if it keeps failing, power-cycle the NanoCore.",
+    "errNoResponse": "No reply from the device during \"{{phase}}\". Retry; if it keeps failing, power-cycle the device.",
     "phase": {
       "info": "checking the device",
       "begin": "starting",
