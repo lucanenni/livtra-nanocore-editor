@@ -101,7 +101,9 @@
     "transportBluetooth": "Bluetooth (parear por esta página)",
     "transportSimulator": "Simulador (sem equipamento)",
     "transportWebmidi": "Web MIDI (USB / Bluetooth pareado no sistema)",
-    "simulatorOutput": "NanoCore simulada (sem equipamento)"
+    "simulatorOutput": "NanoCore simulada (sem equipamento)",
+    "collapse": "Esconder as configurações de conexão",
+    "expand": "Mostrar as configurações de conexão"
   },
   "enum": {
     "saw": "Dente de serra",

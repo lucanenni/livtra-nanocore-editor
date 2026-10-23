@@ -7,6 +7,15 @@ const TRANSPORTS: TransportKind[] = ['simulator', 'webmidi', 'bluetooth'];
 
 /** How long the "Read ✓" confirmation stays up before the button reverts to its normal label. */
 const READ_DONE_DISPLAY_MS = 1500;
+const COLLAPSED_KEY = 'nanocore-editor.connection-collapsed';
+
+function loadCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 export function ConnectionPanel() {
   const { t } = useTranslation();
@@ -25,6 +34,17 @@ export function ConnectionPanel() {
   // flagged as confusing since it's an async, best-effort action with no other visible effect
   // when the device doesn't reply (e.g. a timeout). 'idle' -> 'reading' -> 'done' -> 'idle'.
   const [readState, setReadState] = useState<'idle' | 'reading' | 'done'>('idle');
+  // Once connected, only the chain and the tabs below matter: the panel folds down to its status line.
+  const [collapsed, setCollapsed] = useState(loadCollapsed);
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      localStorage.setItem(COLLAPSED_KEY, next ? '1' : '0');
+    } catch {
+      // Not remembered — the panel just starts expanded next time.
+    }
+  };
   const readDoneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
     if (readDoneTimer.current) clearTimeout(readDoneTimer.current);
@@ -61,10 +81,42 @@ export function ConnectionPanel() {
 
   // The Simulator's port is named by this app, so it's translated; real ports keep the OS's name.
   const portName = (o: { id: string; name: string }) => (o.id === 'simulator' ? t('connection.simulatorOutput', o.name) : o.name);
+  const output = connection.outputs.find((o) => o.id === connection.outputId);
+  const outputName = output && portName(output);
+  const header = (
+    <div className="connection-panel__header">
+      <h2 className="panel-title">{t('connection.title', 'MIDI Connection')}</h2>
+      <button
+        type="button"
+        className="btn btn--ghost btn--small connection-panel__toggle"
+        onClick={toggleCollapsed}
+        aria-expanded={!collapsed}
+        aria-controls="connection-panel-body"
+        aria-label={(collapsed ? t('connection.expand', 'Show connection settings') : t('connection.collapse', 'Hide connection settings')) ?? ''}
+        title={(collapsed ? t('connection.expand', 'Show connection settings') : t('connection.collapse', 'Hide connection settings')) ?? ''}
+      >
+        <span className={`chevron ${collapsed ? '' : 'chevron--up'}`} aria-hidden />
+      </button>
+    </div>
+  );
+
+  if (collapsed) {
+    return (
+      <section className="connection-panel connection-panel--collapsed">
+        {header}
+        <p className="connection-panel__status">
+          <span className={`status-dot ${statusClass}`} aria-hidden />
+          {statusLabel}
+          {connection.connected && outputName && <span className="connection-panel__output-name"> · {outputName}</span>}
+        </p>
+        {connection.error && <p className="connection-panel__error">{connection.error}</p>}
+      </section>
+    );
+  }
 
   return (
-    <section className="connection-panel">
-      <h2 className="panel-title">{t('connection.title', 'MIDI Connection')}</h2>
+    <section className="connection-panel" id="connection-panel-body">
+      {header}
 
       <div className="connection-panel__stack">
         <span className="connection-panel__field-label">{t('connection.transport', 'Transport')}</span>

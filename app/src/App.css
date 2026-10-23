@@ -183,6 +183,16 @@ input[type='search'] {
   background: var(--bg-elevated);
 }
 
+/* Own chevron instead of the native arrow, which sits flush against the right border. */
+select {
+  appearance: none;
+  padding-right: 30px;
+  background-image: var(--select-chevron);
+  background-position: calc(100% - 11px) 50%;
+  background-size: 10px 6px;
+  background-repeat: no-repeat;
+}
+
 /* A small chevron for disclosure buttons, centered on the text (a ▾ glyph sits on the baseline). */
 .chevron {
   display: inline-block;
@@ -287,6 +297,45 @@ input[type='checkbox'] {
 .cc-reference__actions {
   display: flex;
   gap: 4px;
+}
+
+.connection-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.connection-panel__header .panel-title {
+  margin: 0;
+}
+
+.connection-panel__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.connection-panel:not(.connection-panel--collapsed) > .connection-panel__header {
+  margin-bottom: 8px;
+}
+
+.connection-panel__status {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.connection-panel__status .status-dot {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.connection-panel__output-name {
+  color: var(--text-muted);
 }
 
 .connection-panel__row {
@@ -883,6 +932,7 @@ input[type='checkbox'] {
 
 .language-switcher select {
   font-size: 0.85rem;
+  field-sizing: content;
 }
 
 .spinner {
