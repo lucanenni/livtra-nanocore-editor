@@ -113,7 +113,6 @@
   },
   "global": {
     "btVolume": "Volume BT",
-    "firmware": "Firmware",
     "hint": "Não conectado — isto é só uma referência local, nada daqui é transmitido até você conectar. Depois de conectado, estes viram controles ao vivo da pedaleira.",
     "hintLive": "Ao vivo — mostra e controla a pedaleira diretamente.",
     "inputGain": "Ganho de entrada",
@@ -122,7 +121,9 @@
     "midiChannelHint": "0 = Omni (recebe em todos os canais)",
     "title": "Configurações globais",
     "usbVolume": "Volume USB",
-    "wireless": "Sem fio (Bluetooth)"
+    "wireless": "Sem fio (Bluetooth)",
+    "firmwareReference": "Firmware em que o editor se baseia",
+    "firmwareInstalledHint": "O firmware instalado na sua pedaleira aparece só na tela dela — veja em Sobre como atualizar."
   },
   "info": {
     "bluetooth": "Bluetooth",
@@ -172,7 +173,16 @@
     "specifications": "Especificações",
     "title": "Sobre a NanoCore",
     "usbAudio": "Interface de áudio USB",
-    "usbAudioText": "O aparelho é uma interface de áudio USB class-compliant, sem driver — ligue-o a um computador e ele aparece sozinho como \"Nanocore\". Também conecta direto a celulares/tablets por USB OTG, para gravar e fazer lives com qualidade em qualquer lugar."
+    "usbAudioText": "O aparelho é uma interface de áudio USB class-compliant, sem driver — ligue-o a um computador e ele aparece sozinho como \"Nanocore\". Também conecta direto a celulares/tablets por USB OTG, para gravar e fazer lives com qualidade em qualquer lugar.",
+    "firmwareUpdate": "Atualizar o firmware",
+    "firmwareUpdateStep": {
+      "0": "Confira a versão instalada na tela da própria pedaleira: nenhum app nem comando consegue lê-la.",
+      "1": "Exporte seus presets no ToneCommand antes: as notas da versão 1.10 da Livtra avisam que a atualização pode perder presets.",
+      "2": "Na página de downloads, escolha NANOCORE e baixe o \"ToneCommand Editor / Upgrader\" para macOS ou Windows (o download exige uma conta Livtra gratuita).",
+      "3": "Feche este editor (só um app por vez conversa com a pedaleira) e faça a atualização pelo ToneCommand."
+    },
+    "firmwareUpdateNote": "Este editor nunca grava firmware: só o atualizador oficial da Livtra consegue instalá-lo com segurança.",
+    "firmwareUpdateLink": "Downloads da Livtra (escolha NANOCORE)"
   },
   "language": {
     "label": "Idioma"

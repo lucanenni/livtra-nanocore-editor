@@ -54,6 +54,7 @@ at a time. Then ask the assistant to connect.
 | `recall_preset` | Load preset 1-128 |
 | `save_to_slot` | Save the live patch into preset 1-64 — **overwrites**, needs `confirm: true` |
 | `get_global_settings` / `set_global_setting` | Wireless, loopback, input gain, USB/BT volume, MIDI channel |
+| `firmware_update_info` | How to update the firmware with Livtra's own updater (link and steps; works offline). This server never writes firmware, and the installed version can only be read on the pedal's screen |
 | `list_profiles` | The 38 AMP/FX2 profile slots and their names |
 | `verify_profile` | Read one profile or IR slot back and check it against the pedal's CRC-32 (name, size, CRC-32, `intact`) |
 | `listen` | Record for N seconds what the pedal reports on its own (preset changes, blocks on/off, knob turns, settings) — e.g. to check a footswitch or controller reaches it |

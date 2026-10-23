@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { PROFILE_NAME_MAX, PROFILE_SLOT_COUNT } from '@nanocore/protocol';
+import { PROFILE_NAME_MAX, PROFILE_SLOT_COUNT, firmwareUpdate, nanocoreSpec } from '@nanocore/protocol';
 import type { UploadResult } from '@nanocore/protocol';
 import { z } from 'zod';
 import { blockOverview, describeBlockSpec, describePatch, resolveBlock } from './format';
@@ -219,6 +219,23 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
       if (!saved) throw new Error('The NanoCore did not acknowledge the save.');
       return `Saved to preset ${number}.`;
     }),
+  );
+
+  server.registerTool(
+    'firmware_update_info',
+    {
+      title: 'How to update the firmware',
+      description:
+        "Explains how to update the NanoCore's firmware: only with Livtra's own ToneCommand Editor / Upgrader (this server never writes firmware), from the official downloads page. The installed version cannot be read over MIDI — it shows only on the pedal's screen. Works without a connection.",
+      annotations: READ,
+    },
+    guarded(() => ({
+      installedVersion: "Not readable over MIDI — check the pedal's own screen.",
+      documentedFirmware: nanocoreSpec.meta.firmware,
+      downloadsUrl: firmwareUpdate.downloadsUrl,
+      steps: firmwareUpdate.steps,
+      canThisServerUpdateFirmware: false,
+    })),
   );
 
   server.registerTool(

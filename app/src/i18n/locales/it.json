@@ -123,7 +123,8 @@
     "btVolume": "Volume BT",
     "midiChannel": "Canale MIDI",
     "midiChannelHint": "0 = Omni (riceve su tutti i canali)",
-    "firmware": "Firmware"
+    "firmwareReference": "Firmware su cui si basa l'editor",
+    "firmwareInstalledHint": "Il firmware installato sulla pedaliera compare solo sul suo schermo: vedi Informazioni per come aggiornarlo."
   },
   "ccRef": {
     "title": "Riferimento CC",
@@ -237,7 +238,16 @@
       "Headphone Output": "Jack TRS stereo da 3,5 mm (1/8\"), impedenza 16 Ω",
       "Dimensions": "90,5 × 55,5 × 36,7 mm (L×P×A)",
       "Power Requirement": "USB-C, 5 V CC 1 A"
-    }
+    },
+    "firmwareUpdate": "Aggiornare il firmware",
+    "firmwareUpdateStep": {
+      "0": "Controlla la versione installata sullo schermo della pedaliera: nessuna app né comando può leggerla.",
+      "1": "Esporta prima i preset in ToneCommand: le note della 1.10 di Livtra avvisano che un aggiornamento può far perdere i preset.",
+      "2": "Nella pagina dei download scegli NANOCORE e scarica \"ToneCommand Editor / Upgrader\" per macOS o Windows (serve un account Livtra gratuito).",
+      "3": "Chiudi questo editor (una sola app alla volta può parlare con la pedaliera) ed esegui l'aggiornamento da ToneCommand."
+    },
+    "firmwareUpdateNote": "Questo editor non scrive mai il firmware: solo l'updater ufficiale di Livtra può installarlo in sicurezza.",
+    "firmwareUpdateLink": "Download Livtra (scegli NANOCORE)"
   },
   "param": {
     "age": "Age",

@@ -114,7 +114,8 @@
     "btVolume": "BT Volume",
     "midiChannel": "MIDI Channel",
     "midiChannelHint": "0 = Omni (receives on all channels)",
-    "firmware": "Firmware"
+    "firmwareReference": "Firmware the editor is based on",
+    "firmwareInstalledHint": "The firmware installed on your pedal shows only on its own screen — see About for how to update it."
   },
   "ccRef": {
     "title": "CC Reference",
@@ -185,7 +186,10 @@
     "bluetoothMode": {
       "NanoCore Audio (BT Audio)": "Receives media audio from a phone or tablet. Once connected, your phone's music can be used as a backing track routed into the effects processor.",
       "NanoCore MIDI (Wireless MIDI)": "Connects to the official mobile app for bidirectional parameter sync, control and editing — the wireless counterpart to this editor."
-    }
+    },
+    "firmwareUpdate": "Updating the firmware",
+    "firmwareUpdateNote": "This editor never writes firmware: only Livtra's official updater can install it safely.",
+    "firmwareUpdateLink": "Livtra downloads (pick NANOCORE)"
   },
   "language": {
     "label": "Language"
