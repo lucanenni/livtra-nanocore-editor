@@ -43,7 +43,9 @@
     "connectHint": "Scegli il device giusto qui sopra, poi Connetti — questo legge anche la patch realmente caricata sul dispositivo. Non viene inviato nulla al device prima di connettersi.",
     "connectedHint": "Connesso — ogni modifica qui ora va direttamente al device. Disconnetti per smettere di inviare senza cambiare porta.",
     "autoConnected": "{{name}} trovato e connesso automaticamente.",
-    "simulatorOutput": "NanoCore simulata (nessun hardware necessario)"
+    "simulatorOutput": "NanoCore simulata (nessun hardware necessario)",
+    "collapse": "Nascondi le impostazioni di connessione",
+    "expand": "Mostra le impostazioni di connessione"
   },
   "block": {
     "on": "Attivo",

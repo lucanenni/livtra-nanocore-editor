@@ -7,6 +7,8 @@
   --border-strong: #8b9099;
   --text: #16181d;
   --text-muted: #5b616e;
+  /* <select> arrow, in --text-muted (an SVG background can't use currentColor). */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235b616e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --accent: #a04517;
   --accent-contrast: #ffffff;
   --ok: #227a45;
@@ -28,6 +30,7 @@
     --border-strong: #6a707b;
     --text: #eceef2;
     --text-muted: #9aa0ac;
+    --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa0ac' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     --accent: #ef7f3f;
     --accent-contrast: #14161a;
     --ok: #4bc17c;

@@ -43,7 +43,9 @@
     "statusInitializing": "Connecting…",
     "statusError": "Error",
     "statusNotReady": "Not ready",
-    "simulatorOutput": "Simulated NanoCore (no hardware needed)"
+    "simulatorOutput": "Simulated NanoCore (no hardware needed)",
+    "collapse": "Hide connection settings",
+    "expand": "Show connection settings"
   },
   "block": {
     "on": "On",
