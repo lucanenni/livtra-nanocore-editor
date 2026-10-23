@@ -37,13 +37,19 @@ function transportFor(kind: TransportKind): MidiTransport {
   return simulatorTransport;
 }
 
-/** Finds the NanoCore in a port list by name (case-insensitive substring — real captures use
- * names like "Nanocore"). Returns `null` rather than falling back to some other port: this is
- * also what `initTransport` uses to decide it's safe to auto-connect (see
+/** Livtra pedals confirmed to speak this exact SysEx protocol (same manufacturer/device tag,
+ * same opcodes, same AMP-profile payload layout — verified byte-for-byte against a real Mosaic
+ * capture on 2026-10-23) — add a device here once its wire protocol has been confirmed the same
+ * way, not just because it looks similar. */
+const KNOWN_DEVICE_NAMES = ['nanocore', 'mosaic'];
+
+/** Finds a known Livtra pedal in a port list by name (case-insensitive substring — real captures
+ * use names like "Nanocore" or "Mosaic"). Returns `null` rather than falling back to some other
+ * port: this is also what `initTransport` uses to decide it's safe to auto-connect (see
  * `ConnectionState.autoConnected`) — auto-connecting to an unrelated first-listed port (an audio
  * interface, other gear) was the original bug this whole Connect step exists to prevent. */
 function findNanocoreOutput(outputs: MidiPortInfo[]): MidiPortInfo | null {
-  return outputs.find((o) => /nanocore/i.test(o.name)) ?? null;
+  return outputs.find((o) => KNOWN_DEVICE_NAMES.some((name) => o.name.toLowerCase().includes(name))) ?? null;
 }
 
 /** Turns a raw transport `init()` failure into something worth showing the user — no internal

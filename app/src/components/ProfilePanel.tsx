@@ -91,7 +91,7 @@ export function ProfilePanel() {
       return t('profiles.errStatus', { phase, status: failure.status, defaultValue: 'The device rejected the upload during "{{phase}}" (status {{status}}).' });
     return t('profiles.errNoResponse', {
       phase,
-      defaultValue: 'No reply from the device during "{{phase}}". Retry; if it keeps failing, power-cycle the NanoCore.',
+      defaultValue: 'No reply from the device during "{{phase}}". Retry; if it keeps failing, power-cycle the device.',
     });
   };
 

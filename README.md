@@ -3,13 +3,16 @@
 **Live: https://lucanenni.github.io/livtra-nanocore-editor/**
 
 An unofficial, browser-based editor for the **Livtra NanoCore** mini multi-effect
-processor. Build a patch — 8 effect blocks, each with its own type and
-parameters — and push it live to the device over MIDI, straight from a static
-web page. No install, no backend.
+processor — and the **Livtra Mosaic**, which speaks the exact same SysEx
+protocol (confirmed byte-for-byte against a real Mosaic capture). Build a
+patch — 8 effect blocks, each with its own type and parameters — and push it
+live to the device over MIDI, straight from a static web page. No install, no
+backend.
 
 Originally built ahead of owning the hardware — everything can still be
 exercised end-to-end without a device via the built-in **Simulator**
-transport — and since verified against a real NanoCore over **Web MIDI**.
+transport — and since verified against both a real NanoCore and a real
+Mosaic over **Web MIDI**.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/editor-desktop-dark.png">

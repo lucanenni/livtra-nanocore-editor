@@ -199,7 +199,7 @@ export function PresetPanel() {
         <p className="panel-hint">
           {t(
             'preset.recallHint',
-            'Program Change only tells the NanoCore which of its own stored presets to load — it does not read the resulting parameters back into this editor.',
+            'Program Change only tells the device which of its own stored presets to load — it does not read the resulting parameters back into this editor.',
           )}
         </p>
         <p className="panel-hint">

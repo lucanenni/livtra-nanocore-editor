@@ -53,7 +53,7 @@ export function CCReferencePanel() {
             )
           : t(
               'ccRef.hint',
-              'Not connected — connect the NanoCore to send test values from this table. It still works as a plain reference either way.',
+              'Not connected — connect your pedal to send test values from this table. It still works as a plain reference either way.',
             )}
       </p>
 

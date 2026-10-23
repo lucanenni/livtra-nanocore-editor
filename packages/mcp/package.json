@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
-  "description": "MCP server for the Livtra NanoCore: lets an AI assistant read and edit the pedal (patch, effect parameters, chain order, presets, global settings, AMP/FX2 profiles) over USB MIDI, built on @nanocore/protocol.",
+  "description": "MCP server for the Livtra NanoCore and Mosaic: lets an AI assistant read and edit the pedal (patch, effect parameters, chain order, presets, global settings, AMP/FX2 profiles) over USB MIDI, built on @nanocore/protocol.",
   "type": "module",
   "engines": {
     "node": ">=20"

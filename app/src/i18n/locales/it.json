@@ -1,8 +1,8 @@
 {
   "app": {
     "title": "NanoCore Editor",
-    "subtitle": "Editor online non ufficiale per il multieffetto Livtra NanoCore",
-    "noHardwareNotice": "Nessun NanoCore trovato — collegalo via USB (o abbina il Bluetooth) e si connette automaticamente. Niente hardware? Passa al Simulatore per creare una patch offline."
+    "subtitle": "Editor online non ufficiale per i pedali multieffetto Livtra (NanoCore, Mosaic)",
+    "noHardwareNotice": "Nessun dispositivo trovato — collegalo via USB (o abbina il Bluetooth) e si connette automaticamente. Niente hardware? Passa al Simulatore per creare una patch offline."
   },
   "nav": {
     "chain": "Catena effetti",
@@ -19,12 +19,12 @@
     "title": "Connessione MIDI",
     "transport": "Trasporto",
     "transportWebmidi": "Web MIDI (USB / Bluetooth abbinato dal sistema)",
-    "pairingHint": "USB e Bluetooth funzionano entrambi. Per il Bluetooth qui, abbina prima il NanoCore a livello di sistema operativo (su macOS: Audio MIDI Setup → finestra MIDI Studio → Bluetooth) — riattiva il Bluetooth sul device per farlo tornare visibile, e assicurati che nient'altro (es. l'app ufficiale sul telefono) stia già occupando la connessione. Una volta abbinato, comparirà qui sotto come qualsiasi altra porta. (Oppure usa il trasporto \"Bluetooth\" qui sopra per abbinarlo direttamente da questa pagina.)",
+    "pairingHint": "USB e Bluetooth funzionano entrambi. Per il Bluetooth qui, abbina prima il tuo pedale a livello di sistema operativo (su macOS: Audio MIDI Setup → finestra MIDI Studio → Bluetooth) — riattiva il Bluetooth sul device per farlo tornare visibile, e assicurati che nient'altro (es. l'app ufficiale sul telefono) stia già occupando la connessione. Una volta abbinato, comparirà qui sotto come qualsiasi altra porta. (Oppure usa il trasporto \"Bluetooth\" qui sopra per abbinarlo direttamente da questa pagina.)",
     "transportSimulator": "Simulatore (senza hardware)",
     "output": "Uscita",
-    "noOutputs": "Nessuna uscita MIDI trovata. Collega il NanoCore via USB e aggiorna.",
+    "noOutputs": "Nessuna uscita MIDI trovata. Collega il tuo pedale via USB e aggiorna.",
     "channel": "Canale",
-    "channelHint": "Deve corrispondere al canale MIDI impostato sul NanoCore (canale dispositivo 0 = Omni, va bene qualsiasi canale).",
+    "channelHint": "Deve corrispondere al canale MIDI impostato sul dispositivo (canale dispositivo 0 = Omni, va bene qualsiasi canale).",
     "refresh": "Aggiorna",
     "statusConnected": "Connesso",
     "statusPickDevice": "Non connesso",
@@ -32,7 +32,7 @@
     "statusError": "Errore",
     "statusNotReady": "Non pronto",
     "transportBluetooth": "Bluetooth (abbina da questa pagina)",
-    "bluetoothHint": "Apre il selettore dispositivi del browser (solo Chrome/Edge/Opera, richiede HTTPS o localhost) e si connette direttamente al servizio Bluetooth MIDI del NanoCore — nessun abbinamento a livello di sistema operativo necessario. Riattiva il Bluetooth sul device se non compare, e assicurati che nient'altro (es. l'app ufficiale sul telefono) stia già occupando la connessione. Già connesso? Selezionarlo di nuovo non riaprirà il selettore — usa Disconnetti qui sotto per scegliere un altro dispositivo.",
+    "bluetoothHint": "Apre il selettore dispositivi del browser (solo Chrome/Edge/Opera, richiede HTTPS o localhost) e si connette direttamente al servizio Bluetooth MIDI del tuo pedale — nessun abbinamento a livello di sistema operativo necessario. Riattiva il Bluetooth sul device se non compare, e assicurati che nient'altro (es. l'app ufficiale sul telefono) stia già occupando la connessione. Già connesso? Selezionarlo di nuovo non riaprirà il selettore — usa Disconnetti qui sotto per scegliere un altro dispositivo.",
     "disconnect": "Disconnetti",
     "noBluetoothOutput": "Non ancora connesso — clicca sul pulsante di trasporto Bluetooth qui sopra per aprire il selettore dispositivi.",
     "readFromDevice": "Leggi dal device",
@@ -42,7 +42,7 @@
     "disconnectDevice": "Disconnetti",
     "connectHint": "Scegli il device giusto qui sopra, poi Connetti — questo legge anche la patch realmente caricata sul dispositivo. Non viene inviato nulla al device prima di connettersi.",
     "connectedHint": "Connesso — ogni modifica qui ora va direttamente al device. Disconnetti per smettere di inviare senza cambiare porta.",
-    "autoConnected": "Nanocore trovato e connesso automaticamente."
+    "autoConnected": "{{name}} trovato e connesso automaticamente."
   },
   "block": {
     "on": "Attivo",
@@ -75,7 +75,7 @@
     "dirty": "Modifiche non salvate",
     "confirmDelete": "Eliminare il preset \"{{name}}\"?",
     "recallTitle": "Richiama preset dal dispositivo",
-    "recallHint": "Il Program Change indica al NanoCore solo quale preset memorizzato caricare — non rilegge i parametri risultanti in questo editor.",
+    "recallHint": "Il Program Change indica al dispositivo solo quale preset memorizzato caricare — non rilegge i parametri risultanti in questo editor.",
     "recallOffsetHint": "Confermato su hardware: il display dei preset del device mostra un numero più alto di 1 rispetto a quello qui — inviare 0 richiama quello che il device mostra come preset \"1\", inviare 5 richiama \"6\", e così via.",
     "programNumber": "Numero preset (0-127)",
     "recall": "Richiama",
@@ -115,7 +115,7 @@
   },
   "ccRef": {
     "title": "Riferimento CC",
-    "hint": "Non connesso — connetti il NanoCore per inviare valori di test da questa tabella. Funziona comunque come semplice riferimento.",
+    "hint": "Non connesso — connetti il tuo pedale per inviare valori di test da questa tabella. Funziona comunque come semplice riferimento.",
     "hintLive": "Tutti i CC che questo editor conosce, in ordine. Invia un valore di test e osserva la reazione del dispositivo — utile per configurare un controller MIDI esterno per l'uso live.",
     "filterPlaceholder": "Filtra per numero CC, blocco o parametro…",
     "filterLabel": "Filtra la tabella di riferimento CC",
@@ -620,7 +620,7 @@
     "done": "Caricato nello slot {{slot}}.",
     "errSlot": "Il dispositivo non ha quello slot.",
     "errStatus": "Il dispositivo ha rifiutato il caricamento durante \"{{phase}}\" (stato {{status}}).",
-    "errNoResponse": "Nessuna risposta dal dispositivo durante \"{{phase}}\". Riprova; se continua a fallire, spegni e riaccendi il NanoCore.",
+    "errNoResponse": "Nessuna risposta dal dispositivo durante \"{{phase}}\". Riprova; se continua a fallire, spegni e riaccendi il dispositivo.",
     "phase": {
       "info": "controllo del dispositivo",
       "begin": "avvio",
