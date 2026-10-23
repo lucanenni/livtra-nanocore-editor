@@ -54,6 +54,20 @@ export const companionSoftware = {
   url: 'https://www.livtramusic.com',
 };
 
+/** How the NanoCore's firmware gets updated: only through Livtra's own updater, never from this
+ * editor — Livtra's update packages are meant for its own tool, and a failed or interrupted flash can
+ * leave the pedal needing recovery. The installed version shows only on the pedal's own screen: no
+ * known command reports it. */
+export const firmwareUpdate = {
+  downloadsUrl: 'https://www.livtramusic.com/downloads',
+  steps: [
+    "Check the installed version on the pedal's own screen — no app or command can read it.",
+    "Export your presets in ToneCommand first: Livtra's 1.10 release notes warn that an update can lose preset data.",
+    'On the downloads page, pick NANOCORE and get "ToneCommand Editor / Upgrader" for macOS or Windows (downloading needs a free Livtra account).',
+    'Close this editor — only one app can talk to the pedal at a time — and run the update from ToneCommand.',
+  ],
+};
+
 export const audioInterfaceInfo =
   'The device is a driver-free class-compliant USB audio interface — connect it to a computer and it shows up automatically as "Nanocore". It also supports direct connection to phones/tablets via USB OTG for high-quality on-the-go recording and live streaming.';
 

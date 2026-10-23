@@ -163,9 +163,12 @@ export function GlobalSettingsPanel() {
       <p className="panel-hint">{t('global.midiChannelHint', '0 = Omni (receives on all channels)')}</p>
 
       <div className="global-settings__row">
-        <span>{t('global.firmware', 'Firmware')}</span>
+        <span>{t('global.firmwareReference', 'Firmware the editor is based on')}</span>
         <span className="global-settings__value">{nanocoreSpec.meta.firmware}</span>
       </div>
+      <p className="panel-hint">
+        {t('global.firmwareInstalledHint', "The firmware installed on your pedal shows only on its own screen — see About for how to update it.")}
+      </p>
     </section>
   );
 }

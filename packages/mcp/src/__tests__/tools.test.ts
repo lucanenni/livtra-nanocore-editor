@@ -122,6 +122,16 @@ describe('before connecting', () => {
     const amp = (await call('describe_block', { block: 'amp' })).json();
     expect(amp.types.length).toBeGreaterThan(20);
   });
+
+  it('explains the firmware update offline, without ever offering to flash it', async () => {
+    const { tools } = await client.listTools();
+    expect(tools.find((t) => t.name === 'firmware_update_info')?.annotations?.readOnlyHint).toBe(true);
+    const info = (await call('firmware_update_info')).json();
+    expect(info.downloadsUrl).toBe('https://www.livtramusic.com/downloads');
+    expect(info.canThisServerUpdateFirmware).toBe(false);
+    expect(info.steps.join(' ')).toMatch(/Export your presets/);
+    expect(transport.sent).toHaveLength(0);
+  });
 });
 
 describe('connected', () => {

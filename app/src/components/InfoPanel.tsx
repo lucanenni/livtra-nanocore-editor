@@ -3,6 +3,7 @@ import {
   audioInterfaceInfo,
   bluetoothInfo,
   companionSoftware,
+  firmwareUpdate,
   sourceDocuments,
   specifications,
 } from '@nanocore/protocol';
@@ -51,6 +52,19 @@ export function InfoPanel() {
         {t('info.companionSoftwarePlatforms', companionSoftware.platforms)}{' '}
         <a href={companionSoftware.url} target="_blank" rel="noreferrer">
           {companionSoftware.url.replace('https://', '')}
+        </a>
+      </p>
+
+      <h3 className="panel-subtitle">{t('info.firmwareUpdate', 'Updating the firmware')}</h3>
+      <ol className="info-panel__list">
+        {firmwareUpdate.steps.map((step, i) => (
+          <li key={i}>{t(`info.firmwareUpdateStep.${i}`, step)}</li>
+        ))}
+      </ol>
+      <p className="panel-hint">
+        {t('info.firmwareUpdateNote', "This editor never writes firmware: only Livtra's official updater can install it safely.")}{' '}
+        <a href={firmwareUpdate.downloadsUrl} target="_blank" rel="noreferrer">
+          {t('info.firmwareUpdateLink', 'Livtra downloads (pick NANOCORE)')}
         </a>
       </p>
 
