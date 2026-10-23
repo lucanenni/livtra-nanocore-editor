@@ -3,6 +3,21 @@ export interface MidiPortInfo {
   name: string;
 }
 
+/** Livtra pedals confirmed to speak this exact SysEx protocol (same manufacturer/device tag, same
+ * opcodes, same AMP-profile payload layout — verified byte-for-byte against a real Mosaic capture
+ * on 2026-10-23) — add a device here once its wire protocol has been confirmed the same way, not
+ * just because it looks similar. Shared by the editor and the MCP server so they can't drift apart
+ * on which pedals they auto-connect to, as NanoCore vs. Mosaic once did. */
+export const KNOWN_DEVICE_NAMES = ['nanocore', 'mosaic'];
+
+/** Finds a known Livtra pedal in a port list by name (case-insensitive substring — real captures
+ * use names like "Nanocore" or "Mosaic"). Returns `null` rather than falling back to some other
+ * port — auto-connecting to an unrelated first-listed port (an audio interface, other gear) is
+ * exactly what callers use this to avoid. */
+export function findKnownDeviceOutput(outputs: readonly MidiPortInfo[]): MidiPortInfo | null {
+  return outputs.find((o) => KNOWN_DEVICE_NAMES.some((name) => o.name.toLowerCase().includes(name))) ?? null;
+}
+
 /** A single outgoing message, kept around for the activity log / simulator mirror. */
 export interface OutgoingMessage {
   kind: 'cc' | 'pc' | 'sysex';

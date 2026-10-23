@@ -5,6 +5,7 @@ import {
   applySnapshotToPatch,
   buildDefaultPatch,
   findBlock,
+  findKnownDeviceOutput,
   findType,
   nanocoreSpec,
   remapParamsForType,
@@ -35,21 +36,6 @@ function transportFor(kind: TransportKind): MidiTransport {
   if (kind === 'webmidi') return webMidiTransport;
   if (kind === 'bluetooth') return bleMidiTransport;
   return simulatorTransport;
-}
-
-/** Livtra pedals confirmed to speak this exact SysEx protocol (same manufacturer/device tag,
- * same opcodes, same AMP-profile payload layout — verified byte-for-byte against a real Mosaic
- * capture on 2026-10-23) — add a device here once its wire protocol has been confirmed the same
- * way, not just because it looks similar. */
-const KNOWN_DEVICE_NAMES = ['nanocore', 'mosaic'];
-
-/** Finds a known Livtra pedal in a port list by name (case-insensitive substring — real captures
- * use names like "Nanocore" or "Mosaic"). Returns `null` rather than falling back to some other
- * port: this is also what `initTransport` uses to decide it's safe to auto-connect (see
- * `ConnectionState.autoConnected`) — auto-connecting to an unrelated first-listed port (an audio
- * interface, other gear) was the original bug this whole Connect step exists to prevent. */
-function findNanocoreOutput(outputs: MidiPortInfo[]): MidiPortInfo | null {
-  return outputs.find((o) => KNOWN_DEVICE_NAMES.some((name) => o.name.toLowerCase().includes(name))) ?? null;
 }
 
 /** Turns a raw transport `init()` failure into something worth showing the user — no internal
@@ -396,7 +382,7 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
       await transport.init();
       if (myGeneration !== initGeneration) return; // superseded by a newer initTransport call
       const outputs = transport.listOutputs();
-      const nanocore = findNanocoreOutput(outputs);
+      const nanocore = findKnownDeviceOutput(outputs);
       // The Simulator has no real device/port ambiguity and nothing to read on connect — treat
       // it as always-connected, same as before this file grew a real Connect step. For a real
       // transport, only auto-connect when a port is actually named "Nanocore" — on a machine

@@ -60,12 +60,12 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
   server.registerTool(
     'connect',
     {
-      title: 'Connect to the NanoCore',
+      title: 'Connect to the pedal',
       description:
-        'Connects to the pedal (the port named like "Nanocore" unless `port` is given) and reads its current patch. ' +
+        'Connects to the pedal (the port named like "Nanocore" or "Mosaic" unless `port` is given) and reads its current patch. ' +
         'Call this first. Close the official ToneCommand app before connecting: only one app can use the pedal at a time.',
       inputSchema: {
-        port: z.string().optional().describe('Port name or part of it. Defaults to the NanoCore.'),
+        port: z.string().optional().describe('Port name or part of it. Defaults to a known Livtra pedal (NanoCore, Mosaic).'),
         midi_channel: z.number().int().min(1).max(16).optional().describe("MIDI channel for CC/program changes (1-16, default 1). Must match the pedal's MIDI Channel setting unless that is Omni."),
       },
       annotations: EDIT,
