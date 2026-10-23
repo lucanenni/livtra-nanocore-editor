@@ -63,7 +63,7 @@ export function ParamControl({ spec, value, onChange }: Props) {
             </option>
           ))}
         </select>
-        {spec.note && <p className="param-control__note">{spec.note}</p>}
+        {spec.note && <p className="param-control__note">{t(`paramNote.${spec.id}`, spec.note)}</p>}
       </div>
     );
   }
@@ -115,7 +115,7 @@ export function ParamControl({ spec, value, onChange }: Props) {
         />
         {unit && <span className="param-control__exact-unit">{unit}</span>}
       </div>
-      {spec.note && <p className="param-control__note">{spec.note}</p>}
+      {spec.note && <p className="param-control__note">{t(`paramNote.${spec.id}`, spec.note)}</p>}
     </div>
   );
 }

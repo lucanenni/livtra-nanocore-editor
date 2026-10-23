@@ -59,6 +59,9 @@ export function ConnectionPanel() {
     return t('connection.transportWebmidi', 'Web MIDI (USB / OS-paired Bluetooth)');
   };
 
+  // The Simulator's port is named by this app, so it's translated; real ports keep the OS's name.
+  const portName = (o: { id: string; name: string }) => (o.id === 'simulator' ? t('connection.simulatorOutput', o.name) : o.name);
+
   return (
     <section className="connection-panel">
       <h2 className="panel-title">{t('connection.title', 'MIDI Connection')}</h2>
@@ -140,7 +143,7 @@ export function ConnectionPanel() {
             >
               {connection.outputs.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.name}
+                  {portName(o)}
                 </option>
               ))}
             </select>

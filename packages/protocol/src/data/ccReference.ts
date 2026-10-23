@@ -21,6 +21,19 @@ export interface CCReferenceEntry {
    * not the raw 0-127 wire value (which the test-send buttons use directly). */
   rangeText: string;
   note?: string;
+  /** Ids behind the English text above, for a front end that translates it: the block (absent for
+   * "Global"), the params a 'param' row drives, the global control of a 'global' row, and the
+   * range when it is one range or one option list for every param on the CC. */
+  blockId?: string;
+  params?: { id: string; label: string }[];
+  globalId?: string;
+  range?: { kind: 'range'; min: number; max: number; unit?: string } | { kind: 'enum'; options: string[] };
+}
+
+type ParamRange = NonNullable<CCReferenceEntry['range']>;
+
+function rangeFor(spec: ParamSpec): ParamRange {
+  return spec.kind === 'enum' ? { kind: 'enum', options: spec.options } : { kind: 'range', min: spec.min, max: spec.max, unit: spec.unit };
 }
 
 function rangeTextFor(spec: ParamSpec): string {
@@ -33,24 +46,28 @@ function rangeTextFor(spec: ParamSpec): string {
  * params without a `cc` (SysEx-only, see `RangeParam.sysexParamIndex`) are skipped, since there's
  * no CC to test or configure a controller with. */
 function paramEntriesForBlock(block: BlockSpec): CCReferenceEntry[] {
-  const byCC = new Map<number, { labels: Set<string>; ranges: Set<string> }>();
+  const byCC = new Map<number, { labels: Set<string>; params: Map<string, string>; ranges: Map<string, ParamRange> }>();
   const consider = (spec: ParamSpec) => {
     if (spec.cc === undefined) return;
-    const bucket = byCC.get(spec.cc) ?? { labels: new Set(), ranges: new Set() };
+    const bucket = byCC.get(spec.cc) ?? { labels: new Set(), params: new Map(), ranges: new Map() };
     bucket.labels.add(spec.label);
-    bucket.ranges.add(rangeTextFor(spec));
+    if (!bucket.params.has(spec.id)) bucket.params.set(spec.id, spec.label);
+    bucket.ranges.set(rangeTextFor(spec), rangeFor(spec));
     byCC.set(spec.cc, bucket);
   };
   (block.commonParams ?? []).forEach(consider);
   block.types.forEach((type) => type.params.forEach(consider));
 
-  return [...byCC.entries()].map(([cc, { labels, ranges }]) => ({
+  return [...byCC.entries()].map(([cc, { labels, params, ranges }]) => ({
     cc,
     scope: block.name,
     target: [...labels].join(' / '),
     kind: 'param' as const,
-    rangeText: ranges.size === 1 ? [...ranges][0]! : 'Varies by the block’s active type',
+    rangeText: ranges.size === 1 ? [...ranges.keys()][0]! : 'Varies by the block’s active type',
     note: block.note,
+    blockId: block.id,
+    params: [...params].map(([id, label]) => ({ id, label })),
+    range: ranges.size === 1 ? [...ranges.values()][0] : undefined,
   }));
 }
 
@@ -68,6 +85,7 @@ export function buildCCReference(): CCReferenceEntry[] {
       target: 'On/Off',
       kind: 'on-off',
       rangeText: '0-63 = Off, 64-127 = On',
+      blockId: block.id,
     });
     entries.push({
       cc: block.typeCC,
@@ -81,6 +99,7 @@ export function buildCCReference(): CCReferenceEntry[] {
             'is actually programmed) — see docs/MIDI_MAPPING_NOTES.md. Confirmed working again ' +
             'from external CC-only gear after a September 2026 firmware update.'
           : undefined,
+      blockId: block.id,
     });
     entries.push(...paramEntriesForBlock(block));
   }
@@ -94,6 +113,7 @@ export function buildCCReference(): CCReferenceEntry[] {
       kind: 'global',
       rangeText: `${gc.min}-${gc.max}`,
       note: gc.description,
+      globalId: gc.id,
     });
   }
 
