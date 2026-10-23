@@ -30,9 +30,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Matches ci.yml's Node version — jsdom 30 (a devDependency `npm ci` installs regardless of
+      # which workspace is built) requires Node ^22.22.2 || ^24.15.0 || >=26.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: package-lock.json
 
