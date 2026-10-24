@@ -67,10 +67,10 @@ export const cab: BlockSpec = {
       default: 20000,
       curve: 'exp',
     }),
-    // CC67 "Cab Level" was in the MIDI guide's CC map but not the manual's common-parameter
-    // list. Confirmed against real hardware (firmware 1.04+, see HARDWARE_VERIFICATION.md):
-    // it has no effect — Low Cut/High Cut both work over MIDI, Level does not. Left out of
-    // the editor entirely rather than shipping a control that does nothing when moved.
+    // CC67 "Cab Level" was dead on firmware 1.04+ (no effect — see the removed note this
+    // replaces) but firmware 1.12 revived it, confirmed on real hardware: a clean linear 0-100
+    // sweep (CC67=0 -> screen reads 0, CC67=127 -> screen reads 100), no curve needed.
+    range('level', 67, 0, 100, { default: 100 }),
   ],
   types,
 };

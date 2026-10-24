@@ -1130,6 +1130,56 @@ needed, unlike everything else in this document):
 Library") instead of embedding a browse UI — a plain link has no CORS problem. Importing a
 downloaded tone depends on whether `.eadl` can be converted to a `.ead`; that is not established.
 
+## Firmware 1.12 changes (confirmed on real hardware, 2026-10-24)
+
+User updated a real NanoCore (and Mosaic) from 1.04+ to 1.12 and asked what's newly actionable.
+Full 1.10->1.12 release notes read from livtramusic.com/downloads; every change below was then
+independently confirmed against the real NanoCore (CC sends cross-checked against both a live
+`0x63` read and the pedal's own screen) before shipping, not assumed from the notes alone.
+
+- **CAB "Output Level" (CC67) is live again.** Confirmed dead on firmware 1.04+ (the note this
+  replaced said so, citing HARDWARE_VERIFICATION.md) — 1.12 revived it. Clean linear 0-100 (screen
+  read at both CC extremes), no curve. Added to `cab.ts`'s `commonParams`.
+- **FX2 Pitch's range is now -24..+24 semitones** (was -12..+12), same CC68 — confirmed via the
+  pedal's own screen at both CC extremes. `fx2.ts` and the Pitch type's note (the CC68 expression-
+  pedal tip) updated; `it.json`/`pt-BR.json`'s matching note text updated too (not covered by the
+  English inline fallback, each locale carries its own copy of that string).
+- **REV Spring's "Mod" (CC88) is now called "Tone" in the official docs** — same CC, same range,
+  confirmed via before/after diff (still exactly Spring's 4th of 5 live params). Given its own
+  `tone` id in `rev.ts` (Spring only) rather than reusing the OTHER REV types' shared `mod` id —
+  this also happens to match an *unrelated*, already-existing `tone` param on Room/Plate/Hall/
+  Concert (CC87, a different, older control) — intentional id reuse, same established pattern as
+  this block's own `mix`/`mod`/`decay` ids already being shared across multiple types.
+- **DEL Duck Delay grew from 4 to 8 live params** ("Added Sensitivity, Depth, Attack and Release
+  controls"), confirmed via `0x63`: selecting Duck now reports `count=8` where it used to report 4.
+  Mapped byte-exact against the pedal's own screen (not just assumed from the release notes'
+  wording) via two independent methods: (1) oscillating each candidate CC/SysEx index and asking
+  for the on-screen name that moved, (2) setting multiple fields to distinct values at once and
+  reading back the whole screen, matching every number — both agreed:
+  - **CC78 = Attack** (0.1-100ms), **CC79 = Release** (10-2000ms) — genuinely new CCs, confirmed.
+  - **CC76 = Sensitivity** (0-100), **CC77 = Depth** (0-100) — firmware 1.12 *repurposed* these
+    two CCs away from their old meaning (Filter, Mix) to the two new controls, rather than adding
+    fresh CC numbers for them. This was the one genuinely surprising finding, confirmed directly:
+    setting CC76 to a distinct value and reading the screen showed "Sensitivity" at that value, not
+    "Filter".
+  - **Filter and Mix didn't disappear** — they moved to the SysEx-only per-parameter mechanism
+    (`buildSetParamValueSysEx`, `blockId=4`, `paramIndex` 6 and 7 respectively, same ranges as
+    before: 0-100 each), confirmed the same two-method way. `del.ts`'s Duck params now read
+    `[time, feedback, sensitivity, depth, attack, release]` + `rangeSysexOnly` for `filter`/`mix`,
+    matching the live-state wire order (`decodeLiveBlockParams`) exactly.
+  - **Caution for any future probe of this kind**: an early broad diagnostic CC sweep (not kept)
+    blindly tried CC74-89 as if they were all DEL/REV block params and landed on **CC80 (Tuner
+    on/off), CC81 (Previous Preset), CC82 (Next Preset)** — global controls, not block params (see
+    `globalControls` in `data/nanocoreSpec.ts`) — turning the tuner on and triggering preset
+    navigation mid-test. Harmless (navigation doesn't save/overwrite anything) but confusing until
+    diagnosed. Always check a candidate CC against `globalControls` before a blind range sweep.
+- **Mosaic-only, not yet investigated**: 1.12 adds "Preset on Press" (A/B/C footswitch timing,
+  off by default) and 1.11 redesigned the Tuner's on-device UI — neither confirmed to have (or
+  need) a MIDI surface; `Preset on Press` is plausibly a `globalControls`-style setting but this
+  hasn't been checked.
+- **No change to FX2 custom neural-profile support** — not mentioned anywhere in 1.10-1.12's notes,
+  the long-paused item (`nanocore-mosaic-fx2-neural-pending` in this project's memory) is unaffected.
+
 ## Source documents
 
 Livtra's official documentation — not redistributed in this repo (theirs to
