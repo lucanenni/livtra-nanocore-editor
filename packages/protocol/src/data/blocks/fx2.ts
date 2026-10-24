@@ -39,7 +39,7 @@ const WAH_NOTE =
 const PITCH_NOTE =
   ROUTING_NOTE +
   ' Tip — same trick as the Wah type\'s pedal tip works here for a Digitech Whammy-style effect: ' +
-  'map an external MIDI expression pedal directly to CC68 (Pitch, -12~12 semitones) at the MIDI ' +
+  'map an external MIDI expression pedal directly to CC68 (Pitch, -24~24 semitones) at the MIDI ' +
   'level (not through this send-only editor) for real-time foot-controlled pitch bending.';
 
 export const fx2: BlockSpec = {
@@ -57,7 +57,9 @@ export const fx2: BlockSpec = {
       description: 'Pitch shift effect; changes the signal pitch.',
       note: PITCH_NOTE,
       params: [
-        range('pitch', 68, -12, 12, { unit: 'st', default: 0 }),
+        // Range extended from ±12 to ±24 semitones by firmware 1.12, confirmed on real hardware
+        // (CC68=0 -> screen reads -24st, CC68=127 -> +24st). Same CC, same fine/mix.
+        range('pitch', 68, -24, 24, { unit: 'st', default: 0 }),
         range('fine', 69, -1, 1, { decimals: 2, default: 0 }),
         range('mix', 70, 0, 100, { default: 100 }),
         // CC71 "Level" confirmed absent from both the device screen and ToneCommand — not a

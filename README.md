@@ -289,7 +289,7 @@ that parameter with your foot in real time instead:
   (turns off the automatic cyclic sweep), then have your expression pedal
   send CC68 directly (confirmed range 163Hz-3.5kHz on hardware).
 - **Whammy pedal (Digitech Whammy-style):** select FX2 → Pitch, same idea —
-  map your expression pedal to CC68 (-12~12 semitones) for real-time
+  map your expression pedal to CC68 (-24~24 semitones) for real-time
   foot-controlled pitch bending.
 
 Either way, the pedal talks to the NanoCore directly at the MIDI level, not

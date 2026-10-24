@@ -30,6 +30,7 @@ exports[`readPresetFromDevice (characterization, real captured frames) > decodes
       "on": true,
       "params": {
         "high_cut": 10023.744397404149,
+        "level": 100,
         "low_cut": 117.46189881604863,
       },
       "typeId": 0,
@@ -128,6 +129,7 @@ exports[`readPresetFromDevice (characterization, real captured frames) > decodes
       "on": true,
       "params": {
         "high_cut": 10023.744397404149,
+        "level": 100,
         "low_cut": 117.46189881604863,
       },
       "typeId": 0,

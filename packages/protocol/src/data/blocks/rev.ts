@@ -111,7 +111,10 @@ export const rev: BlockSpec = {
         range('decay', 85, 0, 12, { unit: 's', decimals: 1, default: 2 }),
         range('pre_delay', 86, 5, 80, { unit: 'ms', label: 'Pre Delay', default: 20 }),
         range('crossover', 87, 800, 8000, { unit: 'Hz', format: 'freq', default: 4501 }),
-        range('mod', 88, 0, 100, { default: 20 }),
+        // Firmware 1.12 relabeled this "Tone" in the official docs (was "Mod") — same CC88,
+        // confirmed unchanged on real hardware. Given its own id (not shared with the other REV
+        // types' "mod" param) so the two don't collide under one i18n/label key.
+        range('tone', 88, 0, 100, { default: 20 }),
         range('mix', 89, 0, 100, { default: 50 }),
         // CC90 "Level" confirmed absent from both the device screen and ToneCommand — not a
         // real control for this type. See docs/PARAM_VERIFICATION.md.

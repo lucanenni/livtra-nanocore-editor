@@ -365,7 +365,7 @@
       "pitch": {
         "name": "Pitch",
         "description": "Effetto pitch shift; modifica l'intonazione del segnale.",
-        "note": "Condivide i CC68-73 con il blocco MOD. Quando FX2 è impostato su Pitch, Envelope Wah o Wah, questi sei CC controllano questo effetto invece di MOD — vedi docs/MIDI_MAPPING_NOTES.md. Suggerimento — lo stesso trucco del pedale del tipo Wah funziona anche qui per un effetto stile Digitech Whammy: mappa un pedale d'espressione MIDI esterno direttamente sul CC68 (Pitch, -12~12 semitoni) a livello MIDI (non tramite questo editor, che invia soltanto) per piegare l'intonazione col piede in tempo reale."
+        "note": "Condivide i CC68-73 con il blocco MOD. Quando FX2 è impostato su Pitch, Envelope Wah o Wah, questi sei CC controllano questo effetto invece di MOD — vedi docs/MIDI_MAPPING_NOTES.md. Suggerimento — lo stesso trucco del pedale del tipo Wah funziona anche qui per un effetto stile Digitech Whammy: mappa un pedale d'espressione MIDI esterno direttamente sul CC68 (Pitch, -24~24 semitoni) a livello MIDI (non tramite questo editor, che invia soltanto) per piegare l'intonazione col piede in tempo reale."
       },
       "envelope_wah": {
         "name": "Envelope Wah",

@@ -1,5 +1,5 @@
 import type { BlockSpec } from '../types';
-import { range } from '../paramHelpers';
+import { range, rangeSysexOnly } from '../paramHelpers';
 
 export const del: BlockSpec = {
   id: 'del',
@@ -42,10 +42,20 @@ export const del: BlockSpec = {
       params: [
         range('time', 74, 0.1, 3000, { unit: 'ms', format: 'time', default: 450 }),
         range('feedback', 75, 0, 95, { default: 42 }),
-        range('filter', 76, 0, 100, { default: 55 }),
-        range('mix', 77, 0, 100, { default: 40 }),
-        // CC78 "Level" confirmed absent from both the device screen and ToneCommand — not a
-        // real control for this type. See docs/PARAM_VERIFICATION.md.
+        // Firmware 1.12 repurposed CC76/CC77 from Filter/Mix to these two new controls — confirmed
+        // on real hardware (screen cross-checked against the 0x63 live read at several values).
+        // Filter and Mix didn't disappear, they moved to sysexParamIndex 6/7 below.
+        range('sensitivity', 76, 0, 100, { default: 50 }),
+        range('depth', 77, 0, 100, { default: 50 }),
+        // New in firmware 1.12, confirmed on real hardware (screen-read range, no CC in the MIDI
+        // guide) — sent via the SysEx per-parameter mechanism, same as rangeSysexOnly below.
+        range('attack', 78, 0.1, 100, { unit: 'ms', decimals: 1, default: 5 }),
+        range('release', 79, 10, 2000, { unit: 'ms', default: 200 }),
+        // Moved off CC76/CC77 by firmware 1.12 (see sensitivity/depth above) to make room for
+        // them — still real controls, just CC-less now. Confirmed via buildSetParamValueSysEx at
+        // paramIndex 6/7 moving exactly these two screen fields.
+        rangeSysexOnly('filter', 6, 0, 100, { default: 55 }),
+        rangeSysexOnly('mix', 7, 0, 100, { default: 40 }),
       ],
     },
     {
