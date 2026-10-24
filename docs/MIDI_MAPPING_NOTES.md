@@ -1173,12 +1173,29 @@ independently confirmed against the real NanoCore (CC sends cross-checked agains
     `globalControls` in `data/nanocoreSpec.ts`) — turning the tuner on and triggering preset
     navigation mid-test. Harmless (navigation doesn't save/overwrite anything) but confusing until
     diagnosed. Always check a candidate CC against `globalControls` before a blind range sweep.
-- **Mosaic-only, not yet investigated**: 1.12 adds "Preset on Press" (A/B/C footswitch timing,
-  off by default) and 1.11 redesigned the Tuner's on-device UI — neither confirmed to have (or
-  need) a MIDI surface; `Preset on Press` is plausibly a `globalControls`-style setting but this
-  hasn't been checked.
+- **Mosaic's "Preset on Press" has no MIDI surface at all — checked directly, 2026-10-25.**
+  Toggled on the pedal's own menu (ToneCommand doesn't expose it either) with a real Mosaic on
+  USB: the global-settings poll response (opcode `0x65`, byte-for-byte, including the one
+  currently-undecoded gap byte between `btVolume` and `midiChannel`) was identical before and
+  after. A sustained-keepalive passive listen (the `0x68` ping every ~2.5s, same as
+  `patchStore.ts`'s own pattern) across both directions of the toggle produced no push either.
+  It's a purely on-device setting — nothing to add here or to `GLOBAL_SETTING_FIELD`.
 - **No change to FX2 custom neural-profile support** — not mentioned anywhere in 1.10-1.12's notes,
   the long-paused item (`nanocore-mosaic-fx2-neural-pending` in this project's memory) is unaffected.
+- **Mosaic's active-slot-changed push matches NanoCore's exactly — confirmed 2026-10-25, closing
+  a question raised by an independent third-party project (JimCommanD, a Mosaic-only controller).**
+  That project's captured traces report preset-change notifications under opcode `0x60` (and
+  parameter/value notifications under `0x62`/`0x69`), apparently different from this project's
+  `0x01`/`0x02`/`0x06`. A real capture on a Mosaic (footswitch-stepped through 3 presets, clean
+  single-listener connection) settles it: `f0 7d 4e 43 72 00 02 60 00 01 00 2e f7` is
+  `ACTIVE_SLOT_CHANGED_OPCODE` (`0x01`) at this project's own documented offset
+  (`bytes[9]`), with the new slot (`0x2e` = 46) at `bytes[9+2]` exactly where
+  `parseActiveSlotChangedPush` expects it — both match byte-for-byte. The apparent `0x60` is an
+  artifact of running 7-bit unpacking (correct for request/reply frames, `dir` `0x70`/`0x71`) on a
+  push frame (`dir` `0x72`) that — per this project's own established findings — isn't packed that
+  way; unpacking an already-raw buffer misaligns every field downstream, including the one a naive
+  reader would mistake for the opcode. No protocol difference between NanoCore and Mosaic here,
+  and nothing to change in this project's own decoders.
 
 ## Source documents
 
