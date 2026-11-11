@@ -12,6 +12,7 @@ import {
   buildReadPresetSysEx,
   buildRenamePresetSysEx,
   buildSavePresetSysEx,
+  buildSetBlockTypeSysEx,
   buildSetParamValueSysEx,
   GLOBAL_SETTING_FIELD,
   isActiveSlotChangedPush,
@@ -263,6 +264,22 @@ describe('NanoCore SysEx builders (see docs/MIDI_MAPPING_NOTES.md)', () => {
     for (let i = 0; i < 0x12; i++) buildAmpModelSysEx(0); // advance seq to match the capture's 0x13
     expect(buildSetParamValueSysEx(0x06, 0x00, 0.16781900823116302)).toEqual([
       0xf0, 0x7d, 0x4e, 0x43, 0x70, 0x00, 0x02, 0x13, 0x00, 0x6d, 0x00, 0x07, 0x00, 0x18, 0x01, 0x06, 0x00, 0x3f, 0x58, 0x2b, 0x3e, 0xf7,
+    ]);
+  });
+
+  it('builds a set-block-type message matching a real capture of the official 1.3.5 app changing FX2 to Motion Wah', () => {
+    // Captured 2026-11-11 (Frida/CoreMIDI MIDISend hook on the real ToneCommand 1.3.5 app, a
+    // single isolated Retro Wah -> Motion Wah change, nothing else in flight): blockId 1 (FX2),
+    // typeId 11 (Motion Wah's EffectType.id in data/blocks/fx2.ts), 4 floats for its own
+    // rate/voice/sweep/mix params in array order — voice/sweep/mix are exact matches for that
+    // type's documented defaults (50/100, 55/100, 100/100); only rate's captured 0.14 is a hair
+    // off its documented default-of-2 (0.133), likely the real device default differing slightly.
+    //   To Nanocore: f0 7d 4e 43 70 00 02 64 00 6d 00 14 00 00 02 01 0b 04 29 5c 0f 60 3e 00 00 00
+    //                3f 4d 4c 10 0c 3f 00 00 00 3f f7
+    for (let i = 0; i < 0x63; i++) buildAmpModelSysEx(0); // advance seq to match the capture's 0x64
+    expect(buildSetBlockTypeSysEx(1, 11, [0.14, 0.5, 0.55, 1.0])).toEqual([
+      0xf0, 0x7d, 0x4e, 0x43, 0x70, 0x00, 0x02, 0x64, 0x00, 0x6d, 0x00, 0x14, 0x00, 0x00, 0x02, 0x01, 0x0b, 0x04, 0x29, 0x5c, 0x0f, 0x60, 0x3e,
+      0x00, 0x00, 0x00, 0x3f, 0x4d, 0x4c, 0x10, 0x0c, 0x3f, 0x00, 0x00, 0x00, 0x3f, 0xf7,
     ]);
   });
 

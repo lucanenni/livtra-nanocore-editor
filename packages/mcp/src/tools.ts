@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { PROFILE_NAME_MAX, PROFILE_SLOT_COUNT, firmwareUpdate, nanocoreSpec } from '@nanocore/protocol';
+import { PROFILE_NAME_MAX, PROFILE_SLOT_COUNT, buildCCReference, firmwareUpdate, nanocoreSpec } from '@nanocore/protocol';
 import type { UploadResult } from '@nanocore/protocol';
 import { z } from 'zod';
 import { blockOverview, describeBlockSpec, describePatch, resolveBlock } from './format';
@@ -173,6 +173,39 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
     guarded(({ order }: { order: string[] }) => {
       session.setChainOrder(order);
       return { chainOrder: session.chainOrder };
+    }),
+  );
+
+  server.registerTool(
+    'list_cc_reference',
+    {
+      title: 'List every known CC',
+      description:
+        'Reference table of every documented/confirmed MIDI CC the NanoCore responds to — for configuring an external MIDI foot controller, or deciding what to try with send_test_cc. ' +
+        "Most of these are NOT what set_block/set_param send on this editor's own connection (those use SysEx for type-select and the handful of CC-less parameters — see send_test_cc's description); this is the CC surface external gear driving the device directly can use.",
+      inputSchema: {},
+      annotations: READ,
+    },
+    guarded(() => buildCCReference()),
+  );
+
+  server.registerTool(
+    'send_test_cc',
+    {
+      title: 'Send a raw test CC',
+      description:
+        'Sends one raw MIDI CC exactly as given (no scaling, no patch update) — for verifying a CC from list_cc_reference against real hardware, or testing an external controller mapping. ' +
+        'Not how set_block/set_param edit the patch (see their own descriptions): use those for actual editing.',
+      inputSchema: {
+        cc: z.number().int().min(0).max(127).describe('CC number, 0-127.'),
+        value: z.number().int().min(0).max(127).describe('Raw value, 0-127.'),
+        description: z.string().optional().describe('Optional label shown in the connection log.'),
+      },
+      annotations: EDIT,
+    },
+    guarded(({ cc, value, description }: { cc: number; value: number; description?: string }) => {
+      session.sendTestCC(cc, value, description);
+      return { cc, value };
     }),
   );
 

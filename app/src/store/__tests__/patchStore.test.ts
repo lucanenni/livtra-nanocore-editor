@@ -83,24 +83,25 @@ describe('patchStore block editing', () => {
     expect(usePatchStore.getState().patch.fx1.on).toBe(true);
   });
 
-  it('setBlockType sends the exact type id (not scaled) and remaps params to the new type', () => {
+  it('setBlockType sends SysEx (not CC) and remaps params to the new type', () => {
     usePatchStore.getState().setBlockType('fx2', 8); // Pitch
     const log = usePatchStore.getState().log;
-    expect(log[0]).toMatchObject({ kind: 'cc', cc: 41, value: 8 });
+    // The official app never sends typeCC for any block — see buildSetBlockTypeSysEx's doc
+    // comment. The type id (8, not scaled) appears verbatim as the SysEx payload's typeId byte.
+    expect(log[0]).toMatchObject({ kind: 'sysex' });
+    expect(log[0].bytes).toContain(8);
     expect(usePatchStore.getState().patch.fx2.typeId).toBe(8);
     expect(usePatchStore.getState().patch.fx2.params).toHaveProperty('pitch');
     expect(usePatchStore.getState().patch.fx2.params).toHaveProperty('mix');
   });
 
-  it('setParam scales a real-world value onto CC 0-127 for the currently selected type', () => {
-    // FX1 defaults to Gate; Threshold is -100..0 dB on CC50.
-    usePatchStore.getState().setParam('fx1', 'threshold', 0); // max -> 127
-    let log = usePatchStore.getState().log;
-    expect(log[0]).toMatchObject({ kind: 'cc', cc: 50, value: 127 });
-
-    usePatchStore.getState().setParam('fx1', 'threshold', -100); // min -> 0
-    log = usePatchStore.getState().log;
-    expect(log[0]).toMatchObject({ kind: 'cc', cc: 50, value: 0 });
+  it('setParam sends a type param as SysEx, never CC, even though it has a real cc in the MIDI guide', () => {
+    // FX1 defaults to Gate; Threshold has CC50 in the MIDI guide, but this editor only edits via
+    // SysEx — see NanoCoreDevice.sendParam's own comment.
+    usePatchStore.getState().setParam('fx1', 'threshold', 0);
+    const log = usePatchStore.getState().log;
+    expect(log[0]).toMatchObject({ kind: 'sysex' });
+    expect(log.some((m) => m.kind === 'cc' && m.cc === 50)).toBe(false);
   });
 
   it('does nothing (no throw, no log entry) when no output is selected', () => {
@@ -176,7 +177,7 @@ describe('patchStore.setChainOrder', () => {
 });
 
 describe('patchStore.sendFullPatch', () => {
-  it('emits on/off + type + every active param CC for all 8 blocks', () => {
+  it('emits on/off + type + every active param for all 8 blocks (CC for on/off and commonParams, SysEx for everything else)', () => {
     usePatchStore.getState().sendFullPatch();
     const log = usePatchStore.getState().log;
 
@@ -184,12 +185,16 @@ describe('patchStore.sendFullPatch', () => {
     for (const block of nanocoreSpec.blocks) {
       const state = usePatchStore.getState().patch[block.id];
       const type = block.types.find((t) => t.id === state.typeId)!;
-      expectedCount += 2 + (block.commonParams?.length ?? 0) + type.params.length;
+      // +1 extra for every block without sysexTypeField (AMP/CAB): the type-change priming
+      // message buildSetBlockTypeSysEx's doc comment says the real app always sends first.
+      const primeMessage = block.sysexTypeField === undefined ? 1 : 0;
+      expectedCount += 2 + primeMessage + (block.commonParams?.length ?? 0) + type.params.length;
     }
     expect(log).toHaveLength(expectedCount);
 
-    // Spot check: FX1 defaults to Gate (off), so we should see its on/off, type, and threshold CCs.
-    const fx1Messages = log.filter((m) => [20, 40, 50].includes(m.cc ?? -1));
+    // Spot check: FX1 defaults to Gate (off), so we should see its on/off and threshold CCs, plus
+    // its type as a SysEx message (not CC 40 — see buildSetBlockTypeSysEx's doc comment).
+    const fx1Messages = log.filter((m) => [20, 50].includes(m.cc ?? -1) || (m.kind === 'sysex' && m.description?.startsWith('FX1 ')));
     expect(fx1Messages.length).toBeGreaterThanOrEqual(3);
   });
 });

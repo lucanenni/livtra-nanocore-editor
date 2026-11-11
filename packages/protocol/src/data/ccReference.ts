@@ -16,7 +16,7 @@ export interface CCReferenceEntry {
   scope: string;
   /** What this CC does — a param label, "On/Off", "Type / Model select", or a global control name. */
   target: string;
-  kind: 'on-off' | 'type' | 'param' | 'global';
+  kind: 'on-off' | 'type' | 'param' | 'global' | 'unassigned';
   /** Human-readable documented range/options — the real-world value this CC is meant to carry,
    * not the raw 0-127 wire value (which the test-send buttons use directly). */
   rangeText: string;
@@ -58,17 +58,29 @@ function paramEntriesForBlock(block: BlockSpec): CCReferenceEntry[] {
   (block.commonParams ?? []).forEach(consider);
   block.types.forEach((type) => type.params.forEach(consider));
 
-  return [...byCC.entries()].map(([cc, { labels, params, ranges }]) => ({
-    cc,
-    scope: block.name,
-    target: [...labels].join(' / '),
-    kind: 'param' as const,
-    rangeText: ranges.size === 1 ? [...ranges.keys()][0]! : 'Varies by the block’s active type',
-    note: block.note,
-    blockId: block.id,
-    params: [...params].map(([id, label]) => ({ id, label })),
-    range: ranges.size === 1 ? [...ranges.values()][0] : undefined,
-  }));
+  // Only `block.commonParams` (AMP/CAB's shared knobs) still go out as this CC from this editor
+  // itself — every other param here is edited via SysEx instead (same reasoning as the type-select
+  // note above), this CC staying real only for external gear. See NanoCoreDevice.sendParam's own
+  // comment for the commonParams exception.
+  const sysexNote =
+    'This editor edits this via SysEx instead, not this CC — still real and reachable from ' +
+    'external gear driving the device directly.';
+  const isCommonParam = (id: string) => (block.commonParams ?? []).some((p) => p.id === id);
+
+  return [...byCC.entries()].map(([cc, { labels, params, ranges }]) => {
+    const allCommon = [...params.keys()].every(isCommonParam);
+    return {
+      cc,
+      scope: block.name,
+      target: [...labels].join(' / '),
+      kind: 'param' as const,
+      rangeText: ranges.size === 1 ? [...ranges.keys()][0]! : 'Varies by the block’s active type',
+      note: allCommon ? block.note : [block.note, sysexNote].filter(Boolean).join(' '),
+      blockId: block.id,
+      params: [...params].map(([id, label]) => ({ id, label })),
+      range: ranges.size === 1 ? [...ranges.values()][0] : undefined,
+    };
+  });
 }
 
 /** Every CC this app's data model knows about, one row per (block-or-global, CC number) pair,
@@ -94,11 +106,10 @@ export function buildCCReference(): CCReferenceEntry[] {
       kind: 'type',
       rangeText: `0-${block.types.length - 1} (exact type id, not scaled)`,
       note:
-        block.sysexTypeField !== undefined
-          ? 'This editor always sends this via SysEx instead, not this CC (SysEx is how the pedal ' +
-            'is actually programmed) — see docs/MIDI_MAPPING_NOTES.md. Confirmed working again ' +
-            'from external CC-only gear after a September 2026 firmware update.'
-          : undefined,
+        'This editor always sends this via SysEx instead, not this CC (SysEx is how the pedal ' +
+        'is actually programmed — the official ToneCommand app never sends this CC either, for ' +
+        'any block) — see docs/MIDI_MAPPING_NOTES.md. Still real and reachable from external ' +
+        'CC-only gear driving the device directly, confirmed working on real hardware.',
       blockId: block.id,
     });
     entries.push(...paramEntriesForBlock(block));
@@ -117,5 +128,19 @@ export function buildCCReference(): CCReferenceEntry[] {
     });
   }
 
-  return entries.sort((a, b) => a.cc - b.cc || a.scope.localeCompare(b.scope));
+  entries.sort((a, b) => a.cc - b.cc || a.scope.localeCompare(b.scope));
+
+  // Every CC 0-127 this app's own data model has no entry for — including ones the official
+  // spec documents for something this editor doesn't model (Bank Select, CC0/32) as well as
+  // genuinely unassigned numbers — gets a blank, nameless row so it can still be test-sent (e.g.
+  // to probe a number before this table has a name for it, or to configure a controller around
+  // one this editor doesn't otherwise use).
+  const known = new Set(entries.map((e) => e.cc));
+  const unassigned: CCReferenceEntry[] = [];
+  for (let cc = 0; cc <= 127; cc++) {
+    if (known.has(cc)) continue;
+    unassigned.push({ cc, scope: '', target: '', kind: 'unassigned', rangeText: '0-127' });
+  }
+
+  return [...entries, ...unassigned];
 }

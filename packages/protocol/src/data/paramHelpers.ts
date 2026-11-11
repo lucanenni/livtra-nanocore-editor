@@ -60,6 +60,26 @@ export function rangeSysexOnly(
   };
 }
 
+/** `count` numbered placeholder params (`param1`..`paramN`), each a plain 0.0-1.0 SysEx-only
+ * slot — for a type whose NAME and own-param COUNT are confirmed (on-screen read + a live
+ * `buildSetBlockTypeSysEx` capture) but whose individual parameter names, real-world ranges and
+ * default values are NOT yet verified against real hardware. Exists so `EffectType.params.length`
+ * is still correct — the number that matters for `buildSetBlockTypeSysEx`'s `defaultNormalizedValues`
+ * to be the right length when the type is selected — without inventing specific-sounding names or
+ * ranges the project has no evidence for. Addressed via `sysexParamIndex` (not a guessed `cc`):
+ * picking a wrong CC risks silently colliding with another control under this protocol's known
+ * CC-sharing/routing quirks (see fx2.ts's `ROUTING_NOTE`), while a wrong positional SysEx index
+ * for a param nobody has wired a slider to yet has no such side effect. Replace with real `range`
+ * calls once each one is actually measured (see docs/MIDI_MAPPING_NOTES.md). */
+export function placeholderParams(count: number): RangeParam[] {
+  return Array.from({ length: count }, (_, i) =>
+    rangeSysexOnly(`param${i + 1}`, i, 0, 1, {
+      decimals: 2,
+      note: 'Parameter name, real-world range and default are not yet confirmed on real hardware — placeholder only.',
+    }),
+  );
+}
+
 export function enumP(
   id: string,
   cc: number,

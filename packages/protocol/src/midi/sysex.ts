@@ -506,6 +506,65 @@ export function isSetParamValueResponse(bytes: readonly number[], blockId: numbe
   return bytes[opcodeIndex] === SET_FIELD_OPCODE && bytes[opcodeIndex + 7] === blockId && bytes[opcodeIndex + 8] === paramIndex;
 }
 
+/** Sets a block's effect TYPE (not AMP/CAB — those use `buildBlockTypeSysEx`'s older, simpler
+ * single-byte field instead): reuses `SET_FIELD_OPCODE` (`0x6d`) again, with a THIRD distinct
+ * shape under it: `<0x6d> 0x00 <len> 0x00 <7-bit-safe-packed [0x02, blockId, typeId, paramCount,
+ * ...paramCount × float32LE]>`. One message both assigns the type AND pushes every one of its own
+ * params back to their default — there is no separate "just set the type" message at all, which
+ * is also why the on-device type-select CC (`BlockSpec.typeCC`) was never the real mechanism: the
+ * official app doesn't just tell the device "type = N", it also has to seed that type's own
+ * parameter defaults, and it does both in this one SysEx write. `blockId` is
+ * `CHAIN_ORDER_BLOCK_IDS[block.id]`; `typeId` is the same `EffectType.id` `typeCC` would have
+ * carried; `defaultNormalizedValues` are that type's own `params`, in array order (NOT
+ * `sysexParamIndex` order), each as a plain 0.0-1.0 normalized float — the same encoding
+ * `buildSetParamValueSysEx` already uses for one param at a time.
+ *
+ * Found and confirmed 2026-11-11 from two live captures of the official ToneCommand 1.3.5 app
+ * (Frida-instrumented, hooking CoreMIDI's `MIDISend` from inside the app's own process — see
+ * `nanocore-firmware-re/tools/frida/nanocore_ump_hook.js`), each a single, isolated type change
+ * with nothing else happening around it:
+ *  - FX2 Retro Wah -> Motion Wah produced exactly ONE non-keepalive message pair: a
+ *    `buildChainOrderPrimeSysEx`-style priming write (fieldId 0x00, same priming idiom
+ *    `buildChainOrderSysEx` already uses) immediately followed by this one, decoding to
+ *    `[0x02, blockId=1 (fx2), typeId=11, count=4, 0.14, 0.5, 0.55, 1.0]` — `blockId=1` is FX2 per
+ *    `CHAIN_ORDER_BLOCK_IDS`, and `typeId=11` with those 4 floats matches `data/blocks/fx2.ts`'s
+ *    Motion Wah (`id: 11`, params `rate/voice/sweep/mix`) almost exactly: 3 of 4 floats are an
+ *    EXACT match for its documented defaults (voice 50/100=0.5, sweep 55/100=0.55, mix 100/100=1.0)
+ *    with only `rate`'s default (documented as 2 of 0-15 Hz = 0.133) a hair off the captured 0.14 —
+ *    close enough to be the same mechanism with a slightly different real device default, not a
+ *    different mechanism. This is independent confirmation that `EffectType.id` was already the
+ *    right wire type id before this mechanism was even found.
+ *  - An earlier FX1 session (scrolling through several types before landing on Classic Wah)
+ *    produced the same shape repeatedly with `blockId=0` (fx1) and varying `typeId`/count/floats
+ *    per type stepped through, including one step with the SAME 4-float wah-family signature
+ *    `[0.14, 0.5, 0.55, 1.0]` as FX2's Motion Wah above, under a different `typeId` — plausible if
+ *    FX1 and FX2 share a wah-family param layout, though FX1's own new-type catalog (1.3.5 added
+ *    several effects to both blocks) isn't mapped out yet, so that one wasn't independently
+ *    name-confirmed the way FX2's was.
+ *
+ * Applied here to every block without `sysexTypeField` (FX1/FX2 confirmed directly above; DEL,
+ * MOD, REV, EQ not yet independently captured, but share the same `typeCC`/`onOffCC` shape and
+ * the same `SET_FIELD_OPCODE` family as everything else in this protocol, so the same mechanism is
+ * assumed rather than re-guessing a block-specific CC path that's already been ruled out twice
+ * (AMP/CAB) for the two blocks that WERE checked). Replaces sending `typeCC` as a CC for type
+ * changes — see `NanoCoreDevice.sendBlockType`/`sendFullPatch`. */
+export function buildSetBlockTypeSysEx(blockId: number, typeId: number, defaultNormalizedValues: readonly number[]): number[] {
+  const [seqLo, seqHi] = nextSeq();
+  const floatBytes: number[] = [];
+  for (const v of defaultNormalizedValues) {
+    const floatBuf = new ArrayBuffer(4);
+    new DataView(floatBuf).setFloat32(0, v, true);
+    floatBytes.push(...Array.from(new Uint8Array(floatBuf)));
+  }
+  const count = defaultNormalizedValues.length;
+  const logicalLen = 4 + count * 4;
+  const packed = pack7BitSafe([0x02, blockId & 0x7f, typeId & 0x7f, count & 0x7f, ...floatBytes]);
+  return [
+    0xf0, MANUFACTURER_ID, ...DEVICE_TAG, DIR_HOST_TO_DEVICE, CONNECTION_TAG, 0x02, seqLo, seqHi,
+    SET_FIELD_OPCODE, 0x00, logicalLen, 0x00, ...packed, 0xf7,
+  ];
+}
+
 /** Polls the device's current global settings — see `GLOBAL_SETTINGS_POLL_OPCODE`'s doc comment. */
 export function buildGlobalSettingsPollSysEx(): number[] {
   const [seqLo, seqHi] = nextSeq();

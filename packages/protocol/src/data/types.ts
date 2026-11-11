@@ -18,9 +18,13 @@ export interface BaseParam {
   kind: ParamKind;
   /** Generic slug used to look up a translated label via `param.<id>`, e.g. "rate", "mix". */
   id: string;
-  /** MIDI CC number that carries this parameter (per MIDI Control User Guide). Absent for a
-   * handful of params confirmed on the device screen but with no working CC at all — see
-   * `RangeParam.sysexParamIndex`. */
+  /** MIDI CC number that carries this parameter for an EXTERNAL controller driving the device
+   * directly (per the MIDI Control User Guide, or independently confirmed on real hardware for
+   * a 1.3.5+ addition) — surfaced on the CC Reference page, not used to edit from this editor
+   * itself. This editor always sends a param (other than `BlockSpec.commonParams`, which has no
+   * confirmed SysEx mechanism yet) via SysEx regardless of whether `cc` is set — see
+   * `NanoCoreDevice.sendParam`'s own comment for why, and `BlockSpec.typeCC`'s for the parallel
+   * reasoning on type-select. Absent for a handful of params with no known CC at all. */
   cc?: number;
   /** English fallback label (used as i18next defaultValue). */
   label: string;
@@ -92,12 +96,14 @@ export interface BlockSpec {
   /** CC that turns the block on/off. 0-63 = OFF, 64-127 = ON. */
   onOffCC: number;
   /** CC that selects the effect type. Value sent is the exact EffectType.id, not scaled.
-   * Documented in the MIDI Control User Guide. For a block with `sysexTypeField` set below, this
-   * editor never sends this CC itself (`setBlockType`/`sendFullPatch` send SysEx instead, since
-   * that's the pedal's real programming protocol) — kept as a data field purely for reference
-   * (surfaced in `CCReferencePanel.tsx`'s CC table) and because a September 2026 firmware update
-   * confirmed this CC now genuinely works too, for external CC-only MIDI gear driving the device
-   * directly (not through this editor) — see docs/MIDI_MAPPING_NOTES.md. */
+   * Documented in the MIDI Control User Guide, and a September 2026 firmware update confirmed it
+   * now genuinely works on real hardware — but the official ToneCommand app itself was confirmed
+   * (2026-11-11, live capture) to NEVER send it for ANY block, type-select included: it always
+   * uses SysEx (`buildBlockTypeSysEx` for AMP/CAB, `buildSetBlockTypeSysEx` for everything else —
+   * see that function's doc comment). This editor follows suit in `sendBlockType`/`sendFullPatch`
+   * for every block; `typeCC` is kept purely as a data field for reference (surfaced in
+   * `CCReferencePanel.tsx`'s CC table) and for external CC-only MIDI gear driving the device
+   * directly, not through this editor. See docs/MIDI_MAPPING_NOTES.md. */
   typeCC: number;
   /** Set when this block's type selection doesn't work over the documented typeCC and must be
    * sent as a NanoCore SysEx "set field" command instead (see `midi/sysex.ts` and

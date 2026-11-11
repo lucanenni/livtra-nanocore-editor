@@ -169,7 +169,9 @@ exports[`readPresetFromDevice (characterization, real captured frames) > decodes
     "fx2": {
       "on": true,
       "params": {
-        "boost": 0.5,
+        "gain": 0.5,
+        "level": 80,
+        "tone": 50,
       },
       "typeId": 7,
     },

@@ -16,16 +16,26 @@ import { unpack7BitSafe } from '../../midi/safePacking';
 afterEach(() => vi.useRealTimers());
 
 describe('NanoCoreDevice sending', () => {
-  it('sends on/off, a CC-typed block type and a CC param on the configured channel', () => {
+  it('sends on/off as CC, a block type (not AMP/CAB) as SysEx, and a type param as SysEx even though it has a real cc, on the configured channel', () => {
     const t = new FakeTransport();
     const d = new NanoCoreDevice(t, 'nc', 3);
     d.sendBlockOn('fx1', true);
     d.sendBlockType('mod', 2);
     d.sendParam('fx1', 0, 'threshold', -20);
-    expect(t.sent.every((m) => m.kind === 'cc' && m.channel === 3)).toBe(true);
-    expect(t.sent[0].description).toBe('FX1 ON');
-    expect(t.sent[0].value).toBe(127);
-    expect(t.sent.length).toBeGreaterThanOrEqual(3);
+    expect(t.sent[0]).toMatchObject({ kind: 'cc', channel: 3, description: 'FX1 ON', value: 127 });
+    expect(t.sent[1]).toMatchObject({ kind: 'sysex', description: 'MOD type change (prime)' });
+    expect(t.sent[2]).toMatchObject({ kind: 'sysex' });
+    // threshold (fx1 Gate's own param) has a real cc (50) in the MIDI guide, but this editor
+    // never sends it — only SysEx, same as type-select — see NanoCoreDevice.sendParam's comment.
+    expect(t.sent[3]).toMatchObject({ kind: 'sysex' });
+    expect(t.sent.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('still sends a commonParams param (AMP/CAB\'s shared knobs) as CC: no confirmed SysEx mechanism for those yet', () => {
+    const t = new FakeTransport();
+    const d = new NanoCoreDevice(t, 'nc', 3);
+    d.sendParam('amp', 0, 'gain', 0.75);
+    expect(t.sent[0]).toMatchObject({ kind: 'cc', channel: 3, cc: 60 });
   });
 
   it('sends the chain order as the prime message followed by the order itself', () => {

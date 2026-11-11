@@ -5,10 +5,16 @@ import { nanocoreSpec } from '../nanocoreSpec';
 describe('buildCCReference', () => {
   const entries = buildCCReference();
 
-  it('sorts by CC number ascending', () => {
-    for (let i = 1; i < entries.length; i++) {
-      expect(entries[i]!.cc).toBeGreaterThanOrEqual(entries[i - 1]!.cc);
+  it('sorts the known rows by CC number ascending, then appends every unassigned CC (also ascending) at the bottom', () => {
+    const known = entries.filter((e) => e.kind !== 'unassigned');
+    const unassigned = entries.filter((e) => e.kind === 'unassigned');
+    for (let i = 1; i < known.length; i++) {
+      expect(known[i]!.cc).toBeGreaterThanOrEqual(known[i - 1]!.cc);
     }
+    for (let i = 1; i < unassigned.length; i++) {
+      expect(unassigned[i]!.cc).toBeGreaterThan(unassigned[i - 1]!.cc);
+    }
+    expect(entries.indexOf(unassigned[0]!)).toBe(known.length);
   });
 
   it('includes an on-off row and a type row for every block', () => {
@@ -20,13 +26,11 @@ describe('buildCCReference', () => {
     }
   });
 
-  it('flags AMP/CAB type rows as SysEx-sent, unlike a plain-CC block', () => {
-    const ampType = entries.find((e) => e.scope === 'AMP' && e.kind === 'type');
-    const cabType = entries.find((e) => e.scope === 'CAB' && e.kind === 'type');
-    const modType = entries.find((e) => e.scope === 'MOD' && e.kind === 'type');
-    expect(ampType?.note).toMatch(/SysEx/);
-    expect(cabType?.note).toMatch(/SysEx/);
-    expect(modType?.note).toBeUndefined();
+  it('flags every block\'s type row as SysEx-sent: this editor never sends typeCC for any block', () => {
+    for (const block of nanocoreSpec.blocks) {
+      const type = entries.find((e) => e.scope === block.name && e.kind === 'type');
+      expect(type?.note).toMatch(/SysEx/);
+    }
   });
 
   it('never invents a CC for a SysEx-only param', () => {
@@ -50,12 +54,26 @@ describe('buildCCReference', () => {
     expect(globals.some((e) => e.target === 'Direct Preset Recall')).toBe(false);
   });
 
-  it('every entry has a resolvable, non-empty target and range text', () => {
+  it('every known entry has a resolvable, non-empty target and range text; unassigned ones are deliberately blank', () => {
     for (const entry of entries) {
-      expect(entry.target.length).toBeGreaterThan(0);
+      if (entry.kind === 'unassigned') {
+        expect(entry.target).toBe('');
+      } else {
+        expect(entry.target.length).toBeGreaterThan(0);
+      }
       expect(entry.rangeText.length).toBeGreaterThan(0);
       expect(entry.cc).toBeGreaterThanOrEqual(0);
       expect(entry.cc).toBeLessThanOrEqual(127);
+    }
+  });
+
+  it('adds a blank row for every CC 0-127 this app\'s data model has no entry for', () => {
+    const unassigned = entries.filter((e) => e.kind === 'unassigned');
+    const ccs = new Set(entries.map((e) => e.cc));
+    expect(ccs.size).toBe(128); // every CC 0-127 is covered exactly once
+    // Spot-check a few numbers known free from the official spec itself ("Unused controls").
+    for (const cc of [1, 22, 29, 42, 49]) {
+      expect(unassigned.some((e) => e.cc === cc)).toBe(true);
     }
   });
 });

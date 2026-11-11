@@ -12,6 +12,7 @@ import {
   buildReadPresetWindowSysEx,
   buildRenamePresetSysEx,
   buildSavePresetSysEx,
+  buildSetBlockTypeSysEx,
   buildSetParamValueSysEx,
   isAmpProfileResponse,
   isCommandReply,
@@ -21,12 +22,13 @@ import {
   parseReadPresetWindow,
 } from '../midi/sysex';
 import type { ProfileCatalogRecord } from '../midi/sysex';
+import type { EffectType } from '../data/types';
 import { parseGlobalSettingsResponse, parsePresetName } from '../midi/presetReader';
 import type { GlobalSettings } from '../midi/presetReader';
 import { readIrCatalog, readProfileCatalog, readProfileData, runProfileUpload, type ProfileReadResult } from '../midi/profileUpload';
 import type { CommandTransact, UploadPhase, UploadResult } from '../midi/profileUpload';
 import { nanocoreSpec } from '../data/nanocoreSpec';
-import { activeParams, buildBlockDefault, findBlock, findParamSpec, findType } from '../patch/patchDefaults';
+import { buildBlockDefault, findBlock, findParamSpec, findType } from '../patch/patchDefaults';
 import type { BlockPatchState, PatchState } from '../patch/patchTypes';
 import { PROFILE_COMMAND_TIMEOUT_MS, requestSysExResponse } from './request';
 import { buildSnapshot, slotFromLiveProfile } from './snapshot';
@@ -44,6 +46,20 @@ const READ_PRESET_OPCODE_TAG = 0x41;
 
 /** Maximum preset-name length the device accepts (opcode 0x6d, field 0x08). */
 export const PRESET_NAME_MAX = 8;
+
+/** `type`'s own params, each as the 0.0-1.0 normalized float `buildSetBlockTypeSysEx` sends —
+ * array order, not `sysexParamIndex` order (see that function's doc comment for why: confirmed
+ * from a real capture of FX2's Motion Wah, whose `rate`/`voice`/`sweep`/`mix` floats landed in
+ * exactly that params-array order even though `sweep`/`mix` have their own, different
+ * `sysexParamIndex`). No current block type uses an `EnumParam`, so the enum branch below (index
+ * over the option count) is unexercised and unconfirmed — a placeholder for when one exists. */
+function defaultNormalizedValuesForType(type: EffectType): number[] {
+  return type.params.map((spec) =>
+    spec.kind === 'range'
+      ? realToNormalized(spec.min, spec.max, spec.default ?? spec.min, spec.curve)
+      : (spec.default ?? 0) / Math.max(1, spec.options.length - 1),
+  );
+}
 
 /** One NanoCore on one MIDI output, driven through any `MidiTransport`. Holds no state besides
  * the connection coordinates — it never mutates a patch itself: `send*` methods put a change on
@@ -76,31 +92,55 @@ export class NanoCoreDevice {
     const block = findBlock(blockId);
     const type = findType(block, typeId);
     if (block.sysexTypeField !== undefined) {
-      // Confirmed on real hardware: typeCC has no effect for this block — SysEx is the only way.
+      // AMP/CAB: confirmed on real hardware that typeCC has no effect — SysEx is the only way.
       this.transport.sendSysEx(this.outputId, buildBlockTypeSysEx(block.sysexTypeField, typeId), `${block.name} type -> ${type.name}`);
     } else {
-      this.transport.sendCC(this.outputId, this.channel, block.typeCC, typeId, `${block.name} type -> ${type.name}`);
+      // Every other block: the official app never sends typeCC either — see
+      // buildSetBlockTypeSysEx's doc comment for the real mechanism (confirmed on FX1/FX2). The
+      // real app always sends this same priming message right before it (same idiom as
+      // buildChainOrderSysEx) — confirmed 2026-11-12 the hard way: skipping it makes the
+      // following type-change land inconsistently (sometimes applied, sometimes silently
+      // dropped) rather than failing outright, which is why it went unnoticed until a live
+      // re-test sweep hit it repeatedly.
+      this.transport.sendSysEx(this.outputId, buildChainOrderPrimeSysEx(), `${block.name} type change (prime)`);
+      this.transport.sendSysEx(
+        this.outputId,
+        buildSetBlockTypeSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], typeId, defaultNormalizedValuesForType(type)),
+        `${block.name} type -> ${type.name}`,
+      );
     }
   }
 
   /** Sends one parameter value (real units) of a block currently set to `typeId`. */
   sendParam(blockId: string, typeId: number, paramId: string, value: number): void {
     const block = findBlock(blockId);
+    const type = findType(block, typeId);
     const spec = findParamSpec(block, typeId, paramId);
     const displayValue = spec.kind === 'range' ? value.toFixed(spec.decimals ?? 0) : spec.options[value];
-    const label = `${block.name} ${findType(block, typeId).name}: ${spec.label} = ${displayValue}${
-      spec.kind === 'range' && spec.unit ? spec.unit : ''
-    }`;
-    if (spec.kind === 'range' && spec.sysexParamIndex !== undefined) {
-      // No working CC for this one — see RangeParam.sysexParamIndex's doc comment.
-      const normalized = realToNormalized(spec.min, spec.max, value, spec.curve);
-      this.transport.sendSysEx(this.outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[blockId], spec.sysexParamIndex, normalized), label);
+    const label = `${block.name} ${type.name}: ${spec.label} = ${displayValue}${spec.kind === 'range' && spec.unit ? spec.unit : ''}`;
+    const typeParamIndex = type.params.indexOf(spec);
+    if (typeParamIndex === -1) {
+      // `spec` came from `block.commonParams` (AMP/CAB's Gain/Bass/Mid/Treble, Low Cut/High
+      // Cut/Level) — shared across every model, not part of any `type.params` array, so the
+      // positional-SysEx-index convention below doesn't apply and there's no confirmed SysEx
+      // mechanism for these yet. CC stays the only known-working path until that's verified; this
+      // is the one place this editor still edits via CC rather than SysEx (see `sendBlockType`'s
+      // and the SysEx-param branch's own doc comments for why everywhere else doesn't).
+      const raw = spec.kind === 'range' ? realToCC(spec.min, spec.max, value, spec.curve) : enumIndexToCC(value, spec.options.length);
+      this.transport.sendCC(this.outputId, this.channel, spec.cc ?? 0, raw, label);
       return;
     }
-    const raw = spec.kind === 'range' ? realToCC(spec.min, spec.max, value, spec.curve) : enumIndexToCC(value, spec.options.length);
-    // spec.cc is guaranteed here: the sysexParamIndex-without-cc case returned above, and every
-    // other RangeParam (via paramHelpers.range) and every EnumParam always carries a real cc.
-    this.transport.sendCC(this.outputId, this.channel, spec.cc ?? 0, raw, label);
+    // Every other param: the official app edits these via SysEx too, never CC (confirmed
+    // end-to-end on FX1/FX2's own params — `RangeParam.cc`, where set, is real and reachable by
+    // external MIDI gear driving the device directly, but not what this editor itself sends — see
+    // `BlockSpec.typeCC`'s own doc comment for the parallel reasoning on type-select). A param's
+    // SysEx index is `RangeParam.sysexParamIndex` if it declares one (a device-side reserved-slot
+    // quirk, e.g. Motion Wah's Sweep/Mix — see that type's own comment), else its plain position
+    // in `type.params` — same convention `findParamSpecBySysexIndex` already reads back.
+    const sysexIndex = spec.kind === 'range' ? (spec.sysexParamIndex ?? typeParamIndex) : typeParamIndex;
+    const normalized =
+      spec.kind === 'range' ? realToNormalized(spec.min, spec.max, value, spec.curve) : value / Math.max(1, spec.options.length - 1);
+    this.transport.sendSysEx(this.outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[blockId], sysexIndex, normalized), label);
   }
 
   /** Pushes a whole patch: for every block its on/off, type and each active parameter. */
@@ -109,22 +149,30 @@ export class NanoCoreDevice {
     for (const block of nanocoreSpec.blocks) {
       const blockState: BlockPatchState = patch[block.id] ?? buildBlockDefault(block);
       transport.sendCC(outputId, channel, block.onOffCC, onOffToCC(blockState.on), `${block.name} ${blockState.on ? 'ON' : 'OFF'}`);
-      const typeName = findType(block, blockState.typeId).name;
+      const type = findType(block, blockState.typeId);
       if (block.sysexTypeField !== undefined) {
-        transport.sendSysEx(outputId, buildBlockTypeSysEx(block.sysexTypeField, blockState.typeId), `${block.name} type -> ${typeName}`);
+        transport.sendSysEx(outputId, buildBlockTypeSysEx(block.sysexTypeField, blockState.typeId), `${block.name} type -> ${type.name}`);
       } else {
-        transport.sendCC(outputId, channel, block.typeCC, blockState.typeId, `${block.name} type -> ${typeName}`);
+        transport.sendSysEx(outputId, buildChainOrderPrimeSysEx(), `${block.name} type change (prime)`);
+        transport.sendSysEx(
+          outputId,
+          buildSetBlockTypeSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], blockState.typeId, defaultNormalizedValuesForType(type)),
+          `${block.name} type -> ${type.name}`,
+        );
       }
-      for (const spec of activeParams(block, blockState.typeId)) {
+      for (const spec of block.commonParams ?? []) {
+        // See sendParam's own comment: no confirmed SysEx mechanism for common params yet.
         const value = blockState.params[spec.id] ?? (spec.kind === 'range' ? spec.min : 0);
-        if (spec.kind === 'range' && spec.sysexParamIndex !== undefined) {
-          const normalized = realToNormalized(spec.min, spec.max, value, spec.curve);
-          transport.sendSysEx(outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], spec.sysexParamIndex, normalized), `${block.name}: ${spec.label}`);
-          continue;
-        }
         const raw = spec.kind === 'range' ? realToCC(spec.min, spec.max, value, spec.curve) : enumIndexToCC(value, spec.options.length);
         transport.sendCC(outputId, channel, spec.cc ?? 0, raw, `${block.name}: ${spec.label}`);
       }
+      type.params.forEach((spec, typeParamIndex) => {
+        const value = blockState.params[spec.id] ?? (spec.kind === 'range' ? spec.min : 0);
+        const sysexIndex = spec.kind === 'range' ? (spec.sysexParamIndex ?? typeParamIndex) : typeParamIndex;
+        const normalized =
+          spec.kind === 'range' ? realToNormalized(spec.min, spec.max, value, spec.curve) : value / Math.max(1, spec.options.length - 1);
+        transport.sendSysEx(outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], sysexIndex, normalized), `${block.name}: ${spec.label}`);
+      });
     }
   }
 

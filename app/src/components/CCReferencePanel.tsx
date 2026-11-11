@@ -18,8 +18,12 @@ function testValuesFor(entry: CCReferenceEntry) {
   return entry.kind === 'on-off' ? ON_OFF_TEST_VALUES : GENERIC_TEST_VALUES;
 }
 
-/** An entry's texts in the current language (the English ones in `entry` are the fallbacks). */
+/** An entry's texts in the current language (the English ones in `entry` are the fallbacks). An
+ * 'unassigned' row (a CC this app's data model has no entry for — see `buildCCReference`'s own
+ * comment) is deliberately nameless: skip translation lookups entirely rather than fall through
+ * to e.g. `ccRef.global`'s real "Global" text for its blank `scope`. */
 function translated(entry: CCReferenceEntry, t: TFunction) {
+  if (entry.kind === 'unassigned') return { entry, scope: '', target: '', rangeText: entry.rangeText, note: entry.note };
   const scope = entry.blockId ? t(`block.${entry.blockId}.name`, entry.scope) : t('ccRef.global', entry.scope);
   const target =
     entry.kind === 'on-off'
@@ -129,11 +133,25 @@ export function CCReferencePanel() {
                       type="button"
                       className="btn btn--ghost btn--small"
                       disabled={!connectionReady}
-                      onClick={() => sendTestCC(entry.cc, value, `Test: ${entry.scope} — ${entry.target} = ${label} (CC${entry.cc}=${value})`)}
+                      onClick={() => sendTestCC(entry.cc, value, `Test: ${entry.scope || entry.cc} — ${entry.target || entry.cc} = ${label} (CC${entry.cc}=${value})`)}
                     >
                       {entry.kind === 'on-off' ? (label === 'On' ? t('block.on', 'On') : t('block.off', 'Off')) : label}
                     </button>
                   ))}
+                  {entry.kind !== 'on-off' && (
+                    <input
+                      type="range"
+                      className="cc-reference__knob"
+                      min={0}
+                      max={127}
+                      defaultValue={64}
+                      disabled={!connectionReady}
+                      aria-label={t('ccRef.knobLabel', 'Send a CC{{cc}} value', { cc: entry.cc }) ?? ''}
+                      onChange={(e) =>
+                        sendTestCC(entry.cc, Number(e.target.value), `Test: ${entry.scope || entry.cc} — ${entry.target || entry.cc} = ${e.target.value} (CC${entry.cc})`)
+                      }
+                    />
+                  )}
                 </td>
               </tr>
             ))}

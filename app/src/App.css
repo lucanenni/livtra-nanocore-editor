@@ -296,7 +296,13 @@ input[type='checkbox'] {
 
 .cc-reference__actions {
   display: flex;
+  align-items: center;
   gap: 4px;
+}
+
+.cc-reference__knob {
+  width: 70px;
+  margin-left: 4px;
 }
 
 .connection-panel__header {

@@ -250,6 +250,16 @@ export class NanoCoreSession {
     device.sendChainOrder(ids);
   }
 
+  /** Sends a raw, untranslated CC — for testing an external MIDI controller's mapping or
+   * double-checking a CC from `CC_REFERENCE` against real hardware. Bypasses the patch entirely
+   * (no scaling, no state update): this is NOT how `setBlock`/`setParam` work on the real
+   * protocol (they send SysEx for type-select and most params — see `NanoCoreDevice.sendCC`'s
+   * callers), only a diagnostic escape hatch, same purpose as the web editor's CC Reference page
+   * ("test-send" buttons) and `patchStore.sendTestCC`. */
+  sendTestCC(cc: number, value: number, description?: string): void {
+    this.requireDevice().sendCC(cc, value, description);
+  }
+
   /** Renames the live patch (not persisted until `saveToSlot`); returns the name sent. */
   rename(name: string): string {
     const device = this.requireDevice();
