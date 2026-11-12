@@ -31,11 +31,16 @@ describe('NanoCoreDevice sending', () => {
     expect(t.sent.length).toBeGreaterThanOrEqual(4);
   });
 
-  it('still sends a commonParams param (AMP/CAB\'s shared knobs) as CC: no confirmed SysEx mechanism for those yet', () => {
+  it('sends a commonParams param (AMP/CAB\'s shared knobs) as SysEx too, confirmed by a real capture of ToneCommand turning AMP Gain/Bass', () => {
+    // Captured 2026-11-12 (Frida/CoreMIDI hook): turning AMP's Gain sent [0x01, 2, 0, ...float],
+    // Bass sent [0x01, 2, 1, ...float] — blockId 2 (AMP), paramIndex = plain position in
+    // `commonParams` (Gain=0, Bass=1), the same mechanism and indexing convention as every other
+    // param, not a CC-only exception.
     const t = new FakeTransport();
     const d = new NanoCoreDevice(t, 'nc', 3);
     d.sendParam('amp', 0, 'gain', 0.75);
-    expect(t.sent[0]).toMatchObject({ kind: 'cc', channel: 3, cc: 60 });
+    expect(t.sent[0]).toMatchObject({ kind: 'sysex' });
+    expect(t.sent.some((m) => m.kind === 'cc' && m.cc === 60)).toBe(false);
   });
 
   it('sends the chain order as the prime message followed by the order itself', () => {

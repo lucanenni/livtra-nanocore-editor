@@ -1,4 +1,4 @@
-import { enumIndexToCC, onOffToCC, realToCC, realToNormalized } from '../midi/scaling';
+import { onOffToCC, realToNormalized } from '../midi/scaling';
 import type { MidiTransport } from '../midi/types';
 import { buildReplyFrame, withReplyReassembly } from '../midi/segmentedReplies';
 import {
@@ -22,7 +22,7 @@ import {
   parseReadPresetWindow,
 } from '../midi/sysex';
 import type { ProfileCatalogRecord } from '../midi/sysex';
-import type { EffectType } from '../data/types';
+import type { BlockSpec, EffectType, ParamSpec } from '../data/types';
 import { parseGlobalSettingsResponse, parsePresetName } from '../midi/presetReader';
 import type { GlobalSettings } from '../midi/presetReader';
 import { readIrCatalog, readProfileCatalog, readProfileData, runProfileUpload, type ProfileReadResult } from '../midi/profileUpload';
@@ -59,6 +59,26 @@ function defaultNormalizedValuesForType(type: EffectType): number[] {
       ? realToNormalized(spec.min, spec.max, spec.default ?? spec.min, spec.curve)
       : (spec.default ?? 0) / Math.max(1, spec.options.length - 1),
   );
+}
+
+/** `spec`'s index for `buildSetParamValueSysEx` — confirmed 2026-11-12 that `block.commonParams`
+ * (AMP/CAB's shared knobs — every model's own `type.params` is empty) use this exact mechanism
+ * too, indexed by their own plain position in `commonParams`, a separate space from
+ * `type.params`' own indexing. Two independent checks: a live capture of ToneCommand itself
+ * turning AMP's Gain/Bass (blockId 2, index 0/1), and this editor's own send round-tripped
+ * against the real device screen for AMP Treble/Mid (index 3/2, each set to a distinct value and
+ * read back exactly) and CAB Low Cut (index 0) — covering every index from 0 up through AMP's
+ * 4th of 5 commonParams, so the position-in-`commonParams` convention (Gain=0, Bass=1, Mid=2,
+ * Treble=3, Level=4 presumed) is settled, not just a guess from the one knob ToneCommand's own
+ * traffic happened to move first. For a `type.params` entry, the index is
+ * `RangeParam.sysexParamIndex` if it declares one (a device-side reserved-slot quirk, e.g. Motion
+ * Wah's Sweep/Mix), else its plain position there — see `findParamSpecBySysexIndex`'s own comment
+ * for the read-side counterpart of this convention. */
+function sysexParamIndexFor(block: BlockSpec, type: EffectType, spec: ParamSpec): number {
+  const commonIndex = (block.commonParams ?? []).indexOf(spec);
+  if (commonIndex !== -1) return commonIndex;
+  const typeIndex = type.params.indexOf(spec);
+  return spec.kind === 'range' ? (spec.sysexParamIndex ?? typeIndex) : typeIndex;
 }
 
 /** One NanoCore on one MIDI output, driven through any `MidiTransport`. Holds no state besides
@@ -118,26 +138,7 @@ export class NanoCoreDevice {
     const spec = findParamSpec(block, typeId, paramId);
     const displayValue = spec.kind === 'range' ? value.toFixed(spec.decimals ?? 0) : spec.options[value];
     const label = `${block.name} ${type.name}: ${spec.label} = ${displayValue}${spec.kind === 'range' && spec.unit ? spec.unit : ''}`;
-    const typeParamIndex = type.params.indexOf(spec);
-    if (typeParamIndex === -1) {
-      // `spec` came from `block.commonParams` (AMP/CAB's Gain/Bass/Mid/Treble, Low Cut/High
-      // Cut/Level) — shared across every model, not part of any `type.params` array, so the
-      // positional-SysEx-index convention below doesn't apply and there's no confirmed SysEx
-      // mechanism for these yet. CC stays the only known-working path until that's verified; this
-      // is the one place this editor still edits via CC rather than SysEx (see `sendBlockType`'s
-      // and the SysEx-param branch's own doc comments for why everywhere else doesn't).
-      const raw = spec.kind === 'range' ? realToCC(spec.min, spec.max, value, spec.curve) : enumIndexToCC(value, spec.options.length);
-      this.transport.sendCC(this.outputId, this.channel, spec.cc ?? 0, raw, label);
-      return;
-    }
-    // Every other param: the official app edits these via SysEx too, never CC (confirmed
-    // end-to-end on FX1/FX2's own params — `RangeParam.cc`, where set, is real and reachable by
-    // external MIDI gear driving the device directly, but not what this editor itself sends — see
-    // `BlockSpec.typeCC`'s own doc comment for the parallel reasoning on type-select). A param's
-    // SysEx index is `RangeParam.sysexParamIndex` if it declares one (a device-side reserved-slot
-    // quirk, e.g. Motion Wah's Sweep/Mix — see that type's own comment), else its plain position
-    // in `type.params` — same convention `findParamSpecBySysexIndex` already reads back.
-    const sysexIndex = spec.kind === 'range' ? (spec.sysexParamIndex ?? typeParamIndex) : typeParamIndex;
+    const sysexIndex = sysexParamIndexFor(block, type, spec);
     const normalized =
       spec.kind === 'range' ? realToNormalized(spec.min, spec.max, value, spec.curve) : value / Math.max(1, spec.options.length - 1);
     this.transport.sendSysEx(this.outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[blockId], sysexIndex, normalized), label);
@@ -160,19 +161,13 @@ export class NanoCoreDevice {
           `${block.name} type -> ${type.name}`,
         );
       }
-      for (const spec of block.commonParams ?? []) {
-        // See sendParam's own comment: no confirmed SysEx mechanism for common params yet.
+      for (const spec of [...(block.commonParams ?? []), ...type.params]) {
         const value = blockState.params[spec.id] ?? (spec.kind === 'range' ? spec.min : 0);
-        const raw = spec.kind === 'range' ? realToCC(spec.min, spec.max, value, spec.curve) : enumIndexToCC(value, spec.options.length);
-        transport.sendCC(outputId, channel, spec.cc ?? 0, raw, `${block.name}: ${spec.label}`);
-      }
-      type.params.forEach((spec, typeParamIndex) => {
-        const value = blockState.params[spec.id] ?? (spec.kind === 'range' ? spec.min : 0);
-        const sysexIndex = spec.kind === 'range' ? (spec.sysexParamIndex ?? typeParamIndex) : typeParamIndex;
+        const sysexIndex = sysexParamIndexFor(block, type, spec);
         const normalized =
           spec.kind === 'range' ? realToNormalized(spec.min, spec.max, value, spec.curve) : value / Math.max(1, spec.options.length - 1);
         transport.sendSysEx(outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], sysexIndex, normalized), `${block.name}: ${spec.label}`);
-      });
+      }
     }
   }
 

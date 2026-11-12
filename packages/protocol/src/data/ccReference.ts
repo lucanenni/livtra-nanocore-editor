@@ -58,29 +58,25 @@ function paramEntriesForBlock(block: BlockSpec): CCReferenceEntry[] {
   (block.commonParams ?? []).forEach(consider);
   block.types.forEach((type) => type.params.forEach(consider));
 
-  // Only `block.commonParams` (AMP/CAB's shared knobs) still go out as this CC from this editor
-  // itself — every other param here is edited via SysEx instead (same reasoning as the type-select
-  // note above), this CC staying real only for external gear. See NanoCoreDevice.sendParam's own
-  // comment for the commonParams exception.
+  // This editor edits every param (`commonParams` included — confirmed 2026-11-12, same SysEx
+  // mechanism as everything else) via SysEx instead of this CC (same reasoning as the type-select
+  // note above) — the CC stays real only for external gear. See
+  // `NanoCoreDevice.sysexParamIndexFor`'s own comment.
   const sysexNote =
     'This editor edits this via SysEx instead, not this CC — still real and reachable from ' +
     'external gear driving the device directly.';
-  const isCommonParam = (id: string) => (block.commonParams ?? []).some((p) => p.id === id);
 
-  return [...byCC.entries()].map(([cc, { labels, params, ranges }]) => {
-    const allCommon = [...params.keys()].every(isCommonParam);
-    return {
-      cc,
-      scope: block.name,
-      target: [...labels].join(' / '),
-      kind: 'param' as const,
-      rangeText: ranges.size === 1 ? [...ranges.keys()][0]! : 'Varies by the block’s active type',
-      note: allCommon ? block.note : [block.note, sysexNote].filter(Boolean).join(' '),
-      blockId: block.id,
-      params: [...params].map(([id, label]) => ({ id, label })),
-      range: ranges.size === 1 ? [...ranges.values()][0] : undefined,
-    };
-  });
+  return [...byCC.entries()].map(([cc, { labels, params, ranges }]) => ({
+    cc,
+    scope: block.name,
+    target: [...labels].join(' / '),
+    kind: 'param' as const,
+    rangeText: ranges.size === 1 ? [...ranges.keys()][0]! : 'Varies by the block’s active type',
+    note: [block.note, sysexNote].filter(Boolean).join(' '),
+    blockId: block.id,
+    params: [...params].map(([id, label]) => ({ id, label })),
+    range: ranges.size === 1 ? [...ranges.values()][0] : undefined,
+  }));
 }
 
 /** Every CC this app's data model knows about, one row per (block-or-global, CC number) pair,

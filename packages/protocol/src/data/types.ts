@@ -21,10 +21,11 @@ export interface BaseParam {
   /** MIDI CC number that carries this parameter for an EXTERNAL controller driving the device
    * directly (per the MIDI Control User Guide, or independently confirmed on real hardware for
    * a 1.3.5+ addition) — surfaced on the CC Reference page, not used to edit from this editor
-   * itself. This editor always sends a param (other than `BlockSpec.commonParams`, which has no
-   * confirmed SysEx mechanism yet) via SysEx regardless of whether `cc` is set — see
-   * `NanoCoreDevice.sendParam`'s own comment for why, and `BlockSpec.typeCC`'s for the parallel
-   * reasoning on type-select. Absent for a handful of params with no known CC at all. */
+   * itself. This editor always sends every param via SysEx regardless of whether `cc` is set,
+   * including `BlockSpec.commonParams` (confirmed 2026-11-12, same mechanism, own index space
+   * from `type.params`) — see `NanoCoreDevice.sysexParamIndexFor`'s own comment for the exact
+   * indexing, and `BlockSpec.typeCC`'s for the parallel reasoning on type-select. Absent for a
+   * handful of params with no known CC at all. */
   cc?: number;
   /** English fallback label (used as i18next defaultValue). */
   label: string;
