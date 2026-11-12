@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { buildCCReference, type CCReferenceEntry } from '@nanocore/protocol';
 import { usePatchStore } from '../store/patchStore';
+import { Knob } from './Knob';
 
 const ON_OFF_TEST_VALUES = [
   { label: 'Off', value: 0 },
@@ -139,17 +140,13 @@ export function CCReferencePanel() {
                     </button>
                   ))}
                   {entry.kind !== 'on-off' && (
-                    <input
-                      type="range"
-                      className="cc-reference__knob"
+                    <Knob
                       min={0}
                       max={127}
                       defaultValue={64}
                       disabled={!connectionReady}
-                      aria-label={t('ccRef.knobLabel', 'Send a CC{{cc}} value', { cc: entry.cc }) ?? ''}
-                      onChange={(e) =>
-                        sendTestCC(entry.cc, Number(e.target.value), `Test: ${entry.scope || entry.cc} — ${entry.target || entry.cc} = ${e.target.value} (CC${entry.cc})`)
-                      }
+                      ariaLabel={t('ccRef.knobLabel', 'Send a CC{{cc}} value', { cc: entry.cc }) ?? ''}
+                      onChange={(v) => sendTestCC(entry.cc, v, `Test: ${entry.scope || entry.cc} — ${entry.target || entry.cc} = ${v} (CC${entry.cc})`)}
                     />
                   )}
                 </td>

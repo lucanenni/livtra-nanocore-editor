@@ -300,9 +300,46 @@ input[type='checkbox'] {
   gap: 4px;
 }
 
-.cc-reference__knob {
-  width: 70px;
-  margin-left: 4px;
+.knob {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-inset);
+  border: 2px solid var(--border-strong);
+  position: relative;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  outline-offset: 2px;
+}
+
+.knob:active {
+  cursor: grabbing;
+}
+
+.knob:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+.knob--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.knob__dial {
+  position: absolute;
+  inset: 0;
+}
+
+.knob__pointer {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 2px;
+  height: 40%;
+  background: var(--accent);
+  border-radius: 1px;
+  transform: translateX(-50%);
 }
 
 .connection-panel__header {
