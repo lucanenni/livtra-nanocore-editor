@@ -29,7 +29,7 @@ stacks above the effect chain instead of sitting beside it.
 
 ## Status
 
-**Verified against a real NanoCore** (firmware 1.04+) — see
+**Verified against a real NanoCore** (firmware 1.04 through 1.3.5) — see
 [`docs/HARDWARE_VERIFICATION.md`](docs/HARDWARE_VERIFICATION.md) for the full
 checklist and [`docs/MIDI_MAPPING_NOTES.md`](docs/MIDI_MAPPING_NOTES.md) for
 the detailed findings log (a few range/typo fixes were needed along the way).
@@ -43,30 +43,34 @@ toggle Bluetooth off/on on the device first to wake its advertising, and make
 sure nothing else (like the official phone app) is already holding the
 connection. See MIDI_MAPPING_NOTES.md for the full diagnosis story.
 
-The parameter map (CC numbers, on/off conventions, type IDs) is taken directly
-from Livtra's own documentation, and everything documented there works as expected
-over MIDI, with one confirmed exception: **AMP and CAB model selection had no
-effect over the documented CC protocol on earlier firmware** (a September 2026
-NanoCore firmware update fixed CC43/44 for this — confirmed on real hardware,
-see `docs/HARDWARE_VERIFICATION.md`/`docs/MIDI_MAPPING_NOTES.md`; this editor
-is unaffected either way, since it already used SysEx for this and still does).
-The manual's *ranges* for individual
-parameters are less reliable than its CC numbers — one wrong floor is already
-fixed (Compressor Ratio, "1.1:1" vs the device's actual 1:1) and a systematic
-per-parameter check against real hardware is in progress, tracked in
-[`docs/PARAM_VERIFICATION.md`](docs/PARAM_VERIFICATION.md). Model selection is
-programmed via SysEx — not documented anywhere, but reverse-engineered from real
-traffic between the official Livtra app and a real NanoCore (same hardware-
-verification approach as everything else in this project, just applied to
-SysEx). This isn't a workaround for CC43/44: SysEx is the pedal's real patch-
-programming protocol, while CC is meant for live control while playing — model
-selection was never really a CC-shaped action to begin with. Effect chain
-reordering also went from undocumented-and-unsupported to working the same
-way — see MIDI_MAPPING_NOTES.md for the full protocol write-up. Global
-settings (Wireless, Loopback, Input Gain, USB/BT Volume, MIDI Channel) are
-live the same way — see Known limitations below. The tuner's reference
-pitch is the one remaining setting with no documented CC or known SysEx
-equivalent, still shown as reference-only.
+**This editor edits everything via SysEx, never CC.** The CC map (on/off,
+type-select, every parameter) is taken directly from Livtra's own
+documentation and, for firmware 1.3.5's additions, independently confirmed on
+real hardware — but a live capture of the official ToneCommand app's own
+traffic (2026-11) showed it never actually sends any of those CCs itself to
+*edit* anything, type-select or parameter alike: SysEx is the pedal's real
+patch-programming protocol, while CC is meant for live control while playing
+(an external MIDI foot controller driving the device directly) — editing was
+never really a CC-shaped action to begin with, for any block. This editor
+follows the same split: every `set_block`/`set_param` write goes out as
+SysEx, reverse-engineered from that same real traffic (not from the manual),
+with each documented CC kept only as reference data for the **CC Reference**
+tab below and for configuring external gear. The manual's *ranges* for
+individual parameters are less reliable than its CC numbers — one wrong floor
+is already fixed (Compressor Ratio, "1.1:1" vs the device's actual 1:1) and a
+systematic per-parameter check against real hardware is in progress, tracked
+in [`docs/PARAM_VERIFICATION.md`](docs/PARAM_VERIFICATION.md). Effect chain
+reordering is SysEx too, the same way — see MIDI_MAPPING_NOTES.md for the
+full protocol write-up. Global settings (Wireless, Loopback, Input Gain,
+USB/BT Volume, MIDI Channel) are live the same way — see Known limitations
+below. The tuner's reference pitch is the one remaining setting with no
+documented CC or known SysEx equivalent, still shown as reference-only.
+
+**Firmware 1.3.5** added 17 new effect types across FX1 (8 new, 12 total) and
+FX2 (9 new, 21 total) — all named and selectable, with real parameter
+names/ranges/defaults confirmed on hardware for most of them (Peak Comp,
+Parallel Comp, Classic/Retro/Bass Wah); see `docs/MIDI_MAPPING_NOTES.md` for
+which ones are still placeholder parameters pending individual mapping.
 
 ## Source material
 
@@ -205,11 +209,15 @@ name get their slot number in front (`#7 …`) so they can be told apart.
 
 **CC Reference.** A full table of every CC this editor's data model knows
 about — on/off, type-select, and every parameter, for all 8 blocks plus the
-global controls — sorted by CC number, with buttons to send a raw test value
-straight to a connected device. Meant for configuring an external MIDI foot
+global controls — sorted by CC number, with buttons and a round knob to send
+a raw test value straight to a connected device (this editor's own edits go
+out as SysEx instead — see Status above — so this table and its test
+controls are the one place in the app a plain CC actually goes on the wire).
+Every CC 0-127 this table doesn't otherwise have a name for gets a blank row
+at the bottom, still testable. Meant for configuring an external MIDI foot
 controller for live use: look up which CC drives what you want, assign it on
-the controller, then use these buttons to confirm the device actually reacts
-before trusting the controller's own mapping.
+the controller, then use these controls to confirm the device actually
+reacts before trusting the controller's own mapping.
 
 ## MCP server
 
@@ -308,8 +316,12 @@ setting Shape/Mix/Level or the rest of your patch.
   is not part of this and stays reference-only — confirmed a dead end, not
   just unexplored: the official app doesn't expose the tuner at all, only
   the device's own panel does, so there's no traffic to reverse-engineer.
-- CC68-73 are **shared** between MOD and FX2's Pitch/Envelope Wah/Wah types;
-  the editor warns when this conflict is live in the current patch.
+- CC68-73 are **shared** between MOD and whatever FX2 type is currently
+  active (confirmed on real hardware to extend to every FX2 type, including
+  firmware 1.3.5's new ones, not just Pitch/Envelope Wah/Wah); the editor
+  warns when this conflict is live in the current patch. This editor's own
+  edits don't go through these CCs at all (see Status above), so the
+  conflict only matters for external gear sending CC directly.
 - The **installed firmware version** can't be read over MIDI — it shows only on
   the pedal's own screen. The About section explains updating with Livtra's own
   updater (ToneCommand Editor / Upgrader); this editor never writes firmware.

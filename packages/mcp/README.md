@@ -60,6 +60,13 @@ at a time. Then ask the assistant to connect.
 | `verify_profile` | Read one profile or IR slot back and check it against the pedal's CRC-32 (name, size, CRC-32, `intact`) |
 | `listen` | Record for N seconds what the pedal reports on its own (preset changes, blocks on/off, knob turns, settings) — e.g. to check a footswitch or controller reaches it |
 | `upload_profile` | Load a local `.ead` file into a profile slot — **overwrites**, needs `confirm: true` |
+| `list_cc_reference` | Every documented/confirmed MIDI CC, for configuring external gear — not what `set_block`/`set_param` send (see below) |
+| `send_test_cc` | Send one raw CC exactly as given, bypassing the patch — for testing a CC from `list_cc_reference` or an external controller mapping |
+
+`set_block`/`set_param` always edit via SysEx, never CC — reverse-engineered from the official
+ToneCommand app's own traffic, which does the same (CC is for an external controller driving the
+pedal directly, not how its own app edits). `send_test_cc`/`list_cc_reference` are a separate,
+raw-CC diagnostic path for that external-gear use case, not an alternate way to edit the patch.
 
 Edits are **live**: like turning a knob on the pedal, they are lost at the next preset change until
 `save_to_slot` keeps them. Tools that overwrite stored data are marked destructive and require an explicit

@@ -1197,6 +1197,68 @@ independently confirmed against the real NanoCore (CC sends cross-checked agains
   reader would mistake for the opcode. No protocol difference between NanoCore and Mosaic here,
   and nothing to change in this project's own decoders.
 
+## Firmware 1.3.5 changes (confirmed on real hardware, 2026-11-12)
+
+User updated ToneCommand/firmware to 1.3.5, which added 17 new effect types — 8 in FX1 (4 total ->
+12) and 9 in FX2 (12 total -> 21). Two separate gaps had to be closed to support them: naming/
+mapping the new types themselves, and finding the real mechanism this editor needed to *select* a
+type and set its params, since every previous type-select path in this codebase went through CC
+(`typeCC`) or was never implemented for arbitrary type switching at all.
+
+**Type selection is SysEx, not CC — found via live Frida/CoreMIDI capture of ToneCommand 1.3.5
+itself** (same bottom-up ad-hoc-codesign + `MIDISend*` hooking method as this file's other SysEx
+findings). Real traffic shows a single opcode-`0x6d` message, subcommand `0x02`:
+`[0x02, blockId, typeId, paramCount, ...paramCount × float32LE]` (7-bit-safe packed, see
+`buildSetBlockTypeSysEx` in `midi/sysex.ts`) — one message both assigns the type AND seeds its own
+parameter defaults, in the type's own `params` array order (not `sysexParamIndex` order). It must
+be preceded by the same no-value priming message (`buildSetFieldOpcode` field `0x00`,
+`buildChainOrderPrimeSysEx()`) that chain-order changes already required — without it the type
+change sometimes silently drops rather than failing outright, confirmed via repeated capture-vs-
+screen mismatches until the priming message was added. `NanoCoreDevice.sendBlockType` now sends
+the prime unconditionally before every non-AMP/CAB type change.
+
+**New type ids and params**, confirmed by live capture cross-checked against direct device-screen
+reads (not assumed from the manual, which doesn't cover 1.3.5 at all):
+
+- **FX1** (ids 4-11): Env Wah(4), Wah(5), Motion Wah(6), Peak Comp(7), Parallel Comp(8), Classic
+  Wah(9), Retro Wah(10), Bass Wah(11). An initial screen-read-while-cycling-CC pass mis-ordered
+  4-8 (worked fine for the others); corrected via capture. Peak Comp:
+  threshold/ratio/attack/release/makeup, all `rangeSysexOnly` (no CC). Parallel Comp: same 5 plus
+  mix/level — ranges and defaults confirmed, but Attack/Release's real curve doesn't reconcile with
+  either `'linear'` or this codebase's `'exp'` formula; flagged as an open gap in the code comment
+  rather than silently assumed. Classic/Retro/Bass Wah: Position / Low Freq-or-Q Trim / High
+  Freq-or-Volume Trim / Mix / Level, all linear, confirmed exact via normalized-float capture vs.
+  screen reads; Classic/Retro's Position is CC51 (confirmed live), the rest `rangeSysexOnly`.
+- **FX2** (ids 12-20 newly mapped on top of the existing 0-11): id 12 is plain **Gate** (an earlier
+  guess called it "Gate Wah" — wrong; floats match FX1's Gate exactly). ids 13-20 mirror FX1's
+  Peak/Parallel Comp and Classic/Retro/Bass Wah with the same params. CC68-73 (Position/Low Freq/
+  High Freq/Mix for the wah family) confirmed live and found to extend to **every** FX2 type in
+  1.3.5, not just the three previously documented (Pitch/Envelope Wah/Wah) — see "Routing
+  conflicts" section above, now updated. These CCs are reference-only: this editor's own edits
+  never send them (see next section).
+- **Bonus fix found while re-verifying FX2's existing types**: Range/XAC/Fiman (ids 5-7, the boost
+  types) actually have 3 live params — **Gain/Tone/Level** (CC57-59) — not the single `boost`
+  param this codebase (and the official MIDI-CC manual) had them as. Confirmed via capture;
+  `boostParams()` removed, these now use the same `driveParams()` shape as the other drive types.
+
+**This editor edits everything via SysEx, never CC — confirmed and closed as a real architectural
+rule, not just a convention.** Two separate CC exceptions previously existed and were both closed
+this session, each after direct user correction:
+- FX2's new 1.3.5 types were initially wired to send CC68-73 for their wah params directly from
+  `sendParam`. Corrected: `NanoCoreDevice.sendParam`/`sendFullPatch` now always send every
+  `type.params` value via `buildSetParamValueSysEx` (opcode `0x6d`, subcommand `0x01`,
+  `[0x01, blockId, paramIndex, floatLE]`), regardless of whether the param spec carries a `cc`.
+  `cc`/`typeCC` are kept on the spec purely as reference data for the CC Reference page and the
+  MCP `send_test_cc`/`list_cc_reference` tools — never consulted by the real send path.
+- AMP/CAB's shared `commonParams` (Gain/Bass/Mid/Treble/Level, Low Cut/High Cut/Level) were the
+  last params still sent via CC. Live capture of ToneCommand turning these knobs showed the
+  identical `buildSetParamValueSysEx` shape used everywhere else, confirmed round-trip on real
+  hardware (Gain/Bass/Mid/Treble/CAB Low Cut all independently verified against the device screen,
+  including one display-refresh-lag false alarm on Treble that cleared once an unambiguous extreme
+  test value was sent). `sysexParamIndexFor(block, type, spec)` (`NanoCoreDevice.ts`) now gives
+  `commonParams` their own index space (checked before falling back to `type.params`), closing the
+  exception completely — there is no param left in this editor that goes out over CC.
+
 ## Source documents
 
 Livtra's official documentation — not redistributed in this repo (theirs to
