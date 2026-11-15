@@ -494,6 +494,21 @@ input[type='checkbox'] {
 
 /* --- Chain view ------------------------------------------------------------ */
 
+.chain-view-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chain-view__mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .chain-view {
   display: flex;
   align-items: center;
@@ -503,6 +518,11 @@ input[type='checkbox'] {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 10px;
+}
+
+/* The Synth tile: fixed at the front of the chain, not part of the reorderable/draggable set. */
+.chain-view__item--fixed {
+  cursor: default;
 }
 
 .chain-view__block {

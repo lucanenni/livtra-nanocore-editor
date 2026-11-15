@@ -7,7 +7,6 @@ import { ConnectionPanel } from './components/ConnectionPanel';
 import { PresetBrowser } from './components/PresetBrowser';
 import { PresetPanel } from './components/PresetPanel';
 import { GlobalSettingsPanel } from './components/GlobalSettingsPanel';
-import { SynthPanel } from './components/SynthPanel';
 import { CCReferencePanel } from './components/CCReferencePanel';
 import { ProfilePanel } from './components/ProfilePanel';
 import { TunerPanel } from './components/TunerPanel';
@@ -18,7 +17,7 @@ import { Icon } from './components/Icon';
 import { usePatchStore } from './store/patchStore';
 import { nanocoreSpec } from '@nanocore/protocol';
 
-type Tab = 'chain' | 'synth' | 'presets' | 'profiles' | 'global' | 'ccref' | 'tuner' | 'log' | 'info';
+type Tab = 'chain' | 'presets' | 'profiles' | 'global' | 'ccref' | 'tuner' | 'log' | 'info';
 
 function App() {
   const { t } = useTranslation();
@@ -55,7 +54,6 @@ function App() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'chain', label: t('nav.chain', 'Effect Chain') },
-    { id: 'synth', label: t('nav.synth', 'Synth Mode') },
     { id: 'presets', label: t('nav.presets', 'Presets') },
     { id: 'profiles', label: t('nav.profiles', 'AMP/FX2 Profiles') },
     { id: 'global', label: t('nav.global', 'Global Settings') },
@@ -111,7 +109,6 @@ function App() {
               <BlockEditor blockId={selectedBlock} />
             </>
           )}
-          {tab === 'synth' && <SynthPanel />}
           {tab === 'presets' && <PresetPanel />}
           {tab === 'profiles' && <ProfilePanel />}
           {tab === 'global' && <GlobalSettingsPanel />}

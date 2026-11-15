@@ -1335,11 +1335,20 @@ early (silently dropping the `eq` entry) and, after Synth Mode was added, corrup
 since `pos` never advanced past where EQ's header should have been. Fixed with a per-block max
 (9 for `eq`, 8 for everything else) rather than a single flat constant.
 
-**Web editor**: Synth Mode has its own "Synth Mode" tab (`SynthPanel.tsx`), reusing the same
-`BlockEditor` component every chain block already uses — nothing about that component needed to
-change, since Synth is modeled as an ordinary `BlockSpec` (power toggle, voice/type select,
-per-voice params). It's deliberately not inserted into `ChainView`'s reorderable slots — see the
-`nanocoreSpec.synth`-vs-`nanocoreSpec.blocks` note above.
+**Web editor**: integrated into `ChainView` itself as a mode switch, not a separate tab or an
+extra chain slot — matching the real pedal's own UI (confirmed by the user, who corrected an
+earlier separate-tab version of this): a "Synth Mode" toggle above the chain switches
+`patch.synth.on`, and turning it on prepends a fixed, non-draggable Synth tile at the FRONT of
+the chain while hiding AMP and CAB (Synth Mode replaces their amp+cab modeling with the synth
+engine, so showing them alongside it would be misleading — confirmed by the device's own screen).
+Reuses `BlockEditor` unchanged, since Synth is modeled as an ordinary `BlockSpec` (power toggle,
+voice/type select, per-voice params) — selecting the fixed Synth tile shows it exactly like any
+chain block. The reorderable chain-order array itself is untouched (still the 8 original blocks,
+AMP/CAB included) — only their VISIBILITY in `ChainView` depends on `synth.on`; AMP/CAB's own
+state and position are preserved underneath so turning Synth Mode back off restores them exactly
+as they were. `ChainView` also falls the selected block back to the first still-visible one
+whenever the toggle changes and strands the current selection (e.g. AMP was selected, Synth Mode
+turns on).
 
 ## Source documents
 

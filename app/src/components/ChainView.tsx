@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import type { DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { findBlock } from '@nanocore/protocol';
@@ -9,6 +9,11 @@ interface Props {
   selected: string;
   onSelect: (blockId: string) => void;
 }
+
+/** Synth Mode replaces AMP/CAB's amp+cab modeling with the synth engine — confirmed on the real
+ * pedal's own screen: turning it on swaps AMP/CAB out of the chain for a Synth block, rather than
+ * adding Synth alongside them. */
+const HIDDEN_WHEN_SYNTH_ON = ['amp', 'cab'];
 
 /** Reorders `order` by moving `draggedId` to sit right before `targetId` (or to the end, if
  * `targetId` is the last item and the drop happened past its midpoint — see `handleDrop`). */
@@ -24,6 +29,18 @@ export function ChainView({ selected, onSelect }: Props) {
   const patch = usePatchStore((s) => s.patch);
   const chainOrder = usePatchStore((s) => s.chainOrder);
   const setChainOrder = usePatchStore((s) => s.setChainOrder);
+  const setBlockOn = usePatchStore((s) => s.setBlockOn);
+
+  const synthOn = patch.synth?.on ?? false;
+  const visibleChain = synthOn ? chainOrder.filter((id) => !HIDDEN_WHEN_SYNTH_ON.includes(id)) : chainOrder;
+  const visibleIds = synthOn ? ['synth', ...visibleChain] : visibleChain;
+
+  // Keep `selected` pointed at something actually shown here — AMP/CAB disappearing when Synth
+  // Mode turns on (or Synth itself disappearing when it turns off) would otherwise leave
+  // BlockEditor showing a block with no corresponding tile.
+  useEffect(() => {
+    if (!visibleIds.includes(selected) && visibleIds.length > 0) onSelect(visibleIds[0]);
+  }, [selected, visibleIds, onSelect]);
 
   // Only for the visual "being dragged" / "drop target" styling below — the actual reordering
   // logic reads the dragged block's id from `dataTransfer` instead (see handleDrop), not from
@@ -63,55 +80,92 @@ export function ChainView({ selected, onSelect }: Props) {
   };
 
   return (
-    <nav className="chain-view" aria-label={t('nav.chain', 'Effect Chain')}>
-      {chainOrder.map((blockId, i) => {
-        const block = findBlock(blockId);
-        const state = patch[blockId];
-        const blockName = t(`block.${block.id}.name`, block.name);
-        // The on/off dot is color-only visually; fold the state into the accessible name too
-        // (WCAG 1.4.1) rather than relying on the color difference alone.
-        const stateLabel = state?.on ? t('block.on', 'On') : t('block.off', 'Off');
-        return (
-          <Fragment key={block.id}>
-            <div
-              className={[
-                'chain-view__item',
-                draggedId === block.id ? 'chain-view__item--dragging' : '',
-                dragOverId === block.id ? 'chain-view__item--drag-over' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              draggable
-              onDragStart={handleDragStart(block.id)}
-              onDragOver={handleDragOver(block.id)}
-              onDrop={handleDrop(block.id)}
-              onDragEnd={handleDragEnd}
-            >
+    <div className="chain-view-wrapper">
+      <label className="chain-view__mode-toggle">
+        <span>{t('synth.title', 'Synth Mode')}</span>
+        <input
+          type="checkbox"
+          className="visually-hidden"
+          checked={synthOn}
+          onChange={(e) => setBlockOn('synth', e.target.checked)}
+        />
+        <span className={`pill ${synthOn ? 'pill--on' : ''}`} aria-hidden>
+          {synthOn ? t('block.on', 'On') : t('block.off', 'Off')}
+        </span>
+      </label>
+
+      <nav className="chain-view" aria-label={t('nav.chain', 'Effect Chain')}>
+        {synthOn && (
+          <Fragment>
+            <div className="chain-view__item chain-view__item--fixed">
               <button
                 type="button"
-                className={`chain-view__block ${selected === block.id ? 'chain-view__block--active' : ''}`}
-                aria-pressed={selected === block.id}
-                aria-label={`${blockName} — ${stateLabel}`}
-                onClick={() => onSelect(block.id)}
+                className={`chain-view__block ${selected === 'synth' ? 'chain-view__block--active' : ''}`}
+                aria-pressed={selected === 'synth'}
+                aria-label={t('block.synth.name', 'Synth')}
+                onClick={() => onSelect('synth')}
               >
-                <span className={`chain-view__dot ${state?.on ? 'chain-view__dot--on' : ''}`} aria-hidden />
-                <Icon name={block.id} size={22} className={`chain-view__icon ${state?.on ? 'chain-view__icon--on' : ''}`} />
+                <span className="chain-view__dot chain-view__dot--on" aria-hidden />
+                <Icon name="synth" size={22} className="chain-view__icon chain-view__icon--on" />
                 <span className="chain-view__label" aria-hidden>
-                  {blockName}
+                  {t('block.synth.name', 'Synth')}
                 </span>
               </button>
-              {/* The ‹›  move buttons were here (moveBlockInChain) — hidden for now, they were
-                  too small/fiddly next to drag-and-drop; re-add (e.g. as a keyboard-accessible
-                  fallback) if drag-and-drop alone turns out not to be enough. */}
             </div>
-            {i < chainOrder.length - 1 && (
-              <span className="chain-view__arrow" aria-hidden>
-                ›
-              </span>
-            )}
+            <span className="chain-view__arrow" aria-hidden>
+              ›
+            </span>
           </Fragment>
-        );
-      })}
-    </nav>
+        )}
+        {visibleChain.map((blockId, i) => {
+          const block = findBlock(blockId);
+          const state = patch[blockId];
+          const blockName = t(`block.${block.id}.name`, block.name);
+          // The on/off dot is color-only visually; fold the state into the accessible name too
+          // (WCAG 1.4.1) rather than relying on the color difference alone.
+          const stateLabel = state?.on ? t('block.on', 'On') : t('block.off', 'Off');
+          return (
+            <Fragment key={block.id}>
+              <div
+                className={[
+                  'chain-view__item',
+                  draggedId === block.id ? 'chain-view__item--dragging' : '',
+                  dragOverId === block.id ? 'chain-view__item--drag-over' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                draggable
+                onDragStart={handleDragStart(block.id)}
+                onDragOver={handleDragOver(block.id)}
+                onDrop={handleDrop(block.id)}
+                onDragEnd={handleDragEnd}
+              >
+                <button
+                  type="button"
+                  className={`chain-view__block ${selected === block.id ? 'chain-view__block--active' : ''}`}
+                  aria-pressed={selected === block.id}
+                  aria-label={`${blockName} — ${stateLabel}`}
+                  onClick={() => onSelect(block.id)}
+                >
+                  <span className={`chain-view__dot ${state?.on ? 'chain-view__dot--on' : ''}`} aria-hidden />
+                  <Icon name={block.id} size={22} className={`chain-view__icon ${state?.on ? 'chain-view__icon--on' : ''}`} />
+                  <span className="chain-view__label" aria-hidden>
+                    {blockName}
+                  </span>
+                </button>
+                {/* The ‹›  move buttons were here (moveBlockInChain) — hidden for now, they were
+                    too small/fiddly next to drag-and-drop; re-add (e.g. as a keyboard-accessible
+                    fallback) if drag-and-drop alone turns out not to be enough. */}
+              </div>
+              {i < visibleChain.length - 1 && (
+                <span className="chain-view__arrow" aria-hidden>
+                  ›
+                </span>
+              )}
+            </Fragment>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

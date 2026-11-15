@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { cleanup, createEvent, fireEvent, render } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, createEvent, fireEvent, render, screen } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 import { ChainView } from '../ChainView';
@@ -98,6 +98,65 @@ describe('ChainView drag-and-drop reorder', () => {
 
     expect(usePatchStore.getState().chainOrder).toEqual(before);
     expect(usePatchStore.getState().log).toHaveLength(0);
+
+    cleanup();
+  });
+});
+
+describe('ChainView Synth Mode toggle', () => {
+  beforeEach(async () => {
+    await usePatchStore.getState().initTransport('simulator');
+    usePatchStore.getState().resetPatch();
+  });
+
+  it('hides AMP/CAB and shows a fixed Synth tile at the front when Synth Mode turns on', () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <ChainView selected="fx1" onSelect={() => {}} />
+      </I18nextProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: /AMP/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Synth/ })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    expect(screen.getByRole('button', { name: /^Synth/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /AMP/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /CAB/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /FX1/ })).toBeInTheDocument();
+
+    cleanup();
+  });
+
+  it('falls the selection back to the first visible block when the current one disappears', () => {
+    const onSelect = vi.fn();
+    render(
+      <I18nextProvider i18n={i18n}>
+        <ChainView selected="amp" onSelect={onSelect} />
+      </I18nextProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    expect(onSelect).toHaveBeenCalledWith('synth');
+    cleanup();
+  });
+
+  it('turning it back off restores AMP/CAB and removes the Synth tile', () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <ChainView selected="fx1" onSelect={() => {}} />
+      </I18nextProvider>,
+    );
+
+    const toggle = screen.getByRole('checkbox');
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: /AMP/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /CAB/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Synth/ })).not.toBeInTheDocument();
 
     cleanup();
   });

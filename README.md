@@ -73,10 +73,13 @@ Parallel Comp, Classic/Retro/Bass Wah); see `docs/MIDI_MAPPING_NOTES.md` for
 which ones are still placeholder parameters pending individual mapping.
 
 **Synth Mode** (firmware 1.2+, 10 guitar-to-synth voices) is fully mapped and
-wired through the shared protocol layer, the MCP server, and its own "Synth
-Mode" tab in the web editor — enable, voice select, and every one of all 10
-voices' parameters, all SysEx, all confirmed on real hardware. See
-`docs/MIDI_MAPPING_NOTES.md`'s "Synth Mode" section for the protocol detail.
+wired through the shared protocol layer, the MCP server, and the web editor —
+enable, voice select, and every one of all 10 voices' parameters, all SysEx,
+all confirmed on real hardware. In the web editor it's a mode switch above
+the Effect Chain, matching the real pedal: turning it on swaps AMP/CAB out
+for a Synth block at the front of the chain, same as the device's own
+screen. See `docs/MIDI_MAPPING_NOTES.md`'s "Synth Mode" section for the
+protocol detail.
 
 ## Source material
 
