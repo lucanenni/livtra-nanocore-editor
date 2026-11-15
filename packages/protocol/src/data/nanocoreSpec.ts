@@ -7,6 +7,7 @@ import { mod } from './blocks/mod';
 import { del } from './blocks/del';
 import { rev } from './blocks/rev';
 import { eq } from './blocks/eq';
+import { synth } from './blocks/synth';
 
 export const globalControls: GlobalControl[] = [
   {
@@ -65,6 +66,7 @@ export const globalControls: GlobalControl[] = [
 
 export const nanocoreSpec: NanocoreSpec = {
   blocks: [fx1, fx2, amp, cab, mod, del, rev, eq],
+  synth,
   globalControls,
   meta: {
     firmware: '1.04+',
@@ -77,4 +79,4 @@ export const nanocoreSpec: NanocoreSpec = {
   },
 };
 
-export { fx1, fx2, amp, cab, mod, del, rev, eq };
+export { fx1, fx2, amp, cab, mod, del, rev, eq, synth };

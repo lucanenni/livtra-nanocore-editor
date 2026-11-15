@@ -21,6 +21,24 @@ export const LIVE_FX1_GATE = hex(
   'f0 7d 4e 43 71 40 02 01 00 63 00 00 08 00 00 03 2e 54 01 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 01 07 01 00 00 00 10 3f 01 00 05 6e 7c 3f 40 3f 00 00 00 3f 1f 05 48 2b 3f 0a 57 63 3f 4d 41 4c 4c 3f 01 00 02 4d 01 4c 0c 3f 33 33 33 3f 18 00 00 04 1a 19 19 3e 03 41 4a 21 3f 00 00 00 06 3f 1a 19 19 3f 01 00 6c 02 5c 0f 42 3e 4d 4c 01 4c 3e 01 01 05 7b 14 04 2e 3e 6c 51 38 3e 71 18 3d 4a 3f 4d 4c 4c 3e 00 7b 14 2e 3e 00 00 04 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 03 00 04 05 06 07 f7',
 );
 
+// Real frame captured 2026-11-15 (opcode 0x63, live state) with Synth Mode ON and voice = Brass
+// (confirmed against the real pedal's own screen: Attack 25ms, Release 50, Bite 60, Tone 70,
+// Mix 100) — see `data/blocks/synth.ts` and `midi/presetReader.ts`'s `decodeLiveBlockParams` doc
+// comment for how this block was found and decoded.
+// Real frame captured 2026-11-15 with Synth Mode ON and voice = Analog Synth (confirmed against
+// the pedal's own screen: Wave Saw [Sine/Saw/Square/Triangle/Pulse], Attack 5ms [2-400ms],
+// Release 50, Detune 5.0ct [0-20ct], Tone 68, Mix 100). Also doubles as the regression fixture for
+// a real bug this capture surfaced: EQ set to "eq8" (9 entries: 1 master + 8 bands) used to break
+// `decodeLiveBlockParams`'s 8-block loop early (its bound was a flat 8, not EQ's own real max of
+// 9), which silently corrupted every block decoded after EQ — including Synth, added later.
+export const LIVE_SYNTH_ANALOG = hex(
+  'f0 7d 4e 43 71 40 02 01 00 63 00 00 4d 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 1d 01 01 01 00 06 64 00 00 00 3e 0a 57 23 00 3d 00 00 00 3f 00 00 01 00 3e 7b 14 2e 3f 00 02 00 00 3f f7',
+);
+
+export const LIVE_SYNTH_BRASS = hex(
+  'f0 7d 4e 43 71 40 02 07 00 63 00 00 4d 00 00 03 32 64 00 03 06 73 1a 19 19 3f 70 27 06 60 3e 00 00 00 00 4d 4c 0d 4c 3c 1a 19 19 3e 7d 40 3f 15 3f 00 09 04 6c 1a 51 78 3e 0f 42 75 3d 06 50 0d 17 3e 66 66 26 40 3f 00 00 05 00 00 00 00 3f 00 00 00 3f 00 00 40 00 3f 00 00 00 3f 4d 01 4c 4c 3f 00 00 03 00 20 00 00 00 00 00 00 3f 03 4d 4c 4c 3f 01 01 04 47 4d 4c 4c 3d 3d 0a 57 0e 3d 4d 4c 4c 3d 00 00 00 00 00 01 04 04 00 00 1d 00 3e 4d 4c 4c 3c 00 38 00 00 00 1a 19 19 3e 00 01 02 05 0e 2d 32 3e 32 12 03 40 3e 4d 4c 0c 28 3f 33 33 33 3e 2e 47 40 61 3e 01 00 04 6d 67 01 3b 3e 4a 0c 22 3f 2d 03 32 5d 3e 00 00 00 3f 00 08 00 01 02 03 04 05 00 06 07 01 01 25 19 01 30 01 01 04 05 0f 42 75 60 3e 00 00 00 3f 1a 19 00 19 3f 33 33 33 3f 00 02 00 00 3f f7',
+);
+
 
 // Real frames captured over BLUETOOTH (2026-10-01): the device splits a reply into 64-byte segments,
 // each its own SysEx message with status 0x10 (more) / 0x11 (last). The three below are ONE opcode-0x63

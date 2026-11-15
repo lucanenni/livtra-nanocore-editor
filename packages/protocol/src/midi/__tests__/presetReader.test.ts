@@ -523,6 +523,145 @@ describe('decodeLiveBlockParams (opcode 0x63, LIVE state — see docs/MIDI_MAPPI
     expect(byId.mod.variant).toBe(17);
     near(byId.mod.values, [0.101, 0.7, 0.9, 0.8, 0.7]); // Rate/Depth untouched, Feedback/Phase/Mix set live
   });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Brass — confirmed against the pedal's own
+  // screen (Attack 25ms, Release 50, Bite 60, Tone 70, Mix 100). See `data/blocks/synth.ts`.
+  const LIVE_SYNTH_BRASS = hex(
+    'f0 7d 4e 43 71 40 02 07 00 63 00 00 4d 00 00 03 32 64 00 03 06 73 1a 19 19 3f 70 27 06 60 3e 00 00 00 00 4d 4c 0d 4c 3c 1a 19 19 3e 7d 40 3f 15 3f 00 09 04 6c 1a 51 78 3e 0f 42 75 3d 06 50 0d 17 3e 66 66 26 40 3f 00 00 05 00 00 00 00 3f 00 00 00 3f 00 00 40 00 3f 00 00 00 3f 4d 01 4c 4c 3f 00 00 03 00 20 00 00 00 00 00 00 3f 03 4d 4c 4c 3f 01 01 04 47 4d 4c 4c 3d 3d 0a 57 0e 3d 4d 4c 4c 3d 00 00 00 00 00 01 04 04 00 00 1d 00 3e 4d 4c 4c 3c 00 38 00 00 00 1a 19 19 3e 00 01 02 05 0e 2d 32 3e 32 12 03 40 3e 4d 4c 0c 28 3f 33 33 33 3e 2e 47 40 61 3e 01 00 04 6d 67 01 3b 3e 4a 0c 22 3f 2d 03 32 5d 3e 00 00 00 3f 00 08 00 01 02 03 04 05 00 06 07 01 01 25 19 01 30 01 01 04 05 0f 42 75 60 3e 00 00 00 3f 1a 19 00 19 3f 33 33 33 3f 00 02 00 00 3f f7',
+  );
+
+  it('decodes Synth Mode (blockId 10) appended after the 8 known blocks', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_BRASS).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(4); // Brass
+    near(byId.synth.values, [0.24, 0.5, 0.6, 0.7, 1.0]); // Attack/Release/Bite/Tone/Mix
+  });
+
+  it('omits the synth entry for a shorter pre-1.2-firmware-shaped response with no Synth region', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_FX1_GATE).map((b) => [b.blockId, b]));
+    expect(byId.synth).toBeUndefined();
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Analog Synth — confirmed against the
+  // pedal's own screen (Wave Saw, Attack 5ms, Release 50, Detune 5.0ct, Tone 68, Mix 100). This
+  // capture's EQ happens to be "eq8" (9 entries), which is exactly what exposed a real bug: the
+  // 8-block loop's bound was a flat 8, not EQ's own real max of 9, so it broke early and
+  // corrupted every block decoded after EQ — including Synth.
+  const LIVE_SYNTH_ANALOG = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 4d 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 1d 01 01 01 00 06 64 00 00 00 3e 0a 57 23 00 3d 00 00 00 3f 00 00 01 00 3e 7b 14 2e 3f 00 02 00 00 3f f7',
+  );
+
+  it('EQ "eq8" (9 entries) no longer breaks the 8-block loop early, so Synth decodes correctly after it', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_ANALOG).map((b) => [b.blockId, b]));
+    expect(byId.eq.values.length).toBe(9);
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(0); // Analog Synth
+    near(byId.synth.values, [0.25, 0.08, 0.5, 0.25, 0.68, 1.0]); // Wave/Attack/Release/Detune/Tone/Mix
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Strings — confirmed against the pedal's
+  // own screen (Attack 83ms, Release 72, Ensemble 50, Tone 55, Mix 100).
+  const LIVE_SYNTH_STRINGS = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 49 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 19 01 01 01 01 05 14 66 66 66 3e 6c 51 38 60 3f 00 00 00 3f 4d 4c 10 0c 3f 00 00 00 3f f7',
+  );
+
+  it('decodes Strings (typeId 1)', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_STRINGS).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(1); // Strings
+    near(byId.synth.values, [0.45, 0.72, 0.5, 0.55, 1.0]); // Attack/Release/Ensemble/Tone/Mix
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Pad — confirmed against the pedal's own
+  // screen (Tone 100, Decay 50, Mix 100).
+  const LIVE_SYNTH_PAD = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 41 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 11 01 01 01 02 03 04 00 00 00 3f 00 00 00 08 3f 00 00 00 3f f7',
+  );
+
+  it('decodes Pad (typeId 2)', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_PAD).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(2); // Pad
+    near(byId.synth.values, [1.0, 0.5, 1.0]); // Tone/Decay/Mix
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Choir — confirmed against the pedal's own
+  // screen (Attack 122ms, Release 70, Vowel 20, Tone 60, Mix 100).
+  const LIVE_SYNTH_CHOIR = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 49 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 19 01 01 01 03 05 03 4d 4c 0c 3f 33 33 33 66 3f 4d 4c 4c 3e 1a 19 10 19 3f 00 00 00 3f f7',
+  );
+
+  it('decodes Choir (typeId 3)', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_CHOIR).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(3); // Choir
+    near(byId.synth.values, [0.55, 0.7, 0.2, 0.6, 1.0]); // Attack/Release/Vowel/Tone/Mix
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Organ — confirmed against the pedal's own
+  // screen (Attack 3ms, Release 25, Harmonics 60, Tone 85, Mix 100).
+  const LIVE_SYNTH_ORGAN = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 49 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 19 01 01 01 05 05 42 0a 57 23 3d 00 00 00 66 3e 1a 19 19 3f 1a 19 10 59 3f 00 00 00 3f f7',
+  );
+
+  it('decodes Organ (typeId 5)', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_ORGAN).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(5); // Organ
+    near(byId.synth.values, [0.04, 0.25, 0.6, 0.85, 1.0]); // Attack/Release/Harmonics/Tone/Mix
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Flute — confirmed against the pedal's own
+  // screen (Attack 40ms, Release 45, Breath 35, Tone 70, Mix 100).
+  const LIVE_SYNTH_FLUTE = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 49 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 19 01 01 01 06 05 46 52 38 1e 3e 66 66 66 08 3e 33 33 33 3e 33 33 10 33 3f 00 00 00 3f f7',
+  );
+
+  it('decodes Flute (typeId 6)', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_FLUTE).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(6); // Flute
+    near(byId.synth.values, [0.31, 0.45, 0.35, 0.7, 1.0]); // Attack/Release/Breath/Tone/Mix
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Lead — confirmed against the pedal's own
+  // screen (Tone 100, Decay 50, Mix 100).
+  const LIVE_SYNTH_LEAD = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 41 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 11 01 01 01 07 03 04 00 00 00 3f 00 00 00 08 3f 00 00 00 3f f7',
+  );
+
+  it('decodes Lead (typeId 7)', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_LEAD).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(7); // Lead
+    near(byId.synth.values, [1.0, 0.5, 1.0]); // Tone/Decay/Mix
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Bass — confirmed against the pedal's own
+  // screen (Attack 2ms, Release 30, Sub Level 70, Tone 40, Mix 100).
+  const LIVE_SYNTH_BASS = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 49 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 19 01 01 01 08 05 70 00 00 00 00 1a 19 19 60 3e 33 33 33 3f 4d 4c 11 4c 3e 00 00 00 3f f7',
+  );
+
+  it('decodes Bass (typeId 8)', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_BASS).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(8); // Bass
+    near(byId.synth.values, [0, 0.3, 0.7, 0.4, 1.0]); // Attack/Release/Sub Level/Tone/Mix
+  });
+
+  // Real hardware, 2026-11-15: Synth Mode ON, voice = Pluck (the 10th and last voice) —
+  // confirmed against the pedal's own screen (Tone 100, Decay 50, Mix 100).
+  const LIVE_SYNTH_PLUCK = hex(
+    'f0 7d 4e 43 71 40 02 01 00 63 00 00 41 00 00 03 28 64 00 00 02 63 4d 4c 4c 3e 21 30 72 00 3e 00 00 03 00 00 00 60 3f 00 00 00 3f 4d 4c 00 4c 3f 00 00 05 00 00 01 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 03 4d 4c 4c 3f 00 00 03 40 00 00 00 00 00 00 00 06 3f 4d 4c 4c 3f 00 00 24 05 0a 57 23 3e 2e 47 00 01 3f 66 66 26 3f 5c 03 0f 42 3e 00 00 00 00 18 00 00 02 3e 1f 1a 3f 04 00 00 00 3f 00 06 05 03 4d 4c 0c 3f 00 00 40 2e 3f 4d 4c 4c 3e 38 1e 01 05 3e 00 00 00 3f 00 00 02 09 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 00 00 00 3f 00 00 00 00 3f 08 00 01 02 00 03 04 05 06 07 01 01 00 25 11 01 01 01 09 03 04 00 00 00 3f 00 00 00 08 3f 00 00 00 3f f7',
+  );
+
+  it('decodes Pluck (typeId 9) — the 10th and last voice', () => {
+    const byId = Object.fromEntries(decodeLiveBlockParams(LIVE_SYNTH_PLUCK).map((b) => [b.blockId, b]));
+    expect(byId.synth.on).toBe(true);
+    expect(byId.synth.variant).toBe(9); // Pluck
+    near(byId.synth.values, [1.0, 0.5, 1.0]); // Tone/Decay/Mix
+  });
 });
 
 describe('parseGlobalSettingsResponse / parseGlobalSettingsPush (Global.mmon, see MIDI_MAPPING_NOTES.md)', () => {

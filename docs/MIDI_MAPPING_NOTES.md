@@ -1259,6 +1259,88 @@ this session, each after direct user correction:
   `commonParams` their own index space (checked before falling back to `type.params`), closing the
   exception completely — there is no param left in this editor that goes out over CC.
 
+## Synth Mode (opcode `0x6d`, blockId 10) — resolved 2026-11-15
+
+Synth Mode is a firmware 1.2+ feature (official release note: "Turn your guitar into a synth with
+10 voices, including Analog Synth, Strings, Pad, Flute, and Bass. Enable Synth Mode in Settings.
+Each preset saves your selected voice and its controls."), toggleable both from the pedal's own
+Settings menu and from ToneCommand. Reverse-engineered from real ToneCommand traffic (same
+Frida/CoreMIDI capture method as this file's other SysEx findings) while building Synth Mode
+patches for a user request — modeled in `data/blocks/synth.ts` as `nanocoreSpec.synth`.
+
+**Reuses every mechanism already documented above — zero new protocol machinery.** The only new
+fact is the block numbering and one new field id:
+
+- **Enable/disable**: opcode `0x6d`, field `0x0a` (`SYSEX_FIELD.SYNTH_ENABLE`,
+  `buildBlockEnableSysEx`), value `1`/`0`. No CC exists for this at all, unlike every other
+  block's on/off CC.
+- **Voice select**: the same `buildSetBlockTypeSysEx` mechanism "Firmware 1.3.5 changes" above
+  describes, blockId **10**.
+- **Per-voice parameters**: the same `buildSetParamValueSysEx` mechanism, same blockId.
+
+**`nanocoreSpec.synth` is deliberately NOT a member of `nanocoreSpec.blocks`.** Unlike every
+other effect, Synth Mode is not part of the reorderable 8-effect signal chain — it's a separate,
+parallel mode, matching how the pedal's own UI frames it. Code that means "the 8 chain blocks"
+(chain order, `sendFullPatch`, the CC Reference page) keeps iterating `blocks` only; code that
+means "any block the user can address" (`findBlock`, the MCP's `set_block`/`set_param`/
+`describe_block`/`get_patch`) also checks `nanocoreSpec.synth`. `CHAIN_ORDER_BLOCK_IDS.synth = 10`
+participates in the general block-numbering `Record` for this reason, while never appearing in an
+8-element chain-order array.
+
+**All 10 voices are mapped** (ids 0-9, confirmed fully consecutive), each read directly off the
+pedal's own screen and cross-checked against a live `0x63` read of the same voice:
+
+| id | slug | name | params |
+| -- | ---- | ---- | ------ |
+| 0 | `analog_synth` | Analog Synth | Wave (enum: Sine/Saw/Square/Triangle/Pulse), Attack, Release, Detune, Tone, Mix |
+| 1 | `strings` | Strings | Attack, Release, Ensemble, Tone, Mix |
+| 2 | `pad` | Pad | Tone, Decay, Mix |
+| 3 | `choir` | Choir | Attack, Release, Vowel, Tone, Mix |
+| 4 | `brass` | Brass | Attack, Release, Bite, Tone, Mix |
+| 5 | `organ` | Organ | Attack, Release, Harmonics, Tone, Mix |
+| 6 | `flute` | Flute | Attack, Release, Breath, Tone, Mix |
+| 7 | `lead` | Lead | Tone, Decay, Mix |
+| 8 | `bass` | Bass | Attack, Release, Sub Level, Tone, Mix |
+| 9 | `pluck` | Pluck | Tone, Decay, Mix |
+
+Choir, Organ, Lead and Pluck aren't even named in the official release note (it only calls out
+"10 voices, including Analog Synth, Strings, Pad, Flute, and Bass"). Release/Bite/Tone/Mix/
+Ensemble/Vowel/Harmonics/Breath/Sub Level are all plain 0-100 linear (every reading matched its
+on-screen value to the exact integer, not just approximately). Wave (Analog Synth's only enum
+param) is bucketed evenly like every other enum here (`EnumParam.sysexParamIndex`, added
+alongside `RangeParam.sysexParamIndex` specifically for this — the first SysEx-only enum in this
+codebase, since Synth has no CC at all for any param).
+
+**Attack's real taper, found 2026-11-15**: every voice with an Attack param shares the exact same
+`min=2, max=400` (ms) range with a **quadratic** curve — `real = 2 + 398 * t ** 2` — confirmed by 7
+independent real readings across 7 different voices (Analog Synth, Strings, Choir, Brass, Organ,
+Flute, Bass), every one fitting to within display rounding, including both the `t=0` (Bass, exact
+2ms) and several mid-range points. This is a third taper alongside the existing `'linear'`/`'exp'`
+(see `midi/scaling.ts`), added as `curve: 'quad'`.
+
+**Reading Synth's live state back (opcode `0x63`)**: `decodeLiveBlockParams` (`midi/presetReader.ts`)
+decodes it too, appended after the 8 known blocks — its `[on][type][count]` header sits exactly 15
+bytes after where the 8-block walk ends: 9 bytes for the already-known chain-order footer (tag
+`0x08` + 8 order bytes) + 6 more bytes of still-unidentified content (two unknown bytes, a 2-byte
+value that differs between captures without tracking any known block state, then two more unknown
+bytes — possibly two reserved-block on/off flags for blockIds 8/9, unconfirmed). Verified
+byte-exact against the pedal's own screen across many independent live reads (one per voice); a
+response too short to contain this region (older/pre-1.2-firmware-shaped captures) simply omits
+the `synth` entry rather than guessing.
+
+**Real, unrelated bug found and fixed in the process**: `decodeLiveBlockParams`'s 8-block walk
+bounded every block's own entry count at a flat 8 — correct for the other 7, but EQ's own real max
+is 9 (`eq8` = 1 master + 8 bands). Whenever the live EQ happened to be set to `eq8`, the loop broke
+early (silently dropping the `eq` entry) and, after Synth Mode was added, corrupted its offset too
+since `pos` never advanced past where EQ's header should have been. Fixed with a per-block max
+(9 for `eq`, 8 for everything else) rather than a single flat constant.
+
+**Web editor**: Synth Mode has its own "Synth Mode" tab (`SynthPanel.tsx`), reusing the same
+`BlockEditor` component every chain block already uses — nothing about that component needed to
+change, since Synth is modeled as an ordinary `BlockSpec` (power toggle, voice/type select,
+per-voice params). It's deliberately not inserted into `ChainView`'s reorderable slots — see the
+`nanocoreSpec.synth`-vs-`nanocoreSpec.blocks` note above.
+
 ## Source documents
 
 Livtra's official documentation — not redistributed in this repo (theirs to

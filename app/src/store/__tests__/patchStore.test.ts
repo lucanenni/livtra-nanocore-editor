@@ -177,12 +177,12 @@ describe('patchStore.setChainOrder', () => {
 });
 
 describe('patchStore.sendFullPatch', () => {
-  it('emits on/off + type + every active param for all 8 blocks (CC for on/off and commonParams, SysEx for everything else)', () => {
+  it('emits on/off + type + every active param for all 8 blocks plus Synth Mode (CC for on/off and commonParams, SysEx for everything else)', () => {
     usePatchStore.getState().sendFullPatch();
     const log = usePatchStore.getState().log;
 
     let expectedCount = 0;
-    for (const block of nanocoreSpec.blocks) {
+    for (const block of [...nanocoreSpec.blocks, nanocoreSpec.synth]) {
       const state = usePatchStore.getState().patch[block.id];
       const type = block.types.find((t) => t.id === state.typeId)!;
       // +1 extra for every block without sysexTypeField (AMP/CAB): the type-change priming

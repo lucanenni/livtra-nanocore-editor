@@ -47,8 +47,9 @@ export interface RangeParam extends BaseParam {
   /** CC<->real-value taper. Defaults to 'linear' (the MIDI Control User Guide's documented
    * convention). 'exp' (`value = min * (max/min) ** t`) is confirmed on real hardware for a
    * handful of Hz-range params (filter cutoffs, LFO/sweep rates) — see `midi/scaling.ts` and
-   * docs/PARAM_VERIFICATION.md's non-linear section for the measurements. */
-  curve?: 'linear' | 'exp';
+   * docs/PARAM_VERIFICATION.md's non-linear section for the measurements. 'quad' (`value = min +
+   * (max-min) * t ** 2`) is confirmed for Synth Mode's Attack param, same across every voice. */
+  curve?: 'linear' | 'exp' | 'quad';
   /** Suggested default (editor convention — device factory defaults are not documented). */
   default?: number;
   /** Position in this param's block-type's own `params` array (0-indexed) — set INSTEAD of `cc`
@@ -59,13 +60,17 @@ export interface RangeParam extends BaseParam {
   sysexParamIndex?: number;
 }
 
-/** A discrete parameter with named options (e.g. LFO waveform shape). No enum param is
- * SysEx-only yet, so `cc` stays required here even though `BaseParam` makes it optional. */
+/** A discrete parameter with named options (e.g. LFO waveform shape, Synth Mode's Wave). */
 export interface EnumParam extends BaseParam {
   kind: 'enum';
-  cc: number;
   options: string[];
   default?: number;
+  /** Position in this param's block-type's own `params` array (0-indexed) — set INSTEAD of `cc`
+   * for a param confirmed on-device with no working CC (first used 2026-11-15 for Synth Mode's
+   * Analog Synth voice, which has no CC at all for any of its params). Same mechanism as
+   * `RangeParam.sysexParamIndex` — see that field's doc comment. Added via `paramHelpers.ts`'s
+   * `enumSysexOnly`, not `enumP`. */
+  sysexParamIndex?: number;
 }
 
 export type ParamSpec = RangeParam | EnumParam;
@@ -94,8 +99,9 @@ export interface BlockSpec {
   id: string;
   /** English fallback block name shown in the UI, e.g. "FX1". */
   name: string;
-  /** CC that turns the block on/off. 0-63 = OFF, 64-127 = ON. */
-  onOffCC: number;
+  /** CC that turns the block on/off. 0-63 = OFF, 64-127 = ON. Absent for a block with no CC at
+   * all (e.g. `synth`'s Synth Mode toggle) — see `sysexOnOffField` for its alternative. */
+  onOffCC?: number;
   /** CC that selects the effect type. Value sent is the exact EffectType.id, not scaled.
    * Documented in the MIDI Control User Guide, and a September 2026 firmware update confirmed it
    * now genuinely works on real hardware — but the official ToneCommand app itself was confirmed
@@ -105,12 +111,18 @@ export interface BlockSpec {
    * for every block; `typeCC` is kept purely as a data field for reference (surfaced in
    * `CCReferencePanel.tsx`'s CC table) and for external CC-only MIDI gear driving the device
    * directly, not through this editor. See docs/MIDI_MAPPING_NOTES.md. */
-  typeCC: number;
+  typeCC?: number;
   /** Set when this block's type selection doesn't work over the documented typeCC and must be
    * sent as a NanoCore SysEx "set field" command instead (see `midi/sysex.ts` and
    * docs/MIDI_MAPPING_NOTES.md) — the value is this field id, and EffectType.id is sent verbatim
    * as the SysEx value byte (same 0-N index as typeCC would have used). */
   sysexTypeField?: number;
+  /** Set when this block's on/off state has no working CC at all and must be sent as a NanoCore
+   * SysEx "set field" command instead (`midi/sysex.ts`'s `buildBlockEnableSysEx`) — the value is
+   * this field id, 1/0 for on/off. So far only `synth` (Synth Mode's enable toggle, field `0x0a`,
+   * confirmed 2026-11-15 from real ToneCommand traffic — no CC was ever found for it, unlike every
+   * other block's on/off). */
+  sysexOnOffField?: number;
   /** Parameters shared by every type in this block (e.g. Amp Gain/Bass/Mid/Treble/Level). */
   commonParams?: ParamSpec[];
   types: EffectType[];
@@ -136,6 +148,15 @@ export interface GlobalControl {
 
 export interface NanocoreSpec {
   blocks: BlockSpec[];
+  /** Synth Mode (firmware 1.2+) — a `BlockSpec`-shaped entity for its enable toggle, voice
+   * selection and per-voice parameters, so it reuses every existing block mechanism (`findBlock`,
+   * `sendBlockType`/`sendParam`, the MCP block tools). Deliberately NOT a member of `blocks`: it
+   * is not part of the reorderable 8-effect signal chain (`CHAIN_ORDER_BLOCK_IDS`'s own 8-slot
+   * array, `buildChainOrderSysEx`) — it's a separate, parallel mode, same as the device's own
+   * Settings-menu framing. Code that means "all 8 chain blocks" (chain order, `sendFullPatch`,
+   * the CC Reference page) should keep iterating `blocks` only; code that means "any block the
+   * user can address" (the MCP's `set_block`/`set_param`/`describe_block`) should also check this. */
+  synth: BlockSpec;
   globalControls: GlobalControl[];
   meta: {
     firmware: string;

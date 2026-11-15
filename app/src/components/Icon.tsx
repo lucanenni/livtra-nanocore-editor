@@ -8,6 +8,7 @@ import {
   Info,
   KeyboardMusic,
   ListMusic,
+  Piano,
   RadioReceiver,
   Repeat,
   Settings,
@@ -23,6 +24,7 @@ import {
 const ICONS: Record<string, LucideIcon> = {
   // Sidebar sections
   chain: Cable,
+  synth: Piano,
   presets: ListMusic,
   profiles: BrainCircuit, // NAM = Neural Amp Modeler captures
   global: Settings,

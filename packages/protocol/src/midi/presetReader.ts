@@ -684,6 +684,11 @@ const LIVE_BLOCK_ORDER_AFTER_FX1 = ['fx2', 'amp', 'cab', 'del', 'mod', 'rev', 'e
  * confirmed by a real before/after type change landing exactly (a "no visible change" first
  * attempt for MOD turned out to be an invalid type id for MOD's own type list, not a decode
  * failure — retried with a valid id and it worked immediately).
+ *
+ * **Also decodes Synth Mode (`blockId: 'synth'`), appended after the 8 blocks above** — same
+ * `[on][type][count]` + floats shape, found 15 bytes after where the 8-block walk ends (see the
+ * inline comment at that offset for what's in those 15 bytes and how this was confirmed). Unlike
+ * AMP/CAB, Synth's `variant` (voice id) IS confirmed to move correctly here.
  */
 export function decodeLiveBlockParams(ampProfileBytes: readonly number[]): DecodedBlockParams[] {
   const stripped = stripFrame(ampProfileBytes);
@@ -709,7 +714,12 @@ export function decodeLiveBlockParams(ampProfileBytes: readonly number[]): Decod
     const rawVariant = stream[pos + 1];
     const count = stream[pos + 2];
     pos += 3;
-    if (count > 8 || pos + count * 4 > stream.length) break;
+    // EQ's own max is 9 entries (1 master + 8 bands, "eq8" — see eqTypeIdFromEntryCount), not 8
+    // like every other block here. Found 2026-11-15: this bound previously being a flat 8 for
+    // every block silently broke this loop (and, after Synth Mode was added below, corrupted its
+    // offset too) whenever the live EQ happened to be set to eq8 — confirmed on real hardware.
+    const maxCount = blockId === 'eq' ? 9 : 8;
+    if (count > maxCount || pos + count * 4 > stream.length) break;
     const values: number[] = [];
     for (let i = 0; i < count; i += 1, pos += 4) values.push(readFloat32LE(stream, pos));
     const variant =
@@ -720,6 +730,33 @@ export function decodeLiveBlockParams(ampProfileBytes: readonly number[]): Decod
           : rawVariant;
     out.push({ blockId, on, variant, values });
   }
+
+  // Synth Mode (blockId 10, see `data/blocks/synth.ts`): sits 15 bytes after where the 8-block
+  // walk above ends — 9 bytes for the already-known chain-order footer (tag `0x08` + 8 order
+  // bytes, see `parseChainOrderFromAmpProfile`) + 6 more bytes of still-unidentified content
+  // (two unknown bytes, then a 2-byte value that differs between captures without tracking any
+  // known block state — maybe a counter/checksum, then two more unknown bytes, plausibly two
+  // reserved-block on/off flags for blockIds 8/9 with no params of their own, unconfirmed).
+  // Found 2026-11-15 by locating the footer's own known byte shape right where `pos` landed, then
+  // verified byte-exact against the pedal's own screen (values AND their on-screen names, via
+  // Brass's 5 params) across two independent live reads — not just a plausible-looking guess: an
+  // earlier attempt in the same investigation found a DIFFERENT, non-canonical byte offset that
+  // also happened to produce a valid-looking `[on,type,count]` header, and was wrong (confirmed by
+  // the same screen-reading check coming back mismatched). See docs/MIDI_MAPPING_NOTES.md.
+  const SYNTH_HEADER_OFFSET_AFTER_EQ = 9 + 6;
+  pos += SYNTH_HEADER_OFFSET_AFTER_EQ;
+  if (pos + 3 <= stream.length) {
+    const on = stream[pos] !== 0;
+    const variant = stream[pos + 1];
+    const count = stream[pos + 2];
+    pos += 3;
+    if (count <= 8 && pos + count * 4 <= stream.length) {
+      const values: number[] = [];
+      for (let i = 0; i < count; i += 1, pos += 4) values.push(readFloat32LE(stream, pos));
+      out.push({ blockId: 'synth', on, variant, values });
+    }
+  }
+
   return out;
 }
 

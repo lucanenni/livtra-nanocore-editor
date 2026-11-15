@@ -43,6 +43,9 @@ export function describeBlockState(blockId: string, patch: PatchState, catalogs?
 export function describePatch(patch: PatchState, chainOrder: string[], catalogs?: Catalogs) {
   const blocks: Record<string, ReturnType<typeof describeBlockState>> = {};
   for (const block of nanocoreSpec.blocks) blocks[block.id] = describeBlockState(block.id, patch, catalogs);
+  // Synth Mode is not part of the reorderable chain (see `NanocoreSpec.synth`'s doc comment) but
+  // is still a block the assistant can inspect/set — included here whenever the patch has it.
+  if (patch[nanocoreSpec.synth.id]) blocks[nanocoreSpec.synth.id] = describeBlockState(nanocoreSpec.synth.id, patch, catalogs);
   return { chainOrder, blocks };
 }
 
@@ -80,16 +83,20 @@ export function describeBlockSpec(block: BlockSpec, catalogs?: Catalogs) {
 }
 
 export function blockOverview() {
-  return nanocoreSpec.blocks.map((b) => ({ id: b.id, name: b.name, types: b.types.map((t) => t.name) }));
+  const blocks = [...nanocoreSpec.blocks, nanocoreSpec.synth];
+  return blocks.map((b) => ({ id: b.id, name: b.name, types: b.types.map((t) => t.name) }));
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
 
-/** Resolves a block reference: its id ("amp") or its display name ("AMP"). */
+/** Resolves a block reference: its id ("amp") or its display name ("AMP"). Also resolves
+ * `nanocoreSpec.synth` (Synth Mode) — not a member of `nanocoreSpec.blocks` itself (it's not
+ * part of the reorderable chain), but still addressable like any other block. */
 export function resolveBlock(ref: string): BlockSpec {
   const n = norm(ref);
-  const found = nanocoreSpec.blocks.find((b) => norm(b.id) === n || norm(b.name) === n);
-  if (!found) throw new Error(`Unknown block "${ref}". Blocks: ${nanocoreSpec.blocks.map((b) => b.id).join(', ')}.`);
+  const candidates = [...nanocoreSpec.blocks, nanocoreSpec.synth];
+  const found = candidates.find((b) => norm(b.id) === n || norm(b.name) === n);
+  if (!found) throw new Error(`Unknown block "${ref}". Blocks: ${candidates.map((b) => b.id).join(', ')}.`);
   return found;
 }
 

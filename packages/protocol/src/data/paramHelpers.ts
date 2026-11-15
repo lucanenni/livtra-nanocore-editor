@@ -96,3 +96,22 @@ export function enumP(
     note: opts.note,
   };
 }
+
+/** For an enum param confirmed on the device screen with NO working CC at all — sent via
+ * `midi/sysex.ts`'s `buildSetParamValueSysEx` instead, same mechanism as `rangeSysexOnly`. */
+export function enumSysexOnly(
+  id: string,
+  sysexParamIndex: number,
+  options: string[],
+  opts: Partial<Omit<EnumParam, 'kind' | 'id' | 'sysexParamIndex' | 'options' | 'label'>> & { label?: string } = {},
+): EnumParam {
+  return {
+    kind: 'enum',
+    id,
+    sysexParamIndex,
+    options,
+    label: opts.label ?? titleize(id),
+    default: opts.default,
+    note: opts.note,
+  };
+}

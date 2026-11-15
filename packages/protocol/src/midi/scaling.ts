@@ -6,10 +6,14 @@
  * out to be exponential (log-frequency) instead, confirmed 2026-09-11 by sweeping 9 CC values
  * per param and reading the real value off the device screen (see docs/PARAM_VERIFICATION.md) —
  * `value = min * (max/min) ** t` fit every one of them to within ~1%, `min + t * (max-min)`
- * (linear) was off by up to 2-3x mid-range. See `RangeParam.curve` in `data/types.ts`.
+ * (linear) was off by up to 2-3x mid-range. A third shape, `'quad'` (`value = min + (max-min) *
+ * t ** 2`), was confirmed 2026-11-15 for Synth Mode's Attack param (every voice's — Analog
+ * Synth/Strings/Choir/Brass all independently fit the SAME `min=2, max=400` quadratic to within
+ * rounding, 4 real data points, not a single-sample guess). See `RangeParam.curve` in
+ * `data/types.ts`.
  */
 
-export type Curve = 'linear' | 'exp';
+export type Curve = 'linear' | 'exp' | 'quad';
 
 export function clampCC(value: number): number {
   return Math.min(127, Math.max(0, Math.round(value)));
@@ -23,6 +27,10 @@ function realToT(min: number, max: number, value: number, curve: Curve = 'linear
     return Math.log(value / min) / Math.log(max / min);
   }
   if (max === min) return 0;
+  if (curve === 'quad') {
+    const linear = (value - min) / (max - min);
+    return linear <= 0 ? 0 : Math.sqrt(linear);
+  }
   return (value - min) / (max - min);
 }
 
@@ -30,6 +38,9 @@ function realToT(min: number, max: number, value: number, curve: Curve = 'linear
 function tToReal(min: number, max: number, t: number, curve: Curve = 'linear'): number {
   if (curve === 'exp' && min > 0 && max > 0) {
     return min * (max / min) ** t;
+  }
+  if (curve === 'quad') {
+    return min + t ** 2 * (max - min);
   }
   return min + t * (max - min);
 }

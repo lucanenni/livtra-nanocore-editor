@@ -184,14 +184,27 @@ export const SYSEX_FIELD = {
   AMP_MODEL: 0x06,
   CAB_MODEL: 0x07,
   PRESET_NAME: 0x08,
+  /** Synth Mode's enable/disable toggle — see `data/blocks/synth.ts`'s doc comment. Confirmed
+   * 2026-11-15 from real ToneCommand traffic; no CC exists for this at all. */
+  SYNTH_ENABLE: 0x0a,
 } as const;
 
-/** Block-id numbering for the chain-order array, matching `nanocoreSpec.blocks`' declaration
- * order (index 0-7 = FX1,FX2,AMP,CAB,DEL,MOD,REV,EQ), confirmed 2026-09-08 to be the numbering
- * the wire protocol itself uses, unmodified (no permutation/lookup table). Two same-day hardware
- * tests briefly looked like they contradicted this numbering — resolved same day as two real
- * encoding bugs (missing priming message, wrong padding-byte position) in the chain-order SysEx
- * builders, not a mapping problem; see docs/MIDI_MAPPING_NOTES.md's chain-order section. */
+/** Block-id numbering, matching `nanocoreSpec.blocks`' declaration order (index 0-7 =
+ * FX1,FX2,AMP,CAB,DEL,MOD,REV,EQ), confirmed 2026-09-08 to be the numbering the wire protocol
+ * itself uses, unmodified (no permutation/lookup table). Two same-day hardware tests briefly
+ * looked like they contradicted this numbering — resolved same day as two real encoding bugs
+ * (missing priming message, wrong padding-byte position) in the chain-order SysEx builders, not a
+ * mapping problem; see docs/MIDI_MAPPING_NOTES.md's chain-order section.
+ *
+ * Despite the name, this is reused as the general block-id numbering for every per-block SysEx
+ * builder here (`buildSetBlockTypeSysEx`, `buildSetParamValueSysEx`), not just the 8-slot
+ * chain-order array itself. **`synth: 10`** (Synth Mode, confirmed 2026-11-15 from real
+ * ToneCommand traffic) participates in that general numbering but is NOT one of the 8 values
+ * `buildChainOrderSysEx`'s `order` ever contains — `nanocoreSpec.synth` is deliberately not a
+ * member of `nanocoreSpec.blocks` for the same reason (see that field's doc comment). Ids 8/9
+ * remain unexplained (reserved, or something else) — Synth sitting at 10 rather than 8 was not
+ * guessed, it came directly from decoding real `buildSetBlockTypeSysEx`/`buildSetParamValueSysEx`
+ * traffic for it. */
 export const CHAIN_ORDER_BLOCK_IDS: Record<string, number> = {
   fx1: 0,
   fx2: 1,
@@ -201,6 +214,7 @@ export const CHAIN_ORDER_BLOCK_IDS: Record<string, number> = {
   mod: 5,
   rev: 6,
   eq: 7,
+  synth: 10,
 };
 
 let seq = 0;
@@ -262,6 +276,12 @@ export function buildCabModelSysEx(modelIndex: number): number[] {
  * `typeId` is sent verbatim as the single value byte, same index a working typeCC would use. */
 export function buildBlockTypeSysEx(fieldId: number, typeId: number): number[] {
   return buildSetFieldSysEx(fieldId, [typeId]);
+}
+
+/** For any block with a `sysexOnOffField` (see `data/types.ts`) — the on/off counterpart of
+ * `buildBlockTypeSysEx`, same single-value-byte shape. So far only `SYSEX_FIELD.SYNTH_ENABLE`. */
+export function buildBlockEnableSysEx(fieldId: number, enabled: boolean): number[] {
+  return buildSetFieldSysEx(fieldId, [enabled ? 1 : 0]);
 }
 
 /** Renames the currently-active/edited patch — a LIVE edit like any other (confirmed 2026-09-13:

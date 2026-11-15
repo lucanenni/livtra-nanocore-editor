@@ -72,6 +72,12 @@ names/ranges/defaults confirmed on hardware for most of them (Peak Comp,
 Parallel Comp, Classic/Retro/Bass Wah); see `docs/MIDI_MAPPING_NOTES.md` for
 which ones are still placeholder parameters pending individual mapping.
 
+**Synth Mode** (firmware 1.2+, 10 guitar-to-synth voices) is fully mapped and
+wired through the shared protocol layer, the MCP server, and its own "Synth
+Mode" tab in the web editor — enable, voice select, and every one of all 10
+voices' parameters, all SysEx, all confirmed on real hardware. See
+`docs/MIDI_MAPPING_NOTES.md`'s "Synth Mode" section for the protocol detail.
+
 ## Source material
 
 The parameter map is built from Livtra's own official documentation (not

@@ -87,8 +87,10 @@ export function buildCCReference(): CCReferenceEntry[] {
   const entries: CCReferenceEntry[] = [];
 
   for (const block of nanocoreSpec.blocks) {
+    // Every block in `nanocoreSpec.blocks` (unlike `nanocoreSpec.synth`, deliberately excluded
+    // from this CC-only reference since it has no CC at all) genuinely has both of these.
     entries.push({
-      cc: block.onOffCC,
+      cc: block.onOffCC!,
       scope: block.name,
       target: 'On/Off',
       kind: 'on-off',
@@ -96,7 +98,7 @@ export function buildCCReference(): CCReferenceEntry[] {
       blockId: block.id,
     });
     entries.push({
-      cc: block.typeCC,
+      cc: block.typeCC!,
       scope: block.name,
       target: 'Type / Model select',
       kind: 'type',

@@ -95,6 +95,18 @@ exports[`readPresetFromDevice (characterization, real captured frames) > decodes
       },
       "typeId": 1,
     },
+    "synth": {
+      "on": false,
+      "params": {
+        "attack": 5,
+        "detune": 5,
+        "mix": 100,
+        "release": 50,
+        "tone": 68,
+        "wave": 1,
+      },
+      "typeId": 0,
+    },
   },
 }
 `;
@@ -193,6 +205,18 @@ exports[`readPresetFromDevice (characterization, real captured frames) > decodes
         "tone": 79.00000214576721,
       },
       "typeId": 1,
+    },
+    "synth": {
+      "on": false,
+      "params": {
+        "attack": 5,
+        "detune": 5,
+        "mix": 100,
+        "release": 50,
+        "tone": 68,
+        "wave": 1,
+      },
+      "typeId": 0,
     },
   },
 }

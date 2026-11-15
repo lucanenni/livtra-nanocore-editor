@@ -4,6 +4,7 @@ import { buildReplyFrame, withReplyReassembly } from '../midi/segmentedReplies';
 import {
   CHAIN_ORDER_BLOCK_IDS,
   buildAmpProfileReadSysEx,
+  buildBlockEnableSysEx,
   buildBlockTypeSysEx,
   buildChainOrderPrimeSysEx,
   buildChainOrderSysEx,
@@ -51,8 +52,9 @@ export const PRESET_NAME_MAX = 8;
  * array order, not `sysexParamIndex` order (see that function's doc comment for why: confirmed
  * from a real capture of FX2's Motion Wah, whose `rate`/`voice`/`sweep`/`mix` floats landed in
  * exactly that params-array order even though `sweep`/`mix` have their own, different
- * `sysexParamIndex`). No current block type uses an `EnumParam`, so the enum branch below (index
- * over the option count) is unexercised and unconfirmed — a placeholder for when one exists. */
+ * `sysexParamIndex`). The enum branch below (index over the option count) is confirmed 2026-11-15
+ * by Synth Mode's Analog Synth voice: its Wave param's captured default normalized value (0.25,
+ * for a 5-option enum defaulting to option 1/Saw) matches `1/(5-1)` exactly. */
 function defaultNormalizedValuesForType(type: EffectType): number[] {
   return type.params.map((spec) =>
     spec.kind === 'range'
@@ -70,15 +72,15 @@ function defaultNormalizedValuesForType(type: EffectType): number[] {
  * read back exactly) and CAB Low Cut (index 0) — covering every index from 0 up through AMP's
  * 4th of 5 commonParams, so the position-in-`commonParams` convention (Gain=0, Bass=1, Mid=2,
  * Treble=3, Level=4 presumed) is settled, not just a guess from the one knob ToneCommand's own
- * traffic happened to move first. For a `type.params` entry, the index is
- * `RangeParam.sysexParamIndex` if it declares one (a device-side reserved-slot quirk, e.g. Motion
- * Wah's Sweep/Mix), else its plain position there — see `findParamSpecBySysexIndex`'s own comment
- * for the read-side counterpart of this convention. */
+ * traffic happened to move first. For a `type.params` entry, the index is `spec.sysexParamIndex`
+ * if it declares one (a device-side reserved-slot quirk, e.g. Motion Wah's Sweep/Mix, or an enum
+ * param with no CC at all, e.g. Synth Mode's Analog Synth Wave), else its plain position there —
+ * see `findParamSpecBySysexIndex`'s own comment for the read-side counterpart of this convention. */
 function sysexParamIndexFor(block: BlockSpec, type: EffectType, spec: ParamSpec): number {
   const commonIndex = (block.commonParams ?? []).indexOf(spec);
   if (commonIndex !== -1) return commonIndex;
   const typeIndex = type.params.indexOf(spec);
-  return spec.kind === 'range' ? (spec.sysexParamIndex ?? typeIndex) : typeIndex;
+  return spec.sysexParamIndex ?? typeIndex;
 }
 
 /** One NanoCore on one MIDI output, driven through any `MidiTransport`. Holds no state besides
@@ -105,7 +107,12 @@ export class NanoCoreDevice {
 
   sendBlockOn(blockId: string, on: boolean): void {
     const block = findBlock(blockId);
-    this.transport.sendCC(this.outputId, this.channel, block.onOffCC, onOffToCC(on), `${block.name} ${on ? 'ON' : 'OFF'}`);
+    if (block.sysexOnOffField !== undefined) {
+      // Synth Mode: confirmed on real hardware that no CC exists for this toggle at all.
+      this.transport.sendSysEx(this.outputId, buildBlockEnableSysEx(block.sysexOnOffField, on), `${block.name} ${on ? 'ON' : 'OFF'}`);
+    } else {
+      this.transport.sendCC(this.outputId, this.channel, block.onOffCC!, onOffToCC(on), `${block.name} ${on ? 'ON' : 'OFF'}`);
+    }
   }
 
   sendBlockType(blockId: string, typeId: number): void {
@@ -144,31 +151,44 @@ export class NanoCoreDevice {
     this.transport.sendSysEx(this.outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[blockId], sysexIndex, normalized), label);
   }
 
-  /** Pushes a whole patch: for every block its on/off, type and each active parameter. */
-  sendFullPatch(patch: PatchState): void {
+  /** Sends one block's complete state (on/off, type + its default params, then every active
+   * param's real value) — the per-block body `sendFullPatch` repeats for each of `nanocoreSpec`'s
+   * blocks plus `synth`. */
+  private sendBlockFullState(block: BlockSpec, blockState: BlockPatchState): void {
     const { transport, outputId, channel } = this;
-    for (const block of nanocoreSpec.blocks) {
-      const blockState: BlockPatchState = patch[block.id] ?? buildBlockDefault(block);
-      transport.sendCC(outputId, channel, block.onOffCC, onOffToCC(blockState.on), `${block.name} ${blockState.on ? 'ON' : 'OFF'}`);
-      const type = findType(block, blockState.typeId);
-      if (block.sysexTypeField !== undefined) {
-        transport.sendSysEx(outputId, buildBlockTypeSysEx(block.sysexTypeField, blockState.typeId), `${block.name} type -> ${type.name}`);
-      } else {
-        transport.sendSysEx(outputId, buildChainOrderPrimeSysEx(), `${block.name} type change (prime)`);
-        transport.sendSysEx(
-          outputId,
-          buildSetBlockTypeSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], blockState.typeId, defaultNormalizedValuesForType(type)),
-          `${block.name} type -> ${type.name}`,
-        );
-      }
-      for (const spec of [...(block.commonParams ?? []), ...type.params]) {
-        const value = blockState.params[spec.id] ?? (spec.kind === 'range' ? spec.min : 0);
-        const sysexIndex = sysexParamIndexFor(block, type, spec);
-        const normalized =
-          spec.kind === 'range' ? realToNormalized(spec.min, spec.max, value, spec.curve) : value / Math.max(1, spec.options.length - 1);
-        transport.sendSysEx(outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], sysexIndex, normalized), `${block.name}: ${spec.label}`);
-      }
+    if (block.sysexOnOffField !== undefined) {
+      transport.sendSysEx(outputId, buildBlockEnableSysEx(block.sysexOnOffField, blockState.on), `${block.name} ${blockState.on ? 'ON' : 'OFF'}`);
+    } else {
+      transport.sendCC(outputId, channel, block.onOffCC!, onOffToCC(blockState.on), `${block.name} ${blockState.on ? 'ON' : 'OFF'}`);
     }
+    const type = findType(block, blockState.typeId);
+    if (block.sysexTypeField !== undefined) {
+      transport.sendSysEx(outputId, buildBlockTypeSysEx(block.sysexTypeField, blockState.typeId), `${block.name} type -> ${type.name}`);
+    } else {
+      transport.sendSysEx(outputId, buildChainOrderPrimeSysEx(), `${block.name} type change (prime)`);
+      transport.sendSysEx(
+        outputId,
+        buildSetBlockTypeSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], blockState.typeId, defaultNormalizedValuesForType(type)),
+        `${block.name} type -> ${type.name}`,
+      );
+    }
+    for (const spec of [...(block.commonParams ?? []), ...type.params]) {
+      const value = blockState.params[spec.id] ?? (spec.kind === 'range' ? spec.min : 0);
+      const sysexIndex = sysexParamIndexFor(block, type, spec);
+      const normalized =
+        spec.kind === 'range' ? realToNormalized(spec.min, spec.max, value, spec.curve) : value / Math.max(1, spec.options.length - 1);
+      transport.sendSysEx(outputId, buildSetParamValueSysEx(CHAIN_ORDER_BLOCK_IDS[block.id], sysexIndex, normalized), `${block.name}: ${spec.label}`);
+    }
+  }
+
+  /** Pushes a whole patch: for every chain block (and Synth Mode, if present in `patch`) its
+   * on/off, type and each active parameter. */
+  sendFullPatch(patch: PatchState): void {
+    for (const block of nanocoreSpec.blocks) {
+      this.sendBlockFullState(block, patch[block.id] ?? buildBlockDefault(block));
+    }
+    const synthState = patch[nanocoreSpec.synth.id];
+    if (synthState) this.sendBlockFullState(nanocoreSpec.synth, synthState);
   }
 
   /** Sets the effect-chain order (block ids, SysEx fieldId 0x05). */

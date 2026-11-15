@@ -28,7 +28,7 @@ const READ = { readOnlyHint: true, openWorldHint: false } as const;
 const EDIT = { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 const OVERWRITE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false } as const;
 
-const BLOCK_ARG = z.string().describe('Block id: fx1, fx2, amp, cab, mod, del, rev or eq.');
+const BLOCK_ARG = z.string().describe('Block id: fx1, fx2, amp, cab, mod, del, rev, eq, or synth (Synth Mode — not part of the reorderable chain).');
 
 const UPLOAD_PHASE_TEXT: Record<string, string> = {
   info: 'querying storage',
@@ -94,7 +94,7 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
     {
       title: 'Read the current patch',
       description:
-        "Reads what the pedal is playing right now (live edits included, saved or not): the preset number and name, the effect chain order, and for each of the 8 blocks whether it is on, its effect type and every parameter in real units. " +
+        "Reads what the pedal is playing right now (live edits included, saved or not): the preset number and name, the effect chain order, and for each of the 8 chain blocks plus Synth Mode whether it is on, its effect type/voice and every parameter in real units. " +
         'Caveat: the pedal cannot report an AMP or CAB model, or an effect chain order, that was changed but not yet saved, so right after a preset recall or reconnect those show the saved values. ' +
         'An AMP, FX2 or CAB block whose slot holds a user-loaded NAM profile or IR also shows its name as `profile` (`type` is then the factory model that slot replaced).',
       annotations: READ,
@@ -111,7 +111,7 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
     {
       title: 'List a block\'s effects and parameters',
       description:
-        'Lists every effect type of a block with its parameters, units, ranges and options — what set_block and set_param accept. Without `block`, gives an overview of all 8 blocks. ' +
+        'Lists every effect type of a block with its parameters, units, ranges and options — what set_block and set_param accept. Without `block`, gives an overview of all 8 chain blocks plus Synth Mode. ' +
         'When connected, AMP/FX2/CAB types whose slot holds a user-loaded NAM profile or IR also carry its name as `profile`.',
       inputSchema: { block: BLOCK_ARG.optional() },
       annotations: READ,

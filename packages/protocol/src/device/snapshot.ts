@@ -101,6 +101,9 @@ export function applySnapshotToPatch(
     ['del', decodedTypeId('del') ?? parsed.delTypeId, decodedOn('del')],
     ['rev', decodedTypeId('rev') ?? parsed.revTypeId, decodedOn('rev')],
     ['eq', decodedTypeId('eq') ?? parsed.eqTypeId, decodedOn('eq') ?? parsed.eqOn],
+    // Synth Mode only ever comes from the live `0x63` decode above — it isn't part of the `0x41`
+    // saved-preset tag structure `parsed` reads, so there's no fallback source for it.
+    ['synth', decodedTypeId('synth'), decodedOn('synth')],
   ];
 
   const next = { ...patch };

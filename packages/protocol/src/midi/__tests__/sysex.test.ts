@@ -4,6 +4,7 @@ import { USB_PRESET_PAGE2 } from '../../testing/realCaptures';
 import {
   buildAmpModelSysEx,
   buildAmpProfileReadSysEx,
+  buildBlockEnableSysEx,
   buildBlockTypeSysEx,
   buildCabModelSysEx,
   buildChainOrderSysEx,
@@ -14,6 +15,7 @@ import {
   buildSavePresetSysEx,
   buildSetBlockTypeSysEx,
   buildSetParamValueSysEx,
+  CHAIN_ORDER_BLOCK_IDS,
   GLOBAL_SETTING_FIELD,
   isActiveSlotChangedPush,
   isAmpProfileResponse,
@@ -64,6 +66,22 @@ describe('NanoCore SysEx builders (see docs/MIDI_MAPPING_NOTES.md)', () => {
     resetSysExSequence();
     const specific = buildAmpModelSysEx(0x0f);
     expect(generic).toEqual(specific);
+  });
+
+  it('builds a Synth Mode enable message matching a captured hardware example', () => {
+    // Captured 2026-11-15 (Frida-instrumented ToneCommand): 7d 4e 43 70 00 02 <seq> 00 6d 00 02
+    // 00 00 0a 01 (SYSEX_FIELD.SYNTH_ENABLE, value 1 = ON).
+    expect(buildBlockEnableSysEx(SYSEX_FIELD.SYNTH_ENABLE, true)).toEqual([
+      0xf0, 0x7d, 0x4e, 0x43, 0x70, 0x00, 0x02, 0x01, 0x00, 0x6d, 0x00, 0x02, 0x00, 0x00, 0x0a, 0x01, 0xf7,
+    ]);
+    resetSysExSequence();
+    expect(buildBlockEnableSysEx(SYSEX_FIELD.SYNTH_ENABLE, false)).toEqual([
+      0xf0, 0x7d, 0x4e, 0x43, 0x70, 0x00, 0x02, 0x01, 0x00, 0x6d, 0x00, 0x02, 0x00, 0x00, 0x0a, 0x00, 0xf7,
+    ]);
+  });
+
+  it('CHAIN_ORDER_BLOCK_IDS.synth is 10, not part of the 8-slot chain-order numbering (0-7)', () => {
+    expect(CHAIN_ORDER_BLOCK_IDS.synth).toBe(10);
   });
 
   describe('buildRenamePresetSysEx (Rename.mmon, 3 real captures: 2/7/8-char names)', () => {

@@ -119,6 +119,36 @@ describe('realToCC / ccToReal (exponential curve)', () => {
   });
 });
 
+describe('normalizedToReal (quadratic curve)', () => {
+  // Real Synth Mode Attack readings, 2026-11-15 (see data/blocks/synth.ts) — 4 independent
+  // voices' normalized values, all read off the pedal's own screen, all fitting the SAME
+  // `min=2, max=400` quadratic within rounding (not a single-sample guess).
+  const ATTACK_READINGS: [number, number][] = [
+    [0.07999999821186066, 5], // Analog Synth
+    [0.44999998807907104, 83], // Strings
+    [0.550000011920929, 122], // Choir
+    [0.23999999463558197, 25], // Brass
+  ];
+
+  it('matches real Synth Mode Attack readings (2-400ms) within rounding', () => {
+    for (const [normalized, screen] of ATTACK_READINGS) {
+      expect(Math.round(normalizedToReal(2, 400, normalized, 'quad'))).toBe(screen);
+    }
+  });
+
+  it('still maps min -> 0.0 and max -> 1.0 exactly', () => {
+    expect(normalizedToReal(2, 400, 0, 'quad')).toBe(2);
+    expect(normalizedToReal(2, 400, 1, 'quad')).toBe(400);
+  });
+
+  it('realToNormalized is the exact inverse of normalizedToReal', () => {
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+      const real = normalizedToReal(2, 400, t, 'quad');
+      expect(realToNormalized(2, 400, real, 'quad')).toBeCloseTo(t, 6);
+    }
+  });
+});
+
 describe('enum bucketing', () => {
   it('splits 0-127 evenly and round-trips every index', () => {
     for (const count of [2, 3, 4, 6]) {

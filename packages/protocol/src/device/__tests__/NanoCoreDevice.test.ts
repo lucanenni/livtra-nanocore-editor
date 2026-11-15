@@ -57,13 +57,14 @@ describe('NanoCoreDevice sending', () => {
     expect(t.sent[0].description).toBe('Rename patch -> "A very l"');
   });
 
-  it('sends a whole patch: every block gets an on/off and a type', () => {
+  it('sends a whole patch: every block gets an on/off and a type, Synth Mode included', () => {
     const t = new FakeTransport();
     new NanoCoreDevice(t, 'nc').sendFullPatch(buildDefaultPatch());
     const labels = t.sent.map((m) => m.description ?? '');
-    for (const block of ['FX1', 'FX2', 'AMP', 'CAB', 'MOD', 'DEL', 'REV', 'EQ']) {
+    for (const block of ['FX1', 'FX2', 'AMP', 'CAB', 'MOD', 'DEL', 'REV', 'EQ', 'Synth']) {
       expect(labels.some((l) => l.startsWith(`${block} `) && l.includes('type ->'))).toBe(true);
     }
+    expect(labels).toContain('Synth OFF'); // buildDefaultPatch's synth entry defaults to off
   });
 });
 
@@ -93,7 +94,8 @@ describe('NanoCoreDevice.readSnapshot (real captured frames)', () => {
     expect(snap.state?.name).toBe('ClnArp');
     expect(snap.state?.chainOrder).toHaveLength(8);
     const patch = applySnapshotToPatch(buildDefaultPatch(), snap.state!);
-    expect(Object.keys(patch)).toHaveLength(8);
+    // 8 chain blocks + synth (always present in buildDefaultPatch's output, see NanocoreSpec.synth).
+    expect(Object.keys(patch)).toHaveLength(9);
   });
 
   it('takes the slot from the live profile and overlays its state', async () => {

@@ -19,7 +19,9 @@ describe('nanocoreSpec structural integrity', () => {
   it('every block/type on-off + type CC pair is unique across the device (no cross-block clash)', () => {
     const seen = new Map<number, string>();
     for (const block of nanocoreSpec.blocks) {
-      for (const cc of [block.onOffCC, block.typeCC]) {
+      // Every block here (unlike nanocoreSpec.synth, deliberately excluded from this array)
+      // genuinely has both CCs.
+      for (const cc of [block.onOffCC!, block.typeCC!]) {
         const owner = seen.get(cc);
         expect(owner, `CC${cc} used by both "${owner}" and "${block.id}"`).toBeUndefined();
         seen.set(cc, block.id);

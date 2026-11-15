@@ -119,7 +119,9 @@ describe('before connecting', () => {
 
   it('still describes the spec offline', async () => {
     const overview = (await call('describe_block')).json();
-    expect(overview.blocks).toHaveLength(8);
+    // 8 chain blocks + synth (Synth Mode — addressable like any other block, not part of the
+    // reorderable chain; see NanocoreSpec.synth's doc comment).
+    expect(overview.blocks).toHaveLength(9);
     const amp = (await call('describe_block', { block: 'amp' })).json();
     expect(amp.types.length).toBeGreaterThan(20);
   });
@@ -149,7 +151,8 @@ describe('connected', () => {
   it('get_patch reports the live state of all 8 blocks in readable units', async () => {
     const patch = (await call('get_patch')).json();
     expect(patch.preset.name).toBe('ClnArp');
-    expect(Object.keys(patch.blocks)).toHaveLength(8);
+    // 8 chain blocks + synth; chainOrder itself stays 8 (synth isn't part of the reorderable chain).
+    expect(Object.keys(patch.blocks)).toHaveLength(9);
     expect(patch.chainOrder).toHaveLength(8);
     expect(patch.blocks.fx2.on).toBe(true); // live FX2 is on in the captured frame
     for (const block of Object.values<{ params: Record<string, unknown> }>(patch.blocks)) {
@@ -195,6 +198,22 @@ describe('connected', () => {
     const unknown = await call('set_block', { block: 'rev', type: 'Nonexistent' });
     expect(unknown.isError).toBe(true);
     expect(unknown.text).toMatch(/Unknown REV type/);
+  });
+
+  it('set_block/set_param also work for Synth Mode, even though it is not part of the reorderable chain', async () => {
+    transport.sent.length = 0;
+    const r = await call('set_block', { block: 'synth', on: true, type: 'Brass' });
+    expect(r.isError).toBe(false);
+    expect(r.json()).toMatchObject({ name: 'Synth', on: true, type: 'Brass' });
+    expect(sentLabels()).toEqual(expect.arrayContaining([expect.stringMatching(/^Synth type -> Brass/), 'Synth ON']));
+
+    const p = await call('set_param', { block: 'synth', param: 'Mix', value: 100 });
+    expect(p.isError).toBe(false);
+    expect(session.patch.synth.params.mix).toBe(100);
+
+    const patch = (await call('get_patch')).json();
+    expect(patch.blocks.synth).toBeDefined();
+    expect(patch.chainOrder).not.toContain('synth');
   });
 
   it('remembers an AMP model set from here, since the pedal cannot report it back unsaved', async () => {
