@@ -198,6 +198,31 @@ describe('NanoCoreDevice.readSnapshot (real captured frames)', () => {
   });
 });
 
+describe('NanoCoreDevice.readSavedPreset (backup before an overwrite)', () => {
+  it('reads a slot as a full PatchState without touching the live profile (no 0x63 request sent)', async () => {
+    vi.useFakeTimers();
+    const t = new FakeTransport();
+    let page = 0;
+    t.onSysEx = (bytes) => {
+      expect(bytes[9]).not.toBe(0x63); // never asks for live state — must not disturb what's loaded
+      return bytes[9] === 0x41 ? [++page % 2 === 1 ? SLOT0_CLNARP_P1 : SLOT0_CLNARP_P2] : [];
+    };
+    const promise = new NanoCoreDevice(t, 'nc').readSavedPreset(0);
+    await vi.runAllTimersAsync();
+    const backup = await promise;
+    expect(backup?.name).toBe('ClnArp');
+    // 8 chain blocks + synth, same shape readSnapshot's own patch produces.
+    expect(Object.keys(backup!.patch)).toHaveLength(9);
+  });
+
+  it('resolves null when the device does not answer', async () => {
+    vi.useFakeTimers();
+    const promise = new NanoCoreDevice(new FakeTransport(), 'nc').readSavedPreset(3);
+    await vi.runAllTimersAsync();
+    expect(await promise).toBeNull();
+  });
+});
+
 describe('startLive (device pushes)', () => {
   it('pings on the heartbeat cadence and stops cleanly', () => {
     vi.useFakeTimers();

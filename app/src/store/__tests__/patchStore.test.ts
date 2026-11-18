@@ -364,3 +364,20 @@ describe('patchStore.renameAndSaveActivePreset', () => {
     expect(usePatchStore.getState().presetNames![5]).toBe('preset');
   });
 });
+
+describe('patchStore.backupDeviceSlot', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('reads a slot\'s saved content through the device, for the UI to download before an overwrite', async () => {
+    const backup = { name: 'OldName', patch: usePatchStore.getState().patch };
+    const read = vi.spyOn(NanoCoreDevice.prototype, 'readSavedPreset').mockResolvedValue(backup);
+
+    expect(await usePatchStore.getState().backupDeviceSlot(12)).toBe(backup);
+    expect(read).toHaveBeenCalledWith(12);
+  });
+
+  it('resolves null without a connected device', async () => {
+    usePatchStore.setState((s) => ({ connection: { ...s.connection, outputId: null } }));
+    expect(await usePatchStore.getState().backupDeviceSlot(0)).toBeNull();
+  });
+});

@@ -29,10 +29,10 @@ import type { GlobalSettings } from '../midi/presetReader';
 import { readIrCatalog, readProfileCatalog, readProfileData, runProfileUpload, type ProfileReadResult } from '../midi/profileUpload';
 import type { CommandTransact, UploadPhase, UploadResult } from '../midi/profileUpload';
 import { nanocoreSpec } from '../data/nanocoreSpec';
-import { buildBlockDefault, findBlock, findParamSpec, findType } from '../patch/patchDefaults';
+import { buildBlockDefault, buildDefaultPatch, findBlock, findParamSpec, findType } from '../patch/patchDefaults';
 import type { BlockPatchState, PatchState } from '../patch/patchTypes';
 import { PROFILE_COMMAND_TIMEOUT_MS, requestSysExResponse } from './request';
-import { buildSnapshot, slotFromLiveProfile } from './snapshot';
+import { applySnapshotToPatch, buildSnapshot, slotFromLiveProfile } from './snapshot';
 import type { DeviceSnapshot } from './snapshot';
 import { startLiveSession } from './live';
 import type { LiveHandlers } from './live';
@@ -248,6 +248,17 @@ export class NanoCoreDevice {
     if (!pages) return { slot, state: null };
     const { page1, page2 } = pages;
     return { slot, state: buildSnapshot(ampProfile, page1, page2) };
+  }
+
+  /** Reads the SAVED preset at `slot` as a full `PatchState`, without recalling it — so it never
+   * disturbs the device's live state. Meant as a backup immediately before an overwrite (a slot
+   * save or a rename-and-save): `null` if the device doesn't answer (Simulator, older firmware,
+   * dropped connection), in which case there is nothing to offer as a backup. */
+  async readSavedPreset(slot: number): Promise<{ name: string | null; patch: PatchState } | null> {
+    const pages = await this.readPresetPages(slot);
+    if (!pages) return null;
+    const state = buildSnapshot(null, pages.page1, pages.page2);
+    return { name: state.name, patch: applySnapshotToPatch(buildDefaultPatch(), state) };
   }
 
   /** Reads the SAVED data of `slot` (opcode 0x41) as the two page frames the decoders expect, or

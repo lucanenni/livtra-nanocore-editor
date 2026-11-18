@@ -291,6 +291,8 @@
     "renamePlaceholder": "Novo nome do patch (máx. 8 caracteres)",
     "renameTitle": "Renomear patch na pedaleira",
     "save": "Salvar como novo preset",
+    "saveConfirm": "Um backup do slot {{slot}} (\"{{current}}\") acabou de ser baixado. Sobrescrever agora?",
+    "saveConfirmNoBackup": "Não foi possível ler o slot {{slot}} para fazer um backup antes (sem resposta da pedaleira). Sobrescrever assim mesmo?",
     "saveFailed": "Sem resposta da pedaleira — talvez não tenha salvado.",
     "saveHint": "Salva em um slot o que a pedaleira tem carregado agora (o preset carregado mais os ajustes ao vivo) — NÃO envia antes o patch deste editor para a pedaleira. Envie o patch primeiro se quiser salvar o que está vendo aqui. Usa a mesma numeração do carregamento acima.",
     "saveOk": "Salvo no slot {{n}}.",

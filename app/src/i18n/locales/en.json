@@ -91,6 +91,8 @@
     "saveTitle": "Save to device slot",
     "saveHint": "Saves whatever the device currently has loaded (recalled preset plus any live tweaks) into a slot — it does NOT first push this editor's own patch to the device. Send the patch first if you want to save what you see here. Same numbering as the device display and recall above.",
     "saveSlotNumber": "Save slot number (1-{{max}})",
+    "saveConfirm": "A backup of slot {{slot}} (\"{{current}}\") was just downloaded. Overwrite it now?",
+    "saveConfirmNoBackup": "Could not read slot {{slot}} to back it up first (no response from the device). Overwrite it anyway?",
     "saveToSlotButton": "Save",
     "saving": "Saving…",
     "saveOk": "Saved to slot {{n}}.",

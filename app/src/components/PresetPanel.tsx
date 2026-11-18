@@ -33,6 +33,7 @@ export function PresetPanel() {
   const recallProgram = usePatchStore((s) => s.recallProgram);
   const stepPreset = usePatchStore((s) => s.stepPreset);
   const saveToDeviceSlot = usePatchStore((s) => s.saveToDeviceSlot);
+  const backupDeviceSlot = usePatchStore((s) => s.backupDeviceSlot);
   const renamePresetOnDevice = usePatchStore((s) => s.renamePresetOnDevice);
   const activeSlotName = usePatchStore((s) => s.activeSlotName);
   const connectionReady = usePatchStore((s) => s.connection.ready && !!s.connection.outputId);
@@ -284,7 +285,24 @@ export function PresetPanel() {
             onClick={async () => {
               setSaving(true);
               setSaveStatus(null);
-              const ok = await saveToDeviceSlot(saveSlotNumber - 1);
+              const slot = saveSlotNumber - 1;
+              const backup = await backupDeviceSlot(slot);
+              if (backup) downloadJSON(`nanocore-backup-slot${saveSlotNumber}.json`, JSON.stringify(backup.patch, null, 2));
+              const confirmMessage = backup
+                ? t('preset.saveConfirm', {
+                    slot: saveSlotNumber,
+                    current: backup.name ?? '—',
+                    defaultValue: 'A backup of slot {{slot}} ("{{current}}") was just downloaded. Overwrite it now?',
+                  })
+                : t('preset.saveConfirmNoBackup', {
+                    slot: saveSlotNumber,
+                    defaultValue: 'Could not read slot {{slot}} to back it up first (no response from the device). Overwrite it anyway?',
+                  });
+              if (!window.confirm(confirmMessage ?? '')) {
+                setSaving(false);
+                return;
+              }
+              const ok = await saveToDeviceSlot(slot);
               setSaving(false);
               setSaveStatus(
                 ok

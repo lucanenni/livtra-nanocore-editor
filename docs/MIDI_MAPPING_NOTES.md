@@ -434,6 +434,25 @@ showed up as the *only* difference between two otherwise-identical saves of
 the same source preset — confirming the save captures whatever the device's
 live edit state actually is, from either kind of edit.
 
+### Backup before an overwrite — added 2026-11-18
+
+"Save to device slot" and the inline rename-and-save (`PresetBrowser.tsx`)
+both call `0x46` and permanently replace whatever was in the target slot,
+with no way for this editor to put the factory/previous content back
+afterward. The web UI now reads that slot's own saved state first — opcode
+`0x41`, the same two-page read `readSnapshot` uses, but for an *arbitrary*
+slot and with no `0x63` request at all, so it never touches or disturbs
+whatever is currently loaded live (`NanoCoreDevice.readSavedPreset`) — and
+offers it as a downloaded `PatchState` JSON before asking the user to
+confirm the overwrite. That JSON round-trips through the existing "Load
+patch" import, so an unwanted save can be undone with Import → Send patch →
+Save to the same slot. Only wired into "Save to device slot"
+(`PresetPanel.tsx`) for now; the inline rename-and-save keeps its original
+frictionless, no-confirm UX on purpose (it mirrors renaming on the pedal's
+own screen, and only ever touches the one slot already active). Idea
+imported from `dvilelaf/nanocore-controller`'s `--safety-backup` requirement
+on its own `save`/`restore --apply`.
+
 ## Live SysEx parameter edits (opcode `0x6d`) — resolved 2026-09-12
 
 A capture of the official app dragging a single knob (REV Decay) in its own

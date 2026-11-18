@@ -280,6 +280,10 @@ interface PatchStore {
    * so call `sendFullPatch` first if the intent is "save what's currently in the editor". Resolves
    * `true` once the device acks the save, `false` on timeout or with no connected output. */
   saveToDeviceSlot: (slot: number) => Promise<boolean>;
+  /** Reads `slot`'s SAVED content as a full `PatchState`, without recalling it — meant to be
+   * downloaded as a backup right before `saveToDeviceSlot` or `renameAndSaveActivePreset`
+   * overwrite it. `null` when the device doesn't answer (nothing to back up then). */
+  backupDeviceSlot: (slot: number) => Promise<{ name: string | null; patch: PatchState } | null>;
   /** Renames the currently-active/edited patch on the device (opcode `0x6d`, field `0x08` — see
    * `midi/sysex.ts`'s `buildRenamePresetSysEx` doc comment). This is a LIVE edit like any other —
    * it does NOT persist on its own; call `saveToDeviceSlot` afterward to make it stick, same as
@@ -596,6 +600,11 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
     const name = get().activeSlotName;
     if (saved && name) setPresetName(get, set, slot, name);
     return saved;
+  },
+
+  backupDeviceSlot: async (slot) => {
+    const device = deviceFor(get());
+    return device ? await device.readSavedPreset(slot) : null;
   },
 
   readPresetNames: async () => {

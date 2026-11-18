@@ -100,6 +100,8 @@
     "saveTitle": "Salva su slot del dispositivo",
     "saveHint": "Salva quello che il dispositivo ha attualmente caricato (preset richiamato più eventuali modifiche live) in uno slot — NON invia prima la patch di questo editor al dispositivo. Invia prima la patch se vuoi salvare quello che vedi qui. Stessa numerazione del display del device e del richiamo qui sopra.",
     "saveSlotNumber": "Numero slot di salvataggio (1-{{max}})",
+    "saveConfirm": "È stato appena scaricato un backup dello slot {{slot}} (\"{{current}}\"). Sovrascriverlo ora?",
+    "saveConfirmNoBackup": "Impossibile leggere lo slot {{slot}} per farne un backup (nessuna risposta dal dispositivo). Sovrascriverlo comunque?",
     "saveToSlotButton": "Salva",
     "saving": "Salvataggio…",
     "saveOk": "Salvato nello slot {{n}}.",
