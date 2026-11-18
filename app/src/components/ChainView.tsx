@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { findBlock } from '@nanocore/protocol';
@@ -32,8 +32,8 @@ export function ChainView({ selected, onSelect }: Props) {
   const setBlockOn = usePatchStore((s) => s.setBlockOn);
 
   const synthOn = patch.synth?.on ?? false;
-  const visibleChain = synthOn ? chainOrder.filter((id) => !HIDDEN_WHEN_SYNTH_ON.includes(id)) : chainOrder;
-  const visibleIds = synthOn ? ['synth', ...visibleChain] : visibleChain;
+  const visibleChain = useMemo(() => (synthOn ? chainOrder.filter((id) => !HIDDEN_WHEN_SYNTH_ON.includes(id)) : chainOrder), [synthOn, chainOrder]);
+  const visibleIds = useMemo(() => (synthOn ? ['synth', ...visibleChain] : visibleChain), [synthOn, visibleChain]);
 
   // Keep `selected` pointed at something actually shown here — AMP/CAB disappearing when Synth
   // Mode turns on (or Synth itself disappearing when it turns off) would otherwise leave

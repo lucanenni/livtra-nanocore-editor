@@ -100,7 +100,7 @@ describe('tool catalogue', () => {
   it('exposes the tools and marks the overwriting ones destructive', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
-    for (const n of ['verify_profile', 'listen', 'connect', 'get_patch', 'set_block', 'set_param', 'set_chain_order', 'rename_patch', 'save_to_slot', 'recall_preset', 'get_global_settings', 'set_global_setting', 'list_profiles', 'upload_profile', 'upload_ir', 'describe_block']) {
+    for (const n of ['verify_profile', 'backup_profile', 'listen', 'connect', 'get_patch', 'set_block', 'set_param', 'set_chain_order', 'rename_patch', 'save_to_slot', 'recall_preset', 'get_global_settings', 'set_global_setting', 'list_profiles', 'upload_profile', 'upload_ir', 'describe_block']) {
       expect(names).toContain(n);
     }
     const destructive = tools.filter((t) => t.annotations?.destructiveHint).map((t) => t.name).sort();
@@ -263,6 +263,23 @@ describe('connected', () => {
     const ir3 = await call('verify_profile', { slot: 3, ir: true });
     expect(ir3.json()).toMatchObject({ kind: 'IR', name: 'My Cab IR', factoryName: 'Eng412A', intact: true });
     expect((await call('verify_profile', { slot: 31, ir: true })).text).toMatch(/IR slot must be 1-30/);
+  });
+
+  it('backup_profile saves a slot\'s raw body to a local file', async () => {
+    const { readFile, mkdtemp } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = await mkdtemp(join(tmpdir(), 'nanocore-mcp-backup-'));
+    const outputPath = join(dir, 'slot6.bin');
+
+    const res = await call('backup_profile', { slot: 6, output_path: outputPath });
+    expect(res.isError).toBe(false);
+    expect(res.text).toContain('My Amp NAM');
+    const saved = await readFile(outputPath);
+    expect(saved).toHaveLength(300);
+    expect(Array.from(saved).every((b) => b === 5)).toBe(true); // scriptedDevice fills slot 5 (0-based) with its own index
+
+    expect((await call('backup_profile', { slot: 31, ir: true, output_path: outputPath })).text).toMatch(/IR slot must be 1-30/);
   });
 
     it('listen reports what the pedal pushes on its own, and nothing else', async () => {

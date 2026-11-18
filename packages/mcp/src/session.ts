@@ -407,6 +407,24 @@ export class NanoCoreSession {
     };
   }
 
+  /** Reads profile slot `number` (1-38), or CAB IR slot `number` with `ir`, back as its raw
+   * stored body — meant to be saved to a local file before `uploadProfile`/`uploadIr` overwrites
+   * it, and re-uploadable as-is later (the device's write commands take it unchanged, no
+   * particular framing required — same as the web editor's "Download backup"). */
+  async backupProfile(number: number, ir = false): Promise<{ name: string; data: Uint8Array }> {
+    const device = this.requireDevice();
+    const count = ir ? IR_SLOT_COUNT : PROFILE_SLOT_COUNT;
+    if (!Number.isInteger(number) || number < 1 || number > count) throw new Error(`${ir ? 'IR' : 'Profile'} slot must be 1-${count}.`);
+    const result = await device.readProfileData(number - 1, ir);
+    if (!result.ok) {
+      const where = result.offset !== undefined ? ` at byte ${result.offset}` : '';
+      if (result.reason === 'empty-slot') throw new Error(`Slot ${number} is empty.`);
+      if (result.reason === 'device-status') throw new Error(`The NanoCore refused the read${where} (status ${result.status}).`);
+      throw new Error(`The NanoCore did not answer the read${where}.`);
+    }
+    return { name: result.record.name || `slot${number}`, data: result.body };
+  }
+
   /** Independent check after a successful upload: reads the slot back (`readProfileData`, which
    * already retries a flaky read and checks the device's own CRC-32) and compares the result
    * byte-for-byte against what was actually sent. */

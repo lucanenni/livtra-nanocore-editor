@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { IR_SLOT_COUNT, PROFILE_NAME_MAX, PROFILE_SLOT_COUNT, buildCCReference, firmwareUpdate, nanocoreSpec, wavToIr } from '@nanocore/protocol';
@@ -361,11 +361,32 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
   );
 
   server.registerTool(
+    'backup_profile',
+    {
+      title: 'Save a profile or IR slot to a local file',
+      description:
+        'Reads one AMP/FX2 profile slot (1-30 AMP, 31-38 FX2) or, with `ir`, one CAB IR slot (1-30) back from the pedal and saves its raw stored body to a local .bin file — before overwriting a slot with upload_profile/upload_ir, so the original can be put back. ' +
+        'That .bin can later be passed as `file_path` to upload_profile (for an AMP/FX2 slot) or upload_ir (for an IR slot) to restore it, since the device\'s write commands take it unchanged, no particular framing required. Read-only; takes a few seconds.',
+      inputSchema: {
+        slot: z.number().int().min(1).max(PROFILE_SLOT_COUNT),
+        ir: z.boolean().optional().describe('true = CAB IR slot instead of an AMP/FX2 profile slot.'),
+        output_path: z.string().describe('Absolute path to write the .bin backup to on this computer.'),
+      },
+      annotations: READ,
+    },
+    guarded(async ({ slot, ir, output_path }: { slot: number; ir?: boolean; output_path: string }) => {
+      const backup = await session.backupProfile(slot, ir ?? false);
+      await writeFile(output_path, backup.data);
+      return `Saved ${ir ? 'IR' : 'profile'} slot ${slot} ("${backup.name}", ${backup.data.length} B) to ${output_path}.`;
+    }),
+  );
+
+  server.registerTool(
     'upload_profile',
     {
       title: 'Load a .ead profile into a profile slot',
       description:
-        `Uploads a local ToneCommand profile file (.ead), or a raw .bin previously read back from a slot (by verify_profile or a web-editor backup), into AMP/FX2 profile slot \`slot\` (1-${PROFILE_SLOT_COUNT}), replacing what is there; ` +
+        `Uploads a local ToneCommand profile file (.ead), or a raw .bin previously saved with backup_profile (or a web-editor "Download backup"), into AMP/FX2 profile slot \`slot\` (1-${PROFILE_SLOT_COUNT}), replacing what is there; ` +
         'the only way back to the factory profile (without your own prior backup) is the official app\'s "Restore Factory Content". Takes a few seconds. ' +
         'Set `confirm` to true only after the user has agreed to overwrite that slot.',
       inputSchema: {
