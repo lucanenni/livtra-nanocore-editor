@@ -59,8 +59,8 @@ at a time. Then ask the assistant to connect.
 | `list_profiles` | The 38 AMP/FX2 profile slots and their names |
 | `verify_profile` | Read one profile or IR slot back and check it against the pedal's CRC-32 (name, size, CRC-32, `intact`) |
 | `listen` | Record for N seconds what the pedal reports on its own (preset changes, blocks on/off, knob turns, settings) — e.g. to check a footswitch or controller reaches it |
-| `upload_profile` | Load a local `.ead` file into a profile slot — **overwrites**, needs `confirm: true` |
-| `upload_ir` | Load a local `.wav` (converted: mono, 48kHz, peak-normalised, capped at 1024 samples) or raw `.bin` into a CAB IR slot — **overwrites**, needs `confirm: true` |
+| `upload_profile` | Load a local `.ead` or raw `.bin` (e.g. from `verify_profile`'s own read, or a previous backup) file into a profile slot — **overwrites**, needs `confirm: true`. Reads it back afterward and reports whether it verified byte-for-byte |
+| `upload_ir` | Load a local `.wav` (converted: mono, 48kHz, peak-normalised, capped at 1024 samples) or raw `.bin` into a CAB IR slot — **overwrites**, needs `confirm: true`. Same post-upload verification as `upload_profile` |
 | `list_cc_reference` | Every documented/confirmed MIDI CC, for configuring external gear — not what `set_block`/`set_param` send (see below) |
 | `send_test_cc` | Send one raw CC exactly as given, bypassing the patch — for testing a CC from `list_cc_reference` or an external controller mapping |
 

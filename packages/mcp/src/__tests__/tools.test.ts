@@ -338,6 +338,96 @@ describe('connected', () => {
     expect(transport.sent).toHaveLength(0);
   });
 
+  it('upload_profile verifies the write by reading it back, and reports it in the result text', async () => {
+    // A dedicated stateful fake: answers the AMP write family (0x30-0x37) by actually storing what
+    // is sent, then serves it back for the catalog/read (0x36/0x39) session.verifyUpload uses —
+    // unlike `scriptedDevice()` above, whose 0x36/0x39 handlers return a fixed, unrelated body.
+    const uploadable = new FakeTransport();
+    const store = { slot: -1, data: [] as number[], name: '' };
+    uploadable.onSysEx = (bytes) => {
+      const msg = parseCommandMessage(bytes)!;
+      const u32 = (o: number) => (msg.payload[o] | (msg.payload[o + 1] << 8) | (msg.payload[o + 2] << 16) | (msg.payload[o + 3] << 24)) >>> 0;
+      const reply = (payload: number[] = [], opcode = msg.opcode) => [buildReplyFrame(msg.seq, opcode, 0, payload)];
+      switch (msg.opcode) {
+        case 0x30:
+          return reply([0, 0, 0, 0, 0, 0, 0, 0, 0x26, 0, 0, 0, 0, 0x30, 0, 0, 0, 0, 0, 0]);
+        case 0x31:
+          store.slot = u32(0) >>> 24;
+          store.data = [];
+          return reply();
+        case 0x32: {
+          const offset = u32(0) & 0xffffff;
+          msg.payload.slice(4).forEach((b, i) => (store.data[offset + i] = b));
+          return reply();
+        }
+        case 0x33:
+          return reply();
+        case 0x35:
+          store.name = String.fromCharCode(...msg.payload.slice(1));
+          return reply();
+        case 0x37:
+          return reply();
+        case 0x36: {
+          const payload = Array.from({ length: 30 }, () => 0);
+          payload[0] = store.slot;
+          payload[1] = 1;
+          payload[3] = store.data.length & 0xff;
+          payload[4] = store.data.length >> 8;
+          const crc = crc32(store.data);
+          [0, 8, 16, 24].forEach((shift, i) => (payload[7 + i] = (crc >>> shift) & 0xff));
+          Array.from(store.name).forEach((ch, i) => (payload[14 + i] = ch.charCodeAt(0)));
+          return reply(payload);
+        }
+        case 0x39: {
+          const [slot, lo, hi, length] = msg.payload;
+          const at = lo | (hi << 8);
+          return reply([slot, lo, hi, store.data.length & 0xff, store.data.length >> 8, ...store.data.slice(at, at + length)]);
+        }
+        default:
+          // Answered so `connect`'s initial patch read (inside this same test) resolves quickly
+          // instead of waiting out a real timeout — same frames `scriptedDevice()` above uses.
+          switch (bytes[9]) {
+            case 0x63:
+              return [LIVE_FX2_TYPE7];
+            case 0x41:
+              return [SLOT0_CLNARP_P1];
+            case 0x65:
+              return [hex('f0 7d 4e 43 71 00 02 6e 00 65 00 00 07 00 00 01 00 01 00 64 64 00 00 f7')];
+            default:
+              return [];
+          }
+      }
+    };
+    const uploadableSession = new NanoCoreSession(() => uploadable);
+    const uploadableServer = new McpServer({ name: 'nanocore-test-2', version: '0' });
+    registerTools(uploadableServer, uploadableSession);
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    const uploadableClient = new Client({ name: 'test-2', version: '0' });
+    await Promise.all([uploadableServer.connect(a), uploadableClient.connect(b)]);
+    const connectRes = await uploadableClient.callTool({ name: 'connect', arguments: {} });
+    expect(connectRes.isError).toBeFalsy();
+
+    const { writeFile, mkdtemp } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = await mkdtemp(join(tmpdir(), 'nanocore-mcp-test-'));
+    const filePath = join(dir, 'x.ead');
+    // A minimal well-formed .ead container: "SAPF" magic, version 1, 4-byte body (validateProfileFile
+    // only checks the framing, not the encrypted payload or the 32-byte auth code at the end).
+    const eadFile = new Uint8Array(64);
+    eadFile.set([0x53, 0x41, 0x50, 0x46, 0x01], 0);
+    eadFile.set([4, 0, 0, 0], 24); // body length = 64 - 60
+    await writeFile(filePath, Buffer.from(eadFile));
+
+    const res = await uploadableClient.callTool({ name: 'upload_profile', arguments: { slot: 1, file_path: filePath, confirm: true } });
+    const text = (res.content as { type: string; text: string }[])[0].text;
+    expect(res.isError).toBeFalsy();
+    expect(text).toContain('Verified byte-for-byte');
+
+    await uploadableSession.close();
+    await uploadableClient.close();
+  });
+
   it('upload_ir requires confirmation, a .wav/.bin extension and a readable file', async () => {
     transport.sent.length = 0;
     const unconfirmed = await call('upload_ir', { slot: 1, file_path: '/tmp/x.wav' });

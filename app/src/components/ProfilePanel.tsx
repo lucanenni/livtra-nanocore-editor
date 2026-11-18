@@ -19,6 +19,18 @@ import {
 } from '@nanocore/protocol';
 import { usePatchStore } from '../store/patchStore';
 
+function downloadBinary(filename: string, data: Uint8Array) {
+  const blob = new Blob([new Uint8Array(data)], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 /** Built-in (factory) name for a slot, used before the catalog has been read: 0-29 are the AMP
  * models, 30-37 the FX2 drive/boost models. */
 function factoryName(slot: number): string {
@@ -51,6 +63,7 @@ export function ProfilePanel() {
   const readIrCatalog = usePatchStore((s) => s.readIrCatalog);
   const uploadIr = usePatchStore((s) => s.uploadIr);
   const resetIrUpload = usePatchStore((s) => s.resetIrUpload);
+  const backupProfileSlot = usePatchStore((s) => s.backupProfileSlot);
 
   const [slot, setSlot] = useState(0);
   const [file, setFile] = useState<{ fileName: string; data: Uint8Array } | null>(null);
@@ -89,10 +102,21 @@ export function ProfilePanel() {
     resetProfileUpload();
     if (!picked) return;
     const data = new Uint8Array(await picked.arrayBuffer());
-    const check = validateProfileFile(data);
     setFile({ fileName: picked.name, data });
-    setProblem(check.ok ? null : check.problem);
-    setName(sanitizeProfileName(picked.name));
+    if (picked.name.toLowerCase().endsWith('.bin')) {
+      // A raw body previously read back with "Download backup" — the device's write commands take
+      // it as-is (no particular framing required), so skip the .ead-specific SAPF check.
+      setProblem(data.length === 0 ? 'too-short' : null);
+    } else {
+      const check = validateProfileFile(data);
+      setProblem(check.ok ? null : check.problem);
+    }
+    setName(sanitizeProfileName(picked.name.replace(/\.bin$/i, '')));
+  };
+
+  const handleBackup = async () => {
+    const backup = await backupProfileSlot(slot, false);
+    if (backup) downloadBinary(`nanocore-backup-profile-slot${slot + 1}-${backup.name}.bin`, backup.data);
   };
 
   const handleRead = async () => {
@@ -128,6 +152,13 @@ export function ProfilePanel() {
     });
   };
 
+  const verifiedText = (verified: typeof upload.verified) => {
+    if (verified === 'ok') return { cls: 'connection-panel__success', text: t('profiles.verifiedOk', 'Verified byte-for-byte.') };
+    if (verified === 'mismatch') return { cls: 'connection-panel__error', text: t('profiles.verifiedMismatch', 'Verification found a difference — retry the upload.') };
+    if (verified === 'unavailable') return { cls: 'panel-hint', text: t('profiles.verifiedUnavailable', 'Could not verify (no reply reading it back).') };
+    return null;
+  };
+
   const handleIrFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
     e.target.value = '';
@@ -159,6 +190,11 @@ export function ProfilePanel() {
     setIrReadFailed(false);
     setIrReadFailed(!(await readIrCatalog()));
     setIrReading(false);
+  };
+
+  const handleBackupIr = async () => {
+    const backup = await backupProfileSlot(irSlot, true);
+    if (backup) downloadBinary(`nanocore-backup-ir-slot${irSlot + 1}-${backup.name}.bin`, backup.data);
   };
 
   const handleUploadIr = async () => {
@@ -221,7 +257,7 @@ export function ProfilePanel() {
       <p className="panel-hint">
         {t(
           'profiles.uploadHint',
-          'Overwrites the chosen slot. This editor cannot restore factory content — use ToneCommand\'s "Restore Factory Content" for that. Tested over USB only.',
+          'Overwrites the chosen slot. Use "Download backup" above first — the .bin it saves can be chosen again here to put it back. Tested over USB only.',
         )}
       </p>
 
@@ -236,13 +272,16 @@ export function ProfilePanel() {
             ))}
           </select>
         </label>
+        <button type="button" className="btn btn--ghost btn--small" disabled={!connectionReady || running} onClick={handleBackup}>
+          {t('profiles.downloadBackup', 'Download backup')}
+        </button>
       </div>
 
       <div className="profile-panel__row">
         <button type="button" className="btn btn--ghost btn--small" disabled={running} onClick={() => fileInputRef.current?.click()}>
-          {t('profiles.chooseFile', 'Choose .ead file…')}
+          {t('profiles.chooseFile', 'Choose .ead or .bin file…')}
         </button>
-        <input ref={fileInputRef} type="file" accept=".ead" hidden onChange={handleFile} />
+        <input ref={fileInputRef} type="file" accept=".ead,.bin" hidden onChange={handleFile} />
         {file && (
           <span className="panel-hint">
             {file.fileName} · {file.data.length} B
@@ -275,9 +314,13 @@ export function ProfilePanel() {
             </>
           )}
           {upload.status === 'done' && (
-            <p className="connection-panel__success">
-              {t('profiles.done', { slot: (upload.slot ?? 0) + 1, defaultValue: 'Uploaded to slot {{slot}}.' })}
-            </p>
+            <>
+              <p className="connection-panel__success">
+                {t('profiles.done', { slot: (upload.slot ?? 0) + 1, defaultValue: 'Uploaded to slot {{slot}}.' })}
+              </p>
+              {upload.verified === undefined && <p className="panel-hint">{t('profiles.verifying', 'Verifying…')}</p>}
+              {verifiedText(upload.verified) && <p className={verifiedText(upload.verified)!.cls}>{verifiedText(upload.verified)!.text}</p>}
+            </>
           )}
           {upload.status === 'error' && <p className="connection-panel__error">{failureText(upload.failure)}</p>}
         </div>
@@ -335,6 +378,9 @@ export function ProfilePanel() {
             ))}
           </select>
         </label>
+        <button type="button" className="btn btn--ghost btn--small" disabled={!connectionReady || irRunning} onClick={handleBackupIr}>
+          {t('profiles.downloadBackup', 'Download backup')}
+        </button>
       </div>
 
       <div className="profile-panel__row">
@@ -386,9 +432,13 @@ export function ProfilePanel() {
             </>
           )}
           {irUpload.status === 'done' && (
-            <p className="connection-panel__success">
-              {t('profiles.done', { slot: (irUpload.slot ?? 0) + 1, defaultValue: 'Uploaded to slot {{slot}}.' })}
-            </p>
+            <>
+              <p className="connection-panel__success">
+                {t('profiles.done', { slot: (irUpload.slot ?? 0) + 1, defaultValue: 'Uploaded to slot {{slot}}.' })}
+              </p>
+              {irUpload.verified === undefined && <p className="panel-hint">{t('profiles.verifying', 'Verifying…')}</p>}
+              {verifiedText(irUpload.verified) && <p className={verifiedText(irUpload.verified)!.cls}>{verifiedText(irUpload.verified)!.text}</p>}
+            </>
           )}
           {irUpload.status === 'error' && <p className="connection-panel__error">{failureText(irUpload.failure)}</p>}
         </div>

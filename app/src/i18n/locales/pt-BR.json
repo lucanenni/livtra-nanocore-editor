@@ -306,12 +306,13 @@
     "update": "Atualizar"
   },
   "profiles": {
-    "chooseFile": "Escolher arquivo .ead…",
+    "chooseFile": "Escolher arquivo .ead ou .bin…",
     "colName": "Nome",
     "colNote": "Obs.",
     "colSlot": "Slot",
     "confirm": "Sobrescrever o slot {{slot}} (\"{{current}}\") com \"{{name}}\"?\n\nEste editor não consegue devolver o perfil de fábrica — só o \"Restore Factory Content\" do ToneCommand consegue (ele regrava todos os slots de AMP e FX2). Mantenha o cabo conectado até terminar.",
     "done": "Enviado para o slot {{slot}}.",
+    "downloadBackup": "Baixar backup",
     "errNoResponse": "Sem resposta da pedaleira durante \"{{phase}}\". Tente de novo; se continuar falhando, desligue e ligue o dispositivo.",
     "errSlot": "A pedaleira não tem esse slot.",
     "errStatus": "A pedaleira recusou o envio durante \"{{phase}}\" (status {{status}}).",
@@ -360,9 +361,13 @@
     "slot": "Slot",
     "title": "Perfis AMP/FX2",
     "upload": "Enviar para o slot",
-    "uploadHint": "Sobrescreve o slot escolhido. Este editor não restaura o conteúdo de fábrica — para isso use o \"Restore Factory Content\" do ToneCommand. Testado só por USB.",
+    "uploadHint": "Sobrescreve o slot escolhido. Use \"Baixar backup\" acima primeiro — o .bin que ele salva pode ser escolhido de novo aqui para restaurar. Testado só por USB.",
     "uploadTitle": "Enviar um perfil",
-    "uploading": "Enviando…"
+    "uploading": "Enviando…",
+    "verifiedMismatch": "A verificação encontrou uma diferença — tente enviar de novo.",
+    "verifiedOk": "Verificado byte a byte.",
+    "verifiedUnavailable": "Não foi possível verificar (sem resposta ao ler de volta).",
+    "verifying": "Verificando…"
   },
   "routing": {
     "warning": "O FX2 está em {{type}}, que reutiliza os CCs de parâmetro do MOD (68-73). Mexer nos parâmetros do MOD agora vai, na verdade, alterar o {{type}} do FX2."

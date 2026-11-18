@@ -381,3 +381,85 @@ describe('patchStore.backupDeviceSlot', () => {
     expect(await usePatchStore.getState().backupDeviceSlot(0)).toBeNull();
   });
 });
+
+describe('patchStore.backupProfileSlot', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('reads a profile/IR slot back as its raw stored body, for the UI to download before an overwrite', async () => {
+    const body = new Uint8Array([1, 2, 3, 4]);
+    const read = vi.spyOn(NanoCoreDevice.prototype, 'readProfileData').mockResolvedValue({
+      ok: true,
+      record: { slot: 5, present: true, lastWritten: false, bodyBytes: 4, checksum: 0, name: 'MyAmp', assetType: null },
+      body,
+      crc: 0,
+      crcMatches: true,
+      attempts: 1,
+    });
+
+    expect(await usePatchStore.getState().backupProfileSlot(5, false)).toEqual({ name: 'MyAmp', data: body });
+    expect(read).toHaveBeenCalledWith(5, false);
+  });
+
+  it('falls back to a generic name when the slot has none, and resolves null when the read fails', async () => {
+    vi.spyOn(NanoCoreDevice.prototype, 'readProfileData').mockResolvedValue({
+      ok: true,
+      record: { slot: 2, present: true, lastWritten: false, bodyBytes: 1, checksum: 0, name: '', assetType: null },
+      body: new Uint8Array([9]),
+      crc: 0,
+      crcMatches: true,
+      attempts: 1,
+    });
+    expect((await usePatchStore.getState().backupProfileSlot(2, true))?.name).toBe('slot3');
+
+    vi.spyOn(NanoCoreDevice.prototype, 'readProfileData').mockResolvedValue({ ok: false, reason: 'empty-slot' });
+    expect(await usePatchStore.getState().backupProfileSlot(2, true)).toBeNull();
+  });
+});
+
+describe('patchStore.uploadProfile/uploadIr verification', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('marks the upload verified once the read-back matches byte-for-byte', async () => {
+    const data = new Uint8Array([10, 20, 30]);
+    vi.spyOn(NanoCoreDevice.prototype, 'uploadProfile').mockResolvedValue({ ok: true });
+    vi.spyOn(NanoCoreDevice.prototype, 'readProfileCatalog').mockResolvedValue([]);
+    vi.spyOn(NanoCoreDevice.prototype, 'readProfileData').mockResolvedValue({
+      ok: true,
+      record: { slot: 1, present: true, lastWritten: true, bodyBytes: 3, checksum: 0, name: 'x', assetType: null },
+      body: new Uint8Array([10, 20, 30]),
+      crc: 0,
+      crcMatches: true,
+      attempts: 1,
+    });
+
+    await usePatchStore.getState().uploadProfile({ slot: 1, data, name: 'x' });
+    expect(usePatchStore.getState().profileUpload.verified).toBe('ok');
+  });
+
+  it('flags a mismatch when the read-back differs from what was sent', async () => {
+    const data = new Uint8Array([10, 20, 30]);
+    vi.spyOn(NanoCoreDevice.prototype, 'uploadIr').mockResolvedValue({ ok: true });
+    vi.spyOn(NanoCoreDevice.prototype, 'readIrCatalog').mockResolvedValue([]);
+    vi.spyOn(NanoCoreDevice.prototype, 'readProfileData').mockResolvedValue({
+      ok: true,
+      record: { slot: 1, present: true, lastWritten: true, bodyBytes: 3, checksum: 0, name: 'x', assetType: null },
+      body: new Uint8Array([10, 20, 31]), // one byte differs
+      crc: 0,
+      crcMatches: false,
+      attempts: 3,
+    });
+
+    await usePatchStore.getState().uploadIr({ slot: 1, data, name: 'x' });
+    expect(usePatchStore.getState().irUpload.verified).toBe('mismatch');
+  });
+
+  it('flags verification as unavailable when the read-back itself fails', async () => {
+    const data = new Uint8Array([10, 20, 30]);
+    vi.spyOn(NanoCoreDevice.prototype, 'uploadProfile').mockResolvedValue({ ok: true });
+    vi.spyOn(NanoCoreDevice.prototype, 'readProfileCatalog').mockResolvedValue([]);
+    vi.spyOn(NanoCoreDevice.prototype, 'readProfileData').mockResolvedValue({ ok: false, reason: 'no-response' });
+
+    await usePatchStore.getState().uploadProfile({ slot: 1, data, name: 'x' });
+    expect(usePatchStore.getState().profileUpload.verified).toBe('unavailable');
+  });
+});

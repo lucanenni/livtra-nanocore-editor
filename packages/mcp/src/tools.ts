@@ -47,6 +47,14 @@ function uploadFailure(result: Extract<UploadResult, { ok: false }>): string {
   return `The upload failed while ${where}: the NanoCore returned status ${result.status}.`;
 }
 
+/** Reports the post-upload byte-for-byte read-back check (`NanoCoreSession.verifyUpload`), an
+ * independent check beyond the device's own finalize-time CRC-32. */
+function verifiedNote(verified?: 'ok' | 'mismatch' | 'unavailable'): string {
+  if (verified === 'mismatch') return ' WARNING: read back and verified — it does NOT match what was sent. Retry the upload.';
+  if (verified === 'unavailable') return ' (could not verify by reading it back — no reply)';
+  return ' Verified byte-for-byte by reading it back.';
+}
+
 export function registerTools(server: McpServer, session: NanoCoreSession): void {
   server.registerTool(
     'list_midi_ports',
@@ -357,23 +365,24 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
     {
       title: 'Load a .ead profile into a profile slot',
       description:
-        `Uploads a local ToneCommand profile file (.ead) into AMP/FX2 profile slot \`slot\` (1-${PROFILE_SLOT_COUNT}), replacing what is there; ` +
-        'the only way back to the factory profile is the official app\'s "Restore Factory Content". Takes a few seconds. ' +
+        `Uploads a local ToneCommand profile file (.ead), or a raw .bin previously read back from a slot (by verify_profile or a web-editor backup), into AMP/FX2 profile slot \`slot\` (1-${PROFILE_SLOT_COUNT}), replacing what is there; ` +
+        'the only way back to the factory profile (without your own prior backup) is the official app\'s "Restore Factory Content". Takes a few seconds. ' +
         'Set `confirm` to true only after the user has agreed to overwrite that slot.',
       inputSchema: {
         slot: z.number().int().min(1).max(PROFILE_SLOT_COUNT),
-        file_path: z.string().describe('Absolute path of a .ead file on this computer.'),
+        file_path: z.string().describe('Absolute path of a .ead or .bin file on this computer.'),
         name: z.string().max(PROFILE_NAME_MAX).optional().describe(`Name shown for the slot (max ${PROFILE_NAME_MAX} characters). Defaults to the file name.`),
         confirm: z.literal(true).describe('Must be true: the user agreed to overwrite this slot.'),
       },
       annotations: OVERWRITE,
     },
     guarded(async ({ slot, file_path, name }: { slot: number; file_path: string; name?: string; confirm: true }) => {
-      if (extname(file_path).toLowerCase() !== '.ead') throw new Error('Only .ead profile files can be uploaded.');
+      const ext = extname(file_path).toLowerCase();
+      if (ext !== '.ead' && ext !== '.bin') throw new Error('Only .ead or .bin profile files can be uploaded.');
       const data = new Uint8Array(await readFile(file_path));
-      const result = await session.uploadProfile(slot, data, name ?? basename(file_path));
+      const result = await session.uploadProfile(slot, data, name ?? basename(file_path), ext === '.bin');
       if (!result.ok) throw new Error(uploadFailure(result));
-      return `Uploaded ${basename(file_path)} to profile slot ${slot}.`;
+      return `Uploaded ${basename(file_path)} to profile slot ${slot}.${verifiedNote(result.verified)}`;
     }),
   );
 
@@ -405,7 +414,7 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
       }
       const result = await session.uploadIr(slot, data, name ?? basename(file_path));
       if (!result.ok) throw new Error(uploadFailure(result));
-      return `Uploaded ${basename(file_path)} to CAB IR slot ${slot}.`;
+      return `Uploaded ${basename(file_path)} to CAB IR slot ${slot}.${verifiedNote(result.verified)}`;
     }),
   );
 }

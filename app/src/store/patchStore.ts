@@ -81,6 +81,19 @@ function deviceFor(state: PatchStore): NanoCoreDevice | null {
   return new NanoCoreDevice(transportFor(state.connection.transportKind), outputId, state.connection.channel);
 }
 
+/** Independent check after a successful `uploadProfile`/`uploadIr`: reads the slot back
+ * (`readProfileData`, which already retries a flaky read and checks the device's own CRC-32) and
+ * compares the result byte-for-byte against what was actually sent. The device's own finalize-time
+ * CRC check already caught most failure modes; this catches anything else (a stale read, flash
+ * corruption revealed only on a later read, ...). */
+async function verifyUpload(device: NanoCoreDevice, slot: number, data: Uint8Array, ir: boolean): Promise<'ok' | 'mismatch' | 'unavailable'> {
+  const result = await device.readProfileData(slot, ir);
+  if (!result.ok) return 'unavailable';
+  if (result.body.length !== data.length) return 'mismatch';
+  for (let i = 0; i < data.length; i += 1) if (result.body[i] !== data[i]) return 'mismatch';
+  return 'ok';
+}
+
 /** Shared by `moveBlockInChain` and `setChainOrder`: updates local state and sends the resulting
  * order via SysEx (fieldId 0x05 — see midi/sysex.ts). */
 function applyChainOrder(get: () => PatchStore, set: (partial: Partial<PatchStore>) => void, newOrder: string[]): void {
@@ -172,6 +185,12 @@ export interface ProfileUploadState {
   total: number;
   /** Set when `status === 'error'`. */
   failure?: Extract<UploadResult, { ok: false }>;
+  /** Set once `status === 'done'`: a post-upload read-back of the slot, compared byte-for-byte
+   * against what was sent (see `verifyUpload` in `patchStore.ts`). `'ok'` = identical, `'mismatch'`
+   * = the stored data differs (retry the upload), `'unavailable'` = the read-back itself failed
+   * (the upload may still be fine — the device already acknowledged it with its own CRC-32 at
+   * finalize; this is an extra, independent check, not the only one). */
+  verified?: 'ok' | 'mismatch' | 'unavailable';
 }
 
 interface PatchStore {
@@ -320,6 +339,11 @@ interface PatchStore {
    * `irUpload`, refreshes `irCatalog` afterwards, overwrites with no way back. */
   uploadIr: (params: { slot: number; data: Uint8Array; name: string }) => Promise<boolean>;
   resetIrUpload: () => void;
+  /** Reads profile slot `slot` (0-37), or CAB IR slot `slot` with `ir`, back as its raw stored
+   * body — meant to be downloaded as a backup before `uploadProfile`/`uploadIr` overwrites it, and
+   * (the device's write commands don't require any particular framing) re-uploadable as-is later
+   * through the same upload UI. `null` when the slot is empty or the device doesn't answer. */
+  backupProfileSlot: (slot: number, ir: boolean) => Promise<{ name: string; data: Uint8Array } | null>;
 
   // Local preset library
   savePresetLocal: (name: string) => void;
@@ -701,6 +725,8 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
     }
     set({ profileUpload: { status: 'done', slot, sent: data.length, total: data.length } });
     await get().readProfileCatalog();
+    const verified = await verifyUpload(device, slot, data, false);
+    set((s) => ({ profileUpload: { ...s.profileUpload, verified } }));
     return true;
   },
 
@@ -723,10 +749,20 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
     }
     set({ irUpload: { status: 'done', slot, sent: data.length, total: data.length } });
     await get().readIrCatalog();
+    const verified = await verifyUpload(device, slot, data, true);
+    set((s) => ({ irUpload: { ...s.irUpload, verified } }));
     return true;
   },
 
   resetIrUpload: () => set({ irUpload: { status: 'idle', sent: 0, total: 0 } }),
+
+  backupProfileSlot: async (slot, ir) => {
+    const device = deviceFor(get());
+    if (!device) return null;
+    const result = await device.readProfileData(slot, ir);
+    if (!result.ok) return null;
+    return { name: result.record.name || `slot${slot + 1}`, data: result.body };
+  },
 
   savePresetLocal: (name) => {
     const state = get();

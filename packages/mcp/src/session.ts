@@ -407,26 +407,46 @@ export class NanoCoreSession {
     };
   }
 
-  /** Uploads a `.ead` file into profile slot `number` (1-based). Overwrites that slot. */
-  async uploadProfile(number: number, data: Uint8Array, name: string): Promise<UploadResult> {
+  /** Independent check after a successful upload: reads the slot back (`readProfileData`, which
+   * already retries a flaky read and checks the device's own CRC-32) and compares the result
+   * byte-for-byte against what was actually sent. */
+  private async verifyUpload(slot: number, data: Uint8Array, ir: boolean): Promise<'ok' | 'mismatch' | 'unavailable'> {
+    const result = await this.requireDevice().readProfileData(slot, ir);
+    if (!result.ok) return 'unavailable';
+    if (result.body.length !== data.length) return 'mismatch';
+    for (let i = 0; i < data.length; i += 1) if (result.body[i] !== data[i]) return 'mismatch';
+    return 'ok';
+  }
+
+  /** Uploads a `.ead` file into profile slot `number` (1-based). Overwrites that slot. `raw` skips
+   * the `.ead`-specific SAPF framing check — for a `.bin` previously read back from a slot (by
+   * `verify_profile` or a web-editor "Download backup"), which the device's write commands accept
+   * as-is, no particular framing required. */
+  async uploadProfile(number: number, data: Uint8Array, name: string, raw = false): Promise<UploadResult & { verified?: 'ok' | 'mismatch' | 'unavailable' }> {
     const device = this.requireDevice();
     if (!Number.isInteger(number) || number < 1 || number > PROFILE_SLOT_COUNT) throw new Error(`Profile slot must be 1-${PROFILE_SLOT_COUNT}.`);
-    const check = validateProfileFile(data);
-    if (!check.ok) throw new Error(`Not a valid .ead profile file (${check.problem}).`);
+    if (!raw) {
+      const check = validateProfileFile(data);
+      if (!check.ok) throw new Error(`Not a valid .ead profile file (${check.problem}).`);
+    } else if (data.length === 0) {
+      throw new Error('That file is empty.');
+    }
     const result = await device.uploadProfile({ slot: number - 1, data, name: sanitizeProfileName(name) });
     this.catalogs.profiles = null; // re-read on next use, with the new slot name
-    return result;
+    if (!result.ok) return result;
+    return { ...result, verified: await this.verifyUpload(number - 1, data, false) };
   }
 
   /** Uploads a raw float32 IR (`data` already in the device's convention — `tools.ts` converts a
    * `.wav` before calling this) into CAB IR slot `number` (1-based). Overwrites that slot. */
-  async uploadIr(number: number, data: Uint8Array, name: string): Promise<UploadResult> {
+  async uploadIr(number: number, data: Uint8Array, name: string): Promise<UploadResult & { verified?: 'ok' | 'mismatch' | 'unavailable' }> {
     const device = this.requireDevice();
     if (!Number.isInteger(number) || number < 1 || number > IR_SLOT_COUNT) throw new Error(`IR slot must be 1-${IR_SLOT_COUNT}.`);
     const check = validateIrFile(data);
     if (!check.ok) throw new Error(`Not a valid raw IR file (${check.problem}).`);
     const result = await device.uploadIr({ slot: number - 1, data, name: sanitizeProfileName(name) });
     this.catalogs.irs = null; // re-read on next use, with the new slot name
-    return result;
+    if (!result.ok) return result;
+    return { ...result, verified: await this.verifyUpload(number - 1, data, true) };
   }
 }
