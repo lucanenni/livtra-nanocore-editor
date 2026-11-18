@@ -811,13 +811,24 @@ export interface ProfileCatalogRecord {
    * differs from the CRC-32 the finalize command carries. Confirmed 2026-10-20. */
   checksum: number;
   name: string;
+  /** Byte 30 of a 31-byte reply, when present: 1 = DDPB (AMP), 3 = NA2L. `null` on a 30-byte
+   * reply (the length this project has always seen on hardware so far — unverified here). */
+  assetType: number | null;
 }
 
-/** Parses a `0x36` reply payload (30 bytes). */
+/** Parses a `0x36` reply payload (30 bytes, or 31 with a trailing `asset_type` byte). */
 export function parseProfileCatalogRecord(payload: readonly number[]): ProfileCatalogRecord | null {
   if (payload.length < 30) return null;
   const u32 = (o: number) => (payload[o] | (payload[o + 1] << 8) | (payload[o + 2] << 16) | (payload[o + 3] << 24)) >>> 0;
   let name = '';
   for (let i = 14; i < 30 && payload[i] !== 0; i += 1) name += String.fromCharCode(payload[i]);
-  return { slot: payload[0], present: payload[1] === 1, lastWritten: payload[2] === 1, bodyBytes: u32(3), checksum: u32(7), name };
+  return {
+    slot: payload[0],
+    present: payload[1] === 1,
+    lastWritten: payload[2] === 1,
+    bodyBytes: u32(3),
+    checksum: u32(7),
+    name,
+    assetType: payload.length >= 31 ? payload[30] : null,
+  };
 }

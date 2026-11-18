@@ -96,7 +96,13 @@ describe('real captured frames', () => {
     expect(parseCommandMessage(hex(REAL.beginReply))).toMatchObject({ direction: 'reply', opcode: 0x31, status: 0, payload: [] });
 
     const record = parseProfileCatalogRecord(parseCommandMessage(hex(REAL.catalogReply))!.payload)!;
-    expect(record).toEqual({ slot: 0, present: true, lastWritten: false, bodyBytes: 12242, checksum: 0xd782336a, name: 'BogXTC1' });
+    expect(record).toEqual({ slot: 0, present: true, lastWritten: false, bodyBytes: 12242, checksum: 0xd782336a, name: 'BogXTC1', assetType: null });
+  });
+
+  it('reads a trailing 31st byte as assetType when present', () => {
+    const payload = parseCommandMessage(hex(REAL.catalogReply))!.payload.slice();
+    payload.push(3); // NA2L
+    expect(parseProfileCatalogRecord(payload)!.assetType).toBe(3);
   });
 
   it('matches a reply to its request by opcode and sequence number only', () => {
@@ -302,7 +308,7 @@ describe('readIrCatalog', () => {
 });
 
 describe('customProfileName', () => {
-  const record = (slot: number, name: string, present = true) => ({ slot, present, lastWritten: false, bodyBytes: 0, checksum: 0, name });
+  const record = (slot: number, name: string, present = true) => ({ slot, present, lastWritten: false, bodyBytes: 0, checksum: 0, name, assetType: null });
 
   it('maps AMP, FX2 and CAB types onto their catalog slots', () => {
     expect(catalogSlotFor('amp', 5)).toBe(5);
@@ -351,7 +357,7 @@ describe('readProfileCatalog', () => {
 });
 
 describe('customProfileLabel', () => {
-  const record = (slot: number, name: string) => ({ slot, present: true, lastWritten: false, bodyBytes: 0, checksum: 0, name });
+  const record = (slot: number, name: string) => ({ slot, present: true, lastWritten: false, bodyBytes: 0, checksum: 0, name, assetType: null });
   const types = [
     { id: 0, name: 'Bog412A' },
     { id: 1, name: 'Bog412B' },
