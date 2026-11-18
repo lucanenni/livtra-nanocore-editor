@@ -653,8 +653,24 @@ export const PROFILE_OPCODE = {
   /** Read-only: `[slot, offsetLo, offsetHi, length≤200]` → a slice of the slot's STORED body
    * (what the device keeps, not a re-uploadable `.ead`). */
   READ: 0x39,
-  /** CAB IR slots' twin of `CATALOG`: same 30-byte record, slots 0-29 (31+ answer status 3). */
+  // --- CAB IR slots (0-29): the same write family, offset +0x20 for every step this project has
+  // confirmed on AMP/FX2 hardware. Cross-checked against `nanocore-controller`'s (dvilelaf)
+  // independently hardware-verified IR opcode table — exact match for every step below. See
+  // docs/MIDI_MAPPING_NOTES.md, "CAB IR slot write".
+  IR_STORAGE_INFO: 0x50,
+  IR_BEGIN: 0x51,
+  IR_WRITE_CHUNK: 0x52,
+  IR_FINALIZE: 0x53,
+  IR_NAME: 0x55,
+  /** Same 30-byte record as `CATALOG`, confirmed on real hardware 2026-10-20. */
   IR_CATALOG: 0x56,
+  /** Sent once after `IR_NAME`, mirroring `APPLY` (`0x37`) at the same +0x20 offset as every other
+   * IR step above — NOT independently confirmed on this project's own hardware (unlike the rest of
+   * this family). `nanocore-controller` lists it as exercised in a verified real-hardware IR write
+   * ("0x31-0x35, 0x51-0x55, 0x57") but its own purpose there is still marked unknown. Treated as
+   * best-effort by `runIrUpload`: the IR data is already safely committed by `IR_FINALIZE` before
+   * this runs, so a failure here is reported but does not undo or fail the upload. */
+  IR_APPLY: 0x57,
   /** `READ`'s IR twin. */
   IR_READ: 0x59,
 } as const;
@@ -712,13 +728,51 @@ export function buildProfileFinalizeSysEx(slot: number, length: number, crc: num
   return buildCommandFrame(PROFILE_OPCODE.FINALIZE, [...slotHeader(slot, length), ...u32le(crc)]);
 }
 
-/** Sets the slot's display name (ASCII; ToneCommand sends the file name, e.g. `00.ead`). */
-export function buildProfileNameSysEx(slot: number, name: string): number[] {
-  const ascii = Array.from(name, (ch) => {
+function asciiBytes(name: string): number[] {
+  return Array.from(name, (ch) => {
     const code = ch.charCodeAt(0);
     return code >= 0x20 && code < 0x7f ? code : 0x3f;
   });
-  return buildCommandFrame(PROFILE_OPCODE.NAME, [slot & 0xff, ...ascii]);
+}
+
+/** Sets the slot's display name (ASCII; ToneCommand sends the file name, e.g. `00.ead`). */
+export function buildProfileNameSysEx(slot: number, name: string): number[] {
+  return buildCommandFrame(PROFILE_OPCODE.NAME, [slot & 0xff, ...asciiBytes(name)]);
+}
+
+/** Read-only: IR storage info — same reply layout as `buildStorageInfoSysEx` (see
+ * `parseStorageInfo`), slot count/limit are the IR storage's own (30 slots, 4096-byte default
+ * limit on the hardware this project has seen). */
+export function buildIrStorageInfoSysEx(): number[] {
+  return buildCommandFrame(PROFILE_OPCODE.IR_STORAGE_INFO);
+}
+
+/** Starts a write session for IR `slot` with the total byte length (a multiple of 4: raw
+ * little-endian float32 mono samples) that will follow. */
+export function buildIrBeginSysEx(slot: number, totalLength: number): number[] {
+  return buildCommandFrame(PROFILE_OPCODE.IR_BEGIN, slotHeader(slot, totalLength));
+}
+
+/** One chunk of the IR data at `offset` — same 64-byte-at-a-time, wait-for-ack convention as
+ * `buildProfileChunkSysEx`. */
+export function buildIrChunkSysEx(slot: number, offset: number, data: readonly number[]): number[] {
+  return buildCommandFrame(PROFILE_OPCODE.IR_WRITE_CHUNK, [...slotHeader(slot, offset), ...data]);
+}
+
+/** Finalizes the IR upload: `crc` is the CRC-32 of the whole uploaded byte stream. */
+export function buildIrFinalizeSysEx(slot: number, length: number, crc: number): number[] {
+  return buildCommandFrame(PROFILE_OPCODE.IR_FINALIZE, [...slotHeader(slot, length), ...u32le(crc)]);
+}
+
+/** Sets the IR slot's display name. */
+export function buildIrNameSysEx(slot: number, name: string): number[] {
+  return buildCommandFrame(PROFILE_OPCODE.IR_NAME, [slot & 0xff, ...asciiBytes(name)]);
+}
+
+/** Sent once after `buildIrNameSysEx` — see `PROFILE_OPCODE.IR_APPLY`'s doc comment: best-effort,
+ * not independently confirmed on this project's own hardware. */
+export function buildIrApplySysEx(slot: number): number[] {
+  return buildCommandFrame(PROFILE_OPCODE.IR_APPLY, [slot & 0xff]);
 }
 
 /** Sent once by ToneCommand after a successful import (effect not established — see the docs). */

@@ -26,7 +26,7 @@ import type { ProfileCatalogRecord } from '../midi/sysex';
 import type { BlockSpec, EffectType, ParamSpec } from '../data/types';
 import { parseGlobalSettingsResponse, parsePresetName } from '../midi/presetReader';
 import type { GlobalSettings } from '../midi/presetReader';
-import { readIrCatalog, readProfileCatalog, readProfileData, runProfileUpload, type ProfileReadResult } from '../midi/profileUpload';
+import { readIrCatalog, readProfileCatalog, readProfileData, runIrUpload, runProfileUpload, type ProfileReadResult } from '../midi/profileUpload';
 import type { CommandTransact, UploadPhase, UploadResult } from '../midi/profileUpload';
 import { nanocoreSpec } from '../data/nanocoreSpec';
 import { buildBlockDefault, buildDefaultPatch, findBlock, findParamSpec, findType } from '../patch/patchDefaults';
@@ -379,6 +379,18 @@ export class NanoCoreDevice {
     onProgress?: (phase: UploadPhase, sent: number, total: number) => void;
   }): Promise<UploadResult> {
     return runProfileUpload({ transact: this.profileTransact(), ...params });
+  }
+
+  /** Writes a CAB IR slot (0-29) with the matching command sequence (`0x50`-`0x57`, see
+   * `runIrUpload`'s doc comment) — `data` is the device's raw convention (`validateIrFile`) or a
+   * converted `.wav` (`wavToIr`). OVERWRITES that slot: this editor cannot restore factory IRs. */
+  uploadIr(params: {
+    slot: number;
+    data: Uint8Array;
+    name: string;
+    onProgress?: (phase: UploadPhase, sent: number, total: number) => void;
+  }): Promise<UploadResult> {
+    return runIrUpload({ transact: this.profileTransact(), ...params });
   }
 
   // ---- live ----------------------------------------------------------------------------------

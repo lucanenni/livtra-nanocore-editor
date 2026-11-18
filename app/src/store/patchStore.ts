@@ -194,6 +194,9 @@ interface PatchStore {
   profileCatalog: ProfileCatalogRecord[] | null;
   /** Same for the 30 CAB IR slots (`0x56` reads), so custom IRs show under their own names. */
   irCatalog: ProfileCatalogRecord[] | null;
+  /** `uploadIr`'s own progress/result — same shape as `profileUpload`, kept separate since the two
+   * uploads can't meaningfully run at once but are otherwise independent. */
+  irUpload: ProfileUploadState;
   /** The SAVED name of every device preset slot (index = slot), for the device preset list — read on
    * connect, kept up to date by preset reads and saves, and remembered in the browser so the list
    * shows up straight away next time. `null` before any read; an entry is `null` if it didn't decode. */
@@ -312,6 +315,11 @@ interface PatchStore {
    * ToneCommand's "Restore Factory Content". Ignored while another upload is running. */
   uploadProfile: (params: { slot: number; data: Uint8Array; name: string }) => Promise<boolean>;
   resetProfileUpload: () => void;
+  /** Writes a CAB IR slot (0-29) — `data` is the device's raw convention (`validateIrFile`) or the
+   * result of `wavToIr` on a `.wav` file. Same shape as `uploadProfile`: progress through
+   * `irUpload`, refreshes `irCatalog` afterwards, overwrites with no way back. */
+  uploadIr: (params: { slot: number; data: Uint8Array; name: string }) => Promise<boolean>;
+  resetIrUpload: () => void;
 
   // Local preset library
   savePresetLocal: (name: string) => void;
@@ -343,6 +351,7 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
   presetNamesLoading: false,
   presetSwitchingTo: null,
   profileUpload: { status: 'idle', sent: 0, total: 0 },
+  irUpload: { status: 'idle', sent: 0, total: 0 },
   globalSettings: null,
   connection: {
     transportKind: 'simulator',
@@ -696,6 +705,28 @@ export const usePatchStore = create<PatchStore>((set, get) => ({
   },
 
   resetProfileUpload: () => set({ profileUpload: { status: 'idle', sent: 0, total: 0 } }),
+
+  uploadIr: async ({ slot, data, name }) => {
+    const state = get();
+    const device = deviceFor(state);
+    if (!device || state.irUpload.status === 'running') return false;
+    set({ irUpload: { status: 'running', phase: 'info', slot, sent: 0, total: data.length } });
+    const result = await device.uploadIr({
+      slot,
+      data,
+      name,
+      onProgress: (phase, sent, total) => set({ irUpload: { status: 'running', phase, slot, sent, total } }),
+    });
+    if (!result.ok) {
+      set({ irUpload: { status: 'error', slot, sent: get().irUpload.sent, total: data.length, failure: result } });
+      return false;
+    }
+    set({ irUpload: { status: 'done', slot, sent: data.length, total: data.length } });
+    await get().readIrCatalog();
+    return true;
+  },
+
+  resetIrUpload: () => set({ irUpload: { status: 'idle', sent: 0, total: 0 } }),
 
   savePresetLocal: (name) => {
     const state = get();

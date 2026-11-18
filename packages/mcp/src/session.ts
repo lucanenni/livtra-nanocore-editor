@@ -20,6 +20,7 @@ import {
   remapParamsForType,
   resolveParamPush,
   sanitizeProfileName,
+  validateIrFile,
   validateProfileFile,
 } from '@nanocore/protocol';
 import type { GlobalSettings, MidiTransport, PatchState, ProfileCatalogRecord, UploadResult } from '@nanocore/protocol';
@@ -414,6 +415,18 @@ export class NanoCoreSession {
     if (!check.ok) throw new Error(`Not a valid .ead profile file (${check.problem}).`);
     const result = await device.uploadProfile({ slot: number - 1, data, name: sanitizeProfileName(name) });
     this.catalogs.profiles = null; // re-read on next use, with the new slot name
+    return result;
+  }
+
+  /** Uploads a raw float32 IR (`data` already in the device's convention — `tools.ts` converts a
+   * `.wav` before calling this) into CAB IR slot `number` (1-based). Overwrites that slot. */
+  async uploadIr(number: number, data: Uint8Array, name: string): Promise<UploadResult> {
+    const device = this.requireDevice();
+    if (!Number.isInteger(number) || number < 1 || number > IR_SLOT_COUNT) throw new Error(`IR slot must be 1-${IR_SLOT_COUNT}.`);
+    const check = validateIrFile(data);
+    if (!check.ok) throw new Error(`Not a valid raw IR file (${check.problem}).`);
+    const result = await device.uploadIr({ slot: number - 1, data, name: sanitizeProfileName(name) });
+    this.catalogs.irs = null; // re-read on next use, with the new slot name
     return result;
   }
 }

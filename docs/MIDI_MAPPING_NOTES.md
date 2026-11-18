@@ -1122,6 +1122,45 @@ differently (larger or unacknowledged writes). Still unknown: `0x37`'s exact eff
 checksum in the catalog record, the first four `0x30` values, and error statuses (every reply in the
 captures was status 0).
 
+## CAB IR slot write (opcodes `0x50`–`0x57`) — added 2026-11-18
+
+The 30 CAB IR slots' read side (`0x56` catalog, `0x59` body read) was already confirmed on real
+hardware (2026-10-20). The write side was not — it's built by analogy with the AMP/FX2 family
+above, at the same +0x20 opcode offset this project's own `SYNC`/`ABORT` doc comments already
+guessed for IR (`0x38`→`0x5a`, `0x34`→`0x54`) before this was written, and cross-checked against
+`nanocore-controller` (dvilelaf), which independently reverse-engineered and **verified on its own
+real pedal** (2026-10-08) the exact same opcode table for both AMP and IR — including IR storage
+info (30 slots, 4096-byte default limit), 64-byte acknowledged write chunks, and that the stored
+AMP blob is a cleartext `DDPB` structure, not the encrypted `.ead`/`SAPF` form — which matches the
+opcode numbering already in this file (`0x33` finalize/commit, `0x34` abort) exactly.
+
+| Step | AMP | IR |
+|---|---|---|
+| storage info | `0x30` | `0x50` |
+| begin write | `0x31` | `0x51` |
+| chunk (ack'd, 64 B) | `0x32` | `0x52` |
+| commit (`u32 len\|slot<<24`, `u32 crc32`) | `0x33` | `0x53` |
+| abort | `0x34` | `0x54` |
+| set name | `0x35` | `0x55` |
+| slot info / catalog | `0x36` | `0x56` |
+| apply (sent once after name) | `0x37` | `0x57` |
+| read | `0x39` | `0x59` |
+
+`0x37`/`0x57` ("apply") is the one step not independently confirmed for IR on any hardware this
+project has seen — `nanocore-controller`'s own verified write exercised `0x57` without incident,
+but still calls its purpose unknown. `runIrUpload` (`midi/profileUpload.ts`) treats its failure as
+non-fatal (`applyFailed: true`) rather than failing the whole upload, since the IR data itself is
+already safely committed by the time it runs.
+
+**IR data format**: raw little-endian float32 mono samples, no header — confirmed by
+`nanocore-controller` against all 30 factory IR files (1024 samples/4096 B for 28 of them, shorter
+for two; values not normalised by the device itself, peaks from 0.38 to 1.93 in the factory set).
+`wavToIr` (`midi/wavToIr.ts`) converts an arbitrary `.wav` to this project's own convention for a
+*new* IR (mono downmix, resampled to 48kHz, peak-normalised to 1.0, truncated to 1024 samples) —
+this project's choice, same one `nanocore-controller` independently settled on for its own WAV
+importer, not something the device requires. A raw `.bin` upload is sent unchanged
+(`validateIrFile` only checks 4-byte alignment and finite values).
+
 ## Online Tone Library (RESONA) — investigated 2026-09-19, link-out only for now
 
 ToneCommand v1.2.8/1.3.0 added "online Tone Library" browsing/import. Turns out this isn't a

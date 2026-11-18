@@ -2,13 +2,20 @@ import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { amp } from '@nanocore/protocol';
 import { fx2 } from '@nanocore/protocol';
+import { cab } from '@nanocore/protocol';
 import {
+  IR_SLOT_COUNT,
   PROFILE_FIRST_FX2_SLOT,
   PROFILE_NAME_MAX,
   PROFILE_SLOT_COUNT,
   sanitizeProfileName,
+  validateIrFile,
   validateProfileFile,
+  wavToIr,
+  type IrFileProblem,
   type ProfileFileProblem,
+  type WavConversionProblem,
+  type WavConversionResult,
 } from '@nanocore/protocol';
 import { usePatchStore } from '../store/patchStore';
 
@@ -17,6 +24,11 @@ import { usePatchStore } from '../store/patchStore';
 function factoryName(slot: number): string {
   if (slot < PROFILE_FIRST_FX2_SLOT) return amp.types[slot]?.name ?? `Slot ${slot + 1}`;
   return fx2.types.find((type) => type.id === slot - PROFILE_FIRST_FX2_SLOT)?.name ?? `Slot ${slot + 1}`;
+}
+
+/** Built-in (factory) name for a CAB IR slot, before the catalog has been read. */
+function factoryIrName(slot: number): string {
+  return cab.types[slot]?.name ?? `Slot ${slot + 1}`;
 }
 
 /**
@@ -34,6 +46,11 @@ export function ProfilePanel() {
   const readProfileCatalog = usePatchStore((s) => s.readProfileCatalog);
   const uploadProfile = usePatchStore((s) => s.uploadProfile);
   const resetProfileUpload = usePatchStore((s) => s.resetProfileUpload);
+  const irCatalog = usePatchStore((s) => s.irCatalog);
+  const irUpload = usePatchStore((s) => s.irUpload);
+  const readIrCatalog = usePatchStore((s) => s.readIrCatalog);
+  const uploadIr = usePatchStore((s) => s.uploadIr);
+  const resetIrUpload = usePatchStore((s) => s.resetIrUpload);
 
   const [slot, setSlot] = useState(0);
   const [file, setFile] = useState<{ fileName: string; data: Uint8Array } | null>(null);
@@ -43,12 +60,28 @@ export function ProfilePanel() {
   const [readFailed, setReadFailed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [irSlot, setIrSlot] = useState(0);
+  const [irFile, setIrFile] = useState<{ fileName: string; data: Uint8Array } | null>(null);
+  const [irProblem, setIrProblem] = useState<IrFileProblem | WavConversionProblem | null>(null);
+  const [irConversion, setIrConversion] = useState<WavConversionResult | null>(null);
+  const [irName, setIrName] = useState('');
+  const [irReading, setIrReading] = useState(false);
+  const [irReadFailed, setIrReadFailed] = useState(false);
+  const irFileInputRef = useRef<HTMLInputElement>(null);
+
   const slotNames = useMemo(
     () => Array.from({ length: PROFILE_SLOT_COUNT }, (_, i) => catalog?.find((r) => r.slot === i)?.name || factoryName(i)),
     [catalog],
   );
   const running = upload.status === 'running';
   const canUpload = connectionReady && !!file && !problem && !running;
+
+  const irSlotNames = useMemo(
+    () => Array.from({ length: IR_SLOT_COUNT }, (_, i) => irCatalog?.find((r) => r.slot === i)?.name || factoryIrName(i)),
+    [irCatalog],
+  );
+  const irRunning = irUpload.status === 'running';
+  const canUploadIr = connectionReady && !!irFile && !irProblem && !irRunning;
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
@@ -82,17 +115,63 @@ export function ProfilePanel() {
     await uploadProfile({ slot, data: file.data, name });
   };
 
-  const failureText = () => {
-    const failure = upload.failure;
+  const failureText = (failure: typeof upload.failure) => {
     if (!failure) return null;
     const phase = t(`profiles.phase.${failure.phase}`, failure.phase);
     if (failure.reason === 'slot-out-of-range') return t('profiles.errSlot', 'The device does not have that slot.');
+    if (failure.reason === 'too-large') return t('profiles.errTooLarge', 'That data is larger than the slot the device reported.');
     if (failure.reason === 'device-status')
       return t('profiles.errStatus', { phase, status: failure.status, defaultValue: 'The device rejected the upload during "{{phase}}" (status {{status}}).' });
     return t('profiles.errNoResponse', {
       phase,
       defaultValue: 'No reply from the device during "{{phase}}". Retry; if it keeps failing, power-cycle the device.',
     });
+  };
+
+  const handleIrFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files?.[0];
+    e.target.value = '';
+    resetIrUpload();
+    setIrConversion(null);
+    if (!picked) return;
+    const raw = new Uint8Array(await picked.arrayBuffer());
+    const baseName = sanitizeProfileName(picked.name.replace(/\.(wav|bin)$/i, ''));
+    if (picked.name.toLowerCase().endsWith('.wav')) {
+      const converted = wavToIr(raw);
+      if (!converted.ok) {
+        setIrFile(null);
+        setIrProblem(converted.problem);
+        return;
+      }
+      setIrFile({ fileName: picked.name, data: converted.result.data });
+      setIrProblem(null);
+      setIrConversion(converted.result);
+    } else {
+      const check = validateIrFile(raw);
+      setIrFile({ fileName: picked.name, data: raw });
+      setIrProblem(check.ok ? null : check.problem);
+    }
+    setIrName(baseName);
+  };
+
+  const handleReadIr = async () => {
+    setIrReading(true);
+    setIrReadFailed(false);
+    setIrReadFailed(!(await readIrCatalog()));
+    setIrReading(false);
+  };
+
+  const handleUploadIr = async () => {
+    if (!irFile || !canUploadIr) return;
+    const message = t('profiles.irConfirm', {
+      slot: irSlot + 1,
+      current: irSlotNames[irSlot],
+      name: sanitizeProfileName(irName),
+      defaultValue:
+        'Overwrite CAB IR slot {{slot}} ("{{current}}") with "{{name}}"?\n\nThis editor cannot put the factory IR back. Keep the cable connected until it finishes.',
+    });
+    if (!window.confirm(message ?? '')) return;
+    await uploadIr({ slot: irSlot, data: irFile.data, name: irName });
   };
 
   return (
@@ -200,7 +279,118 @@ export function ProfilePanel() {
               {t('profiles.done', { slot: (upload.slot ?? 0) + 1, defaultValue: 'Uploaded to slot {{slot}}.' })}
             </p>
           )}
-          {upload.status === 'error' && <p className="connection-panel__error">{failureText()}</p>}
+          {upload.status === 'error' && <p className="connection-panel__error">{failureText(upload.failure)}</p>}
+        </div>
+      )}
+
+      <h2 className="panel-title">{t('profiles.irTitle', 'CAB IR slots')}</h2>
+      <p className="panel-hint">
+        {t(
+          'profiles.irHint',
+          'The NanoCore keeps 30 cabinet impulse-response slots. Read what is in them, or upload a .wav (converted automatically: mono, 48kHz, peak-normalised, capped at 1024 samples) or a raw .bin (float32 mono samples, no header) into one.',
+        )}
+      </p>
+
+      <div className="profile-panel__row">
+        <button type="button" className="btn btn--small" disabled={!connectionReady || irReading || irRunning} onClick={handleReadIr}>
+          {irReading ? t('profiles.reading', 'Reading…') : t('profiles.read', 'Read slots from device')}
+        </button>
+        {irReadFailed && <span className="panel-hint">{t('profiles.readFailed', 'No reply from the device.')}</span>}
+      </div>
+
+      {irCatalog && (
+        <div className="cc-reference__table-wrap">
+          <table className="cc-reference__table">
+            <thead>
+              <tr>
+                <th>{t('profiles.colSlot', 'Slot')}</th>
+                <th>{t('profiles.colName', 'Name')}</th>
+                <th>{t('profiles.colNote', 'Note')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {irCatalog.map((r) => (
+                <tr key={r.slot}>
+                  <td className="cc-reference__cc">{r.slot + 1}</td>
+                  <td>{r.name || '—'}</td>
+                  <td className="cc-reference__range">{r.lastWritten ? t('profiles.lastWritten', 'last written') : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h3 className="panel-subtitle">{t('profiles.irUploadTitle', 'Upload a CAB IR')}</h3>
+      <p className="panel-hint">{t('profiles.uploadHint', 'Overwrites the chosen slot. This editor cannot restore factory content — use ToneCommand\'s "Restore Factory Content" for that. Tested over USB only.')}</p>
+
+      <div className="profile-panel__row">
+        <label>
+          {t('profiles.slot', 'Slot')}{' '}
+          <select value={irSlot} onChange={(e) => setIrSlot(Number(e.target.value))} disabled={irRunning}>
+            {irSlotNames.map((n, i) => (
+              <option key={i} value={i}>
+                {i + 1} — {n}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="profile-panel__row">
+        <button type="button" className="btn btn--ghost btn--small" disabled={irRunning} onClick={() => irFileInputRef.current?.click()}>
+          {t('profiles.irChooseFile', 'Choose .wav or .bin file…')}
+        </button>
+        <input ref={irFileInputRef} type="file" accept=".wav,.bin" hidden onChange={handleIrFile} />
+        {irFile && (
+          <span className="panel-hint">
+            {irFile.fileName} · {irFile.data.length} B
+          </span>
+        )}
+      </div>
+      {irProblem && (
+        <p className="connection-panel__error">{t(`profiles.irProblem.${irProblem}`, irProblem)}</p>
+      )}
+      {irConversion && (
+        <p className="panel-hint">
+          {t('profiles.irConverted', {
+            rate: irConversion.sourceSampleRate,
+            count: irConversion.sampleCount,
+            defaultValue: 'Converted from {{rate}}Hz to {{count}} samples at 48kHz.',
+          })}
+          {irConversion.truncated ? ` ${t('profiles.irTruncated', '(truncated to the device limit)')}` : ''}
+        </p>
+      )}
+
+      <div className="profile-panel__row">
+        <label>
+          {t('profiles.irName', 'IR name')}{' '}
+          <input type="text" value={irName} maxLength={PROFILE_NAME_MAX} onChange={(e) => setIrName(e.target.value)} disabled={irRunning} />
+        </label>
+      </div>
+
+      <div className="profile-panel__row">
+        <button type="button" className="btn btn--accent" disabled={!canUploadIr} onClick={handleUploadIr}>
+          {irRunning ? t('profiles.uploading', 'Uploading…') : t('profiles.upload', 'Upload to slot')}
+        </button>
+      </div>
+
+      {irUpload.status !== 'idle' && (
+        <div className="profile-panel__status">
+          {irUpload.status === 'running' && (
+            <>
+              <progress value={irUpload.sent} max={Math.max(irUpload.total, 1)} />
+              <span className="panel-hint">
+                {t(`profiles.phase.${irUpload.phase ?? 'info'}`, irUpload.phase ?? '')} · {irUpload.sent} / {irUpload.total} B
+              </span>
+            </>
+          )}
+          {irUpload.status === 'done' && (
+            <p className="connection-panel__success">
+              {t('profiles.done', { slot: (irUpload.slot ?? 0) + 1, defaultValue: 'Uploaded to slot {{slot}}.' })}
+            </p>
+          )}
+          {irUpload.status === 'error' && <p className="connection-panel__error">{failureText(irUpload.failure)}</p>}
         </div>
       )}
     </section>

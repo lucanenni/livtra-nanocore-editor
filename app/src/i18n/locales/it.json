@@ -724,6 +724,25 @@
       "bad-version": "Versione del profilo non supportata.",
       "length-mismatch": "La lunghezza del file non corrisponde all'intestazione — potrebbe essere troncato o danneggiato.",
       "too-large": "Il file è più grande di qualsiasi profilo visto finora."
+    },
+    "errTooLarge": "Questi dati sono più grandi dello slot riportato dal dispositivo.",
+    "irTitle": "Slot IR del CAB",
+    "irHint": "Il NanoCore ha 30 slot per le risposte all'impulso del cabinet. Puoi leggere cosa contengono, oppure caricare un .wav (convertito automaticamente: mono, 48kHz, normalizzato al picco, limitato a 1024 campioni) o un .bin grezzo (campioni float32 mono, senza intestazione) in uno di essi.",
+    "irUploadTitle": "Carica una IR del CAB",
+    "irChooseFile": "Scegli file .wav o .bin…",
+    "irName": "Nome della IR",
+    "irConfirm": "Sovrascrivere lo slot IR {{slot}} (\"{{current}}\") con \"{{name}}\"?\n\nQuesto editor non può rimettere la IR di fabbrica. Tieni il cavo collegato fino alla fine.",
+    "irConverted": "Convertito da {{rate}}Hz a {{count}} campioni a 48kHz.",
+    "irTruncated": "(troncato al limite del dispositivo)",
+    "irProblem": {
+      "too-short": "Il file è vuoto.",
+      "not-aligned": "Non è un file IR grezzo valido (la lunghezza non è un multiplo di 4 byte).",
+      "non-finite": "Il file contiene valori dei campioni non validi (non finiti).",
+      "not-wav": "Non sembra un file .wav.",
+      "no-fmt-chunk": "Quel file .wav non ha un chunk di formato utilizzabile.",
+      "no-data-chunk": "Quel file .wav non contiene dati audio.",
+      "unsupported-format": "Formato .wav non supportato (atteso PCM o IEEE float).",
+      "empty": "Quel file .wav non ha campioni."
     }
   },
   "devicePresets": {

@@ -100,11 +100,11 @@ describe('tool catalogue', () => {
   it('exposes the tools and marks the overwriting ones destructive', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
-    for (const n of ['verify_profile', 'listen', 'connect', 'get_patch', 'set_block', 'set_param', 'set_chain_order', 'rename_patch', 'save_to_slot', 'recall_preset', 'get_global_settings', 'set_global_setting', 'list_profiles', 'upload_profile', 'describe_block']) {
+    for (const n of ['verify_profile', 'listen', 'connect', 'get_patch', 'set_block', 'set_param', 'set_chain_order', 'rename_patch', 'save_to_slot', 'recall_preset', 'get_global_settings', 'set_global_setting', 'list_profiles', 'upload_profile', 'upload_ir', 'describe_block']) {
       expect(names).toContain(n);
     }
     const destructive = tools.filter((t) => t.annotations?.destructiveHint).map((t) => t.name).sort();
-    expect(destructive).toEqual(['save_to_slot', 'upload_profile']);
+    expect(destructive).toEqual(['save_to_slot', 'upload_ir', 'upload_profile']);
     expect(tools.find((t) => t.name === 'get_patch')?.annotations?.readOnlyHint).toBe(true);
   });
 });
@@ -334,6 +334,18 @@ describe('connected', () => {
     expect(wrongExt.isError).toBe(true);
     expect(wrongExt.text).toMatch(/\.ead/);
     const missing = await call('upload_profile', { slot: 31, file_path: '/nonexistent/x.ead', confirm: true });
+    expect(missing.isError).toBe(true);
+    expect(transport.sent).toHaveLength(0);
+  });
+
+  it('upload_ir requires confirmation, a .wav/.bin extension and a readable file', async () => {
+    transport.sent.length = 0;
+    const unconfirmed = await call('upload_ir', { slot: 1, file_path: '/tmp/x.wav' });
+    expect(unconfirmed.isError).toBe(true);
+    const wrongExt = await call('upload_ir', { slot: 1, file_path: '/tmp/x.txt', confirm: true });
+    expect(wrongExt.isError).toBe(true);
+    expect(wrongExt.text).toMatch(/\.wav/);
+    const missing = await call('upload_ir', { slot: 1, file_path: '/nonexistent/x.bin', confirm: true });
     expect(missing.isError).toBe(true);
     expect(transport.sent).toHaveLength(0);
   });

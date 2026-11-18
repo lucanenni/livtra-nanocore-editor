@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { PROFILE_NAME_MAX, PROFILE_SLOT_COUNT, buildCCReference, firmwareUpdate, nanocoreSpec } from '@nanocore/protocol';
+import { IR_SLOT_COUNT, PROFILE_NAME_MAX, PROFILE_SLOT_COUNT, buildCCReference, firmwareUpdate, nanocoreSpec, wavToIr } from '@nanocore/protocol';
 import type { UploadResult } from '@nanocore/protocol';
 import { z } from 'zod';
 import { blockOverview, describeBlockSpec, describePatch, resolveBlock } from './format';
@@ -43,6 +43,7 @@ function uploadFailure(result: Extract<UploadResult, { ok: false }>): string {
   const where = UPLOAD_PHASE_TEXT[result.phase] ?? result.phase;
   if (result.reason === 'no-response') return `The upload failed while ${where}: the NanoCore stopped answering.`;
   if (result.reason === 'slot-out-of-range') return `The NanoCore rejected the slot while ${where}.`;
+  if (result.reason === 'too-large') return 'That data is larger than the slot the NanoCore reported.';
   return `The upload failed while ${where}: the NanoCore returned status ${result.status}.`;
 }
 
@@ -373,6 +374,38 @@ export function registerTools(server: McpServer, session: NanoCoreSession): void
       const result = await session.uploadProfile(slot, data, name ?? basename(file_path));
       if (!result.ok) throw new Error(uploadFailure(result));
       return `Uploaded ${basename(file_path)} to profile slot ${slot}.`;
+    }),
+  );
+
+  server.registerTool(
+    'upload_ir',
+    {
+      title: 'Load a cabinet impulse response into a CAB IR slot',
+      description:
+        `Uploads a local impulse response into CAB IR slot \`slot\` (1-${IR_SLOT_COUNT}), replacing what is there; this editor cannot restore the factory IR afterward. ` +
+        'A .wav file is converted automatically (mono, 48kHz, peak-normalised, capped at 1024 samples); a .bin file is sent as raw little-endian float32 mono samples, unchanged. Takes a few seconds. ' +
+        'Set `confirm` to true only after the user has agreed to overwrite that slot.',
+      inputSchema: {
+        slot: z.number().int().min(1).max(IR_SLOT_COUNT),
+        file_path: z.string().describe('Absolute path of a .wav or .bin file on this computer.'),
+        name: z.string().max(PROFILE_NAME_MAX).optional().describe(`Name shown for the slot (max ${PROFILE_NAME_MAX} characters). Defaults to the file name.`),
+        confirm: z.literal(true).describe('Must be true: the user agreed to overwrite this slot.'),
+      },
+      annotations: OVERWRITE,
+    },
+    guarded(async ({ slot, file_path, name }: { slot: number; file_path: string; name?: string; confirm: true }) => {
+      const ext = extname(file_path).toLowerCase();
+      if (ext !== '.wav' && ext !== '.bin') throw new Error('Only .wav or .bin files can be uploaded as a CAB IR.');
+      const raw = new Uint8Array(await readFile(file_path));
+      let data: Uint8Array = raw;
+      if (ext === '.wav') {
+        const converted = wavToIr(raw);
+        if (!converted.ok) throw new Error(`Not a usable .wav file (${converted.problem}).`);
+        data = converted.result.data;
+      }
+      const result = await session.uploadIr(slot, data, name ?? basename(file_path));
+      if (!result.ok) throw new Error(uploadFailure(result));
+      return `Uploaded ${basename(file_path)} to CAB IR slot ${slot}.`;
     }),
   );
 }

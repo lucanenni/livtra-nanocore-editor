@@ -210,9 +210,13 @@ Livtra's own RESONA tone library at livtramusic.com — its API doesn't allow
 requests from other pages (no CORS), and this editor has no backend to route
 around that, so browsing/importing it inline isn't possible; downloading also
 needs a Livtra account. The **AMP/FX2 Profiles** tab loads a local `.ead` profile file into
-one of the 38 AMP/FX2 slots (it overwrites that slot; restore with the official app's "Restore
-Factory Content"). The protocol is documented in `docs/MIDI_MAPPING_NOTES.md`, which also has the
-library investigation. User-loaded profiles and IRs show up in the AMP/FX2/CAB model lists under
+one of the 38 AMP/FX2 slots, and a local `.wav` (converted automatically: mono, 48kHz,
+peak-normalised, capped at 1024 samples) or raw `.bin` into one of the 30 CAB IR slots (either
+overwrites that slot; restore with the official app's "Restore Factory Content"). The protocol is
+documented in `docs/MIDI_MAPPING_NOTES.md`, which also has the library investigation — the CAB IR
+write side is built by analogy with the AMP/FX2 one and cross-checked against an independent
+third-party reverse-engineering of the same pedal, not directly confirmed on this project's own
+hardware yet. User-loaded profiles and IRs show up in the AMP/FX2/CAB model lists under
 their own names; since the pedal keeps only 16 characters of a name, slots that end up with the same
 name get their slot number in front (`#7 …`) so they can be told apart.
 
@@ -334,6 +338,11 @@ setting Shape/Mix/Level or the rest of your patch.
 - The **installed firmware version** can't be read over MIDI — it shows only on
   the pedal's own screen. The About section explains updating with Livtra's own
   updater (ToneCommand Editor / Upgrader); this editor never writes firmware.
+- **CAB IR upload** (AMP/FX2 Profiles tab) is not yet confirmed on this
+  project's own hardware — built by analogy with the hardware-verified AMP/FX2
+  profile upload and cross-checked against an independent third party's own
+  hardware-verified IR write. Keep a backup and expect to retry/report back if
+  it doesn't work on your pedal — see MIDI_MAPPING_NOTES.md, "CAB IR slot write".
 
 ## License
 

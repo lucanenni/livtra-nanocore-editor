@@ -239,6 +239,25 @@
       "bad-version": "Unsupported profile version.",
       "length-mismatch": "The file's length does not match its header — it may be truncated or damaged.",
       "too-large": "That file is larger than any profile seen so far."
+    },
+    "errTooLarge": "That data is larger than the slot the device reported.",
+    "irTitle": "CAB IR slots",
+    "irHint": "The NanoCore keeps 30 cabinet impulse-response slots. Read what is in them, or upload a .wav (converted automatically: mono, 48kHz, peak-normalised, capped at 1024 samples) or a raw .bin (float32 mono samples, no header) into one.",
+    "irUploadTitle": "Upload a CAB IR",
+    "irChooseFile": "Choose .wav or .bin file…",
+    "irName": "IR name",
+    "irConfirm": "Overwrite CAB IR slot {{slot}} (\"{{current}}\") with \"{{name}}\"?\n\nThis editor cannot put the factory IR back. Keep the cable connected until it finishes.",
+    "irConverted": "Converted from {{rate}}Hz to {{count}} samples at 48kHz.",
+    "irTruncated": "(truncated to the device limit)",
+    "irProblem": {
+      "too-short": "That file is empty.",
+      "not-aligned": "Not a valid raw IR file (length is not a multiple of 4 bytes).",
+      "non-finite": "That file contains invalid (non-finite) sample values.",
+      "not-wav": "That does not look like a .wav file.",
+      "no-fmt-chunk": "That .wav file has no usable format chunk.",
+      "no-data-chunk": "That .wav file has no audio data.",
+      "unsupported-format": "Unsupported .wav format (expected PCM or IEEE float).",
+      "empty": "That .wav file has no samples."
     }
   },
   "devicePresets": {

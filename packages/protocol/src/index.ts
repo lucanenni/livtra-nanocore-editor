@@ -12,6 +12,7 @@ export * from './midi/scaling';
 export * from './midi/sysex';
 export * from './midi/presetReader';
 export * from './midi/profileUpload';
+export * from './midi/wavToIr';
 export * from './midi/crc32';
 export * from './midi/segmentedReplies';
 export * from './midi/safePacking';

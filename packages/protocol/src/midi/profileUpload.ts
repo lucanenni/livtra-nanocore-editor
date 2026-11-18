@@ -4,7 +4,13 @@ import {
   buildProfileBeginSysEx,
   buildProfileCatalogReadSysEx,
   buildProfileChunkSysEx,
+  buildIrApplySysEx,
+  buildIrBeginSysEx,
   buildIrCatalogReadSysEx,
+  buildIrChunkSysEx,
+  buildIrFinalizeSysEx,
+  buildIrNameSysEx,
+  buildIrStorageInfoSysEx,
   buildProfileReadSysEx,
   buildProfileFinalizeSysEx,
   buildProfileNameSysEx,
@@ -99,8 +105,8 @@ export type CommandTransact = (build: () => number[], label: string) => Promise<
 export type UploadPhase = 'info' | 'begin' | 'writing' | 'finalize' | 'naming' | 'applying';
 
 export type UploadResult =
-  | { ok: true }
-  | { ok: false; phase: UploadPhase; reason: 'no-response' | 'device-status' | 'slot-out-of-range'; status?: number; offset?: number };
+  | { ok: true; applyFailed?: boolean }
+  | { ok: false; phase: UploadPhase; reason: 'no-response' | 'device-status' | 'slot-out-of-range' | 'too-large'; status?: number; offset?: number };
 
 export interface RunProfileUploadOptions {
   transact: CommandTransact;
@@ -169,6 +175,91 @@ export async function runProfileUpload(opts: RunProfileUploadOptions): Promise<U
     if (!reply || reply.status !== 0) return fail('applying', reply);
   }
   return { ok: true };
+}
+
+export interface RunIrUploadOptions {
+  transact: CommandTransact;
+  slot: number;
+  /** Raw little-endian float32 mono samples, no header — see `validateIrFile`/`wavToIrFloat32`. */
+  data: Uint8Array;
+  /** Shown as the slot's name (sanitised to printable ASCII, at most `PROFILE_NAME_MAX`). */
+  name: string;
+  onProgress?: (phase: UploadPhase, sentBytes: number, totalBytes: number) => void;
+  chunkRetries?: number;
+}
+
+/** Writes a CAB IR slot: storage-info → begin → 64-byte chunks, each acknowledged → finalize with
+ * the data's CRC-32 → name → apply. Same step shape and opcode family as `runProfileUpload`
+ * (`PROFILE_OPCODE.IR_*`, `0x50`-`0x57`) — the one difference is the final apply step (`0x57`):
+ * unconfirmed on this project's own hardware (see that opcode's doc comment), so its failure is
+ * reported via `applyFailed` rather than failing the whole upload — by the time it runs, the IR
+ * data itself is already safely committed via `finalize`. Stops at the first *other* step with a
+ * non-zero status or no reply at all. */
+export async function runIrUpload(opts: RunIrUploadOptions): Promise<UploadResult> {
+  const { transact, slot, data, onProgress } = opts;
+  const retries = opts.chunkRetries ?? 2;
+  const total = data.length;
+  const bytes = Array.from(data);
+
+  const fail = (phase: UploadPhase, reply: CommandMessage | null, offset?: number): UploadResult =>
+    reply === null
+      ? { ok: false, phase, reason: 'no-response', offset }
+      : { ok: false, phase, reason: 'device-status', status: reply.status ?? undefined, offset };
+
+  onProgress?.('info', 0, total);
+  const info = await transact(buildIrStorageInfoSysEx, 'IR upload: storage info');
+  if (!info || info.status !== 0) return fail('info', info);
+  const parsed = parseStorageInfo(info.payload);
+  const slotCount = parsed?.slotCount ?? IR_SLOT_COUNT;
+  if (slot < 0 || slot >= slotCount) return { ok: false, phase: 'info', reason: 'slot-out-of-range' };
+  // values[3] is the byte-size limit (0x1000 = 4096 on every IR storage this project or
+  // `nanocore-controller` has seen) — see `parseStorageInfo`'s doc comment.
+  const sizeLimit = parsed?.values[3] ?? 4096;
+  if (total > sizeLimit) return { ok: false, phase: 'info', reason: 'too-large' };
+
+  onProgress?.('begin', 0, total);
+  const begin = await transact(() => buildIrBeginSysEx(slot, total), `IR upload: begin slot ${slot + 1}`);
+  if (!begin || begin.status !== 0) return fail('begin', begin);
+
+  for (let offset = 0; offset < total; offset += PROFILE_CHUNK_SIZE) {
+    const chunk = bytes.slice(offset, offset + PROFILE_CHUNK_SIZE);
+    let reply: CommandMessage | null = null;
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+      reply = await transact(() => buildIrChunkSysEx(slot, offset, chunk), `IR upload: bytes ${offset}-${offset + chunk.length}`);
+      if (reply) break;
+    }
+    if (!reply || reply.status !== 0) return fail('writing', reply, offset);
+    onProgress?.('writing', offset + chunk.length, total);
+  }
+
+  onProgress?.('finalize', total, total);
+  const crc = crc32(data);
+  const finalize = await transact(() => buildIrFinalizeSysEx(slot, total, crc), 'IR upload: finalize');
+  if (!finalize || finalize.status !== 0) return fail('finalize', finalize);
+
+  onProgress?.('naming', total, total);
+  const name = sanitizeProfileName(opts.name);
+  const named = await transact(() => buildIrNameSysEx(slot, name), `IR upload: name "${name}"`);
+  if (!named || named.status !== 0) return fail('naming', named);
+
+  onProgress?.('applying', total, total);
+  const applied = await transact(() => buildIrApplySysEx(slot), 'IR upload: apply');
+  return { ok: true, applyFailed: !applied || applied.status !== 0 };
+}
+
+export type IrFileProblem = 'too-short' | 'not-aligned' | 'non-finite';
+
+/** Checks that `data` looks like a raw CAB IR the device will accept: a non-empty, 4-byte-aligned
+ * (little-endian float32 samples) buffer of finite values. Does not check it against the device's
+ * own size limit — `runIrUpload` does that live, against what `0x50` actually reports. */
+export function validateIrFile(data: Uint8Array): { ok: true; sampleCount: number } | { ok: false; problem: IrFileProblem } {
+  if (data.length === 0) return { ok: false, problem: 'too-short' };
+  if (data.length % 4 !== 0) return { ok: false, problem: 'not-aligned' };
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  for (let offset = 0; offset < data.length; offset += 4) {
+    if (!Number.isFinite(view.getFloat32(offset, true))) return { ok: false, problem: 'non-finite' };
+  }
+  return { ok: true, sampleCount: data.length / 4 };
 }
 
 /** Printable ASCII only, trimmed, at most `PROFILE_NAME_MAX` characters; never empty. */

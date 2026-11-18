@@ -9,14 +9,22 @@ import {
   readIrCatalog,
   readProfileData,
   readProfileCatalog,
+  runIrUpload,
   runProfileUpload,
   sanitizeProfileName,
+  validateIrFile,
   validateProfileFile,
   type CommandTransact,
   type UploadPhase,
 } from '../profileUpload';
 import {
   buildCommandFrameWithSeq,
+  buildIrApplySysEx,
+  buildIrBeginSysEx,
+  buildIrChunkSysEx,
+  buildIrFinalizeSysEx,
+  buildIrNameSysEx,
+  buildIrStorageInfoSysEx,
   buildProfileApplySysEx,
   buildProfileBeginSysEx,
   buildProfileCatalogReadSysEx,
@@ -236,6 +244,115 @@ describe('runProfileUpload', () => {
     const transact: CommandTransact = (build, label) => (label.includes('bytes 64-') ? Promise.resolve(null) : base.transact(build, label));
     const result = await runProfileUpload({ transact, slot: 1, data, name: 'x', chunkRetries: 1 });
     expect(result).toMatchObject({ ok: false, phase: 'writing', reason: 'no-response', offset: 64 });
+  });
+});
+
+describe('IR write builders (0x50-0x57) — exact opcode/offset parity with the AMP family', () => {
+  it('shares frame shape with the AMP builders, opcode offset by +0x20 for every confirmed step', () => {
+    const pairs: [number[], number[]][] = [
+      [buildStorageInfoSysEx(), buildIrStorageInfoSysEx()],
+      [buildProfileBeginSysEx(5, 4096), buildIrBeginSysEx(5, 4096)],
+      [buildProfileChunkSysEx(5, 64, [1, 2, 3]), buildIrChunkSysEx(5, 64, [1, 2, 3])],
+      [buildProfileFinalizeSysEx(5, 4096, 0x12345678), buildIrFinalizeSysEx(5, 4096, 0x12345678)],
+      [buildProfileNameSysEx(5, 'MyCab'), buildIrNameSysEx(5, 'MyCab')],
+    ];
+    for (const [ampFrame, irFrame] of pairs) {
+      const amp = parseCommandMessage(ampFrame)!;
+      const ir = parseCommandMessage(irFrame)!;
+      expect(ir.opcode).toBe(amp.opcode + 0x20);
+      expect(ir.payload).toEqual(amp.payload); // same payload shape, only the opcode differs
+    }
+    // IR_APPLY (0x57) sits at the same relative position after NAME as AMP's APPLY (0x37) does.
+    expect(parseCommandMessage(buildIrApplySysEx(5))!.opcode).toBe(parseCommandMessage(buildProfileApplySysEx(5))!.opcode + 0x20);
+  });
+});
+
+describe('validateIrFile', () => {
+  it('accepts a 4-byte-aligned buffer of finite float32 samples', () => {
+    const buf = new Uint8Array(16);
+    new DataView(buf.buffer).setFloat32(0, 0.5, true);
+    expect(validateIrFile(buf)).toEqual({ ok: true, sampleCount: 4 });
+  });
+
+  it('rejects empty, misaligned and non-finite data', () => {
+    expect(validateIrFile(new Uint8Array(0))).toEqual({ ok: false, problem: 'too-short' });
+    expect(validateIrFile(new Uint8Array(6))).toEqual({ ok: false, problem: 'not-aligned' });
+    const nanBuf = new Uint8Array(4);
+    new DataView(nanBuf.buffer).setFloat32(0, NaN, true);
+    expect(validateIrFile(nanBuf)).toEqual({ ok: false, problem: 'non-finite' });
+  });
+});
+
+/** A tiny in-memory NanoCore that speaks the IR write protocol, for exercising `runIrUpload`
+ * without hardware (mirrors `fakeDevice` above, IR opcodes and a 30-slot/4096-byte storage). */
+function fakeIrDevice(options: { statusFor?: (opcode: number) => number } = {}) {
+  const log: { opcode: number; payload: number[] }[] = [];
+  const store = { slot: -1, length: 0, data: [] as number[], crc: -1, name: '' };
+  const transact: CommandTransact = async (build) => {
+    const request = parseCommandMessage(build())!;
+    log.push({ opcode: request.opcode, payload: request.payload });
+    const u32 = (o: number) => (request.payload[o] | (request.payload[o + 1] << 8) | (request.payload[o + 2] << 16) | (request.payload[o + 3] << 24)) >>> 0;
+    let payload: number[] = [];
+    switch (request.opcode) {
+      case 0x50: payload = [0, 0, 0, 0, 0, 0, 0, 0, 0x1e, 0, 0, 0, 0x00, 0x10, 0, 0, 0, 0, 0, 0]; break; // slotCount 30, limit 4096
+      case 0x51: store.slot = u32(0) >>> 24; store.length = u32(0) & 0xffffff; store.data = []; break;
+      case 0x52: {
+        const offset = u32(0) & 0xffffff;
+        const chunk = request.payload.slice(4);
+        for (let i = 0; i < chunk.length; i += 1) store.data[offset + i] = chunk[i];
+        break;
+      }
+      case 0x53: store.crc = u32(4); break;
+      case 0x55: store.name = String.fromCharCode(...request.payload.slice(1)); break;
+    }
+    return { direction: 'reply', seq: request.seq, opcode: request.opcode, status: options.statusFor?.(request.opcode) ?? 0, payload };
+  };
+  return { transact, log, store };
+}
+
+describe('runIrUpload', () => {
+  const data = new Uint8Array(4 * 65); // 260 bytes, not a round number of 64-byte chunks
+
+  it('uploads the IR in acknowledged 64-byte chunks, finalizes, names and applies', async () => {
+    const device = fakeIrDevice();
+    const phases: UploadPhase[] = [];
+    const result = await runIrUpload({ transact: device.transact, slot: 7, data, name: 'MyCab', onProgress: (p) => phases.push(p) });
+
+    expect(result).toEqual({ ok: true, applyFailed: false });
+    expect(device.store.slot).toBe(7);
+    expect(device.store.data).toEqual(Array.from(data));
+    expect(device.store.crc).toBe(crc32(data));
+    expect(device.store.name).toBe('MyCab');
+    expect(device.log.map((m) => m.opcode)).toEqual([0x50, 0x51, 0x52, 0x52, 0x52, 0x52, 0x52, 0x53, 0x55, 0x57]);
+    expect(phases.at(-1)).toBe('applying');
+  });
+
+  it('refuses data larger than the live size limit before writing anything', async () => {
+    const device = fakeIrDevice();
+    const tooBig = new Uint8Array(4100);
+    const result = await runIrUpload({ transact: device.transact, slot: 0, data: tooBig, name: 'x' });
+    expect(result).toEqual({ ok: false, phase: 'info', reason: 'too-large' });
+    expect(device.log.map((m) => m.opcode)).toEqual([0x50]);
+  });
+
+  it('refuses a slot the IR storage does not have', async () => {
+    const device = fakeIrDevice();
+    const result = await runIrUpload({ transact: device.transact, slot: 30, data, name: 'x' });
+    expect(result).toEqual({ ok: false, phase: 'info', reason: 'slot-out-of-range' });
+  });
+
+  it('stops at the first non-zero status before the apply step, as a hard failure', async () => {
+    const device = fakeIrDevice({ statusFor: (op) => (op === 0x53 ? 5 : 0) });
+    const result = await runIrUpload({ transact: device.transact, slot: 7, data, name: 'x' });
+    expect(result).toEqual({ ok: false, phase: 'finalize', reason: 'device-status', status: 5, offset: undefined });
+    expect(device.log.some((m) => m.opcode === 0x55)).toBe(false); // never got as far as naming
+  });
+
+  it('reports a failed apply step without failing the upload — the data is already committed', async () => {
+    const device = fakeIrDevice({ statusFor: (op) => (op === 0x57 ? 0x7e : 0) });
+    const result = await runIrUpload({ transact: device.transact, slot: 7, data, name: 'MyCab' });
+    expect(result).toEqual({ ok: true, applyFailed: true });
+    expect(device.store.name).toBe('MyCab'); // name (and the data before it) still landed
   });
 });
 
