@@ -121,7 +121,11 @@ export interface RunProfileUploadOptions {
 
 /** The exact sequence ToneCommand uses over USB (captured 2026-09-30): storage-info → begin →
  * 64-byte chunks, each acknowledged → finalize with the file's CRC-32 → name → storage-info →
- * apply → storage-info. Stops at the first reply with a non-zero status or no reply at all. */
+ * apply → storage-info. Stops at the first reply with a non-zero status or no reply at all, up
+ * through naming — by then the data is already safely committed via finalize+name. The trailing
+ * apply step (confirmed to work for AMP slots, but to always come back with a non-zero status for
+ * every FX2 slot on real hardware, 2026-11-20) is best-effort from there on, like `runIrUpload`'s
+ * own apply step: its failure is reported via `applyFailed` rather than failing the whole upload. */
 export async function runProfileUpload(opts: RunProfileUploadOptions): Promise<UploadResult> {
   const { transact, slot, data, onProgress } = opts;
   const retries = opts.chunkRetries ?? 2;
@@ -166,15 +170,16 @@ export async function runProfileUpload(opts: RunProfileUploadOptions): Promise<U
   if (!named || named.status !== 0) return fail('naming', named);
 
   onProgress?.('applying', total, total);
+  let applyFailed = false;
   for (const [build, label] of [
     [buildStorageInfoSysEx, 'Profile upload: storage info'],
     [() => buildProfileApplySysEx(slot), 'Profile upload: apply'],
     [buildStorageInfoSysEx, 'Profile upload: storage info'],
   ] as const) {
     const reply = await transact(build, label);
-    if (!reply || reply.status !== 0) return fail('applying', reply);
+    if (!reply || reply.status !== 0) applyFailed = true;
   }
-  return { ok: true };
+  return { ok: true, applyFailed };
 }
 
 export interface RunIrUploadOptions {

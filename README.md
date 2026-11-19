@@ -217,9 +217,12 @@ can be chosen again in the same uploader to put it back, without needing the off
 upload is also read back and compared byte-for-byte afterward, beyond the device's own CRC-32 check
 at write time; the result ("Verified byte-for-byte" / a mismatch warning / "could not verify") shows
 under the upload button. The protocol is documented in `docs/MIDI_MAPPING_NOTES.md`, which also has
-the library investigation — the CAB IR write side is built by analogy with the AMP/FX2 one and
-cross-checked against an independent third-party reverse-engineering of the same pedal, not directly
-confirmed on this project's own hardware yet. User-loaded profiles and IRs show up in the
+the library investigation. Both uploads are confirmed on this project's own hardware; the one
+caveat found there is that an FX2 profile slot's final "apply" step always comes back a non-zero
+status (unlike AMP or CAB IR) — the slot itself is still written and read back byte-for-byte
+correctly, and the upload is still reported as successful, but it's not established whether the
+pedal needs an extra nudge (recalling the preset again, say) to actually play the new FX2 content
+live. User-loaded profiles and IRs show up in the
 AMP/FX2/CAB model lists under their own names; since the pedal keeps only 16 characters of a name,
 slots that end up with the same name get their slot number in front (`#7 …`) so they can be told
 apart.
@@ -342,11 +345,11 @@ setting Shape/Mix/Level or the rest of your patch.
 - The **installed firmware version** can't be read over MIDI — it shows only on
   the pedal's own screen. The About section explains updating with Livtra's own
   updater (ToneCommand Editor / Upgrader); this editor never writes firmware.
-- **CAB IR upload** (AMP/FX2 Profiles tab) is not yet confirmed on this
-  project's own hardware — built by analogy with the hardware-verified AMP/FX2
-  profile upload and cross-checked against an independent third party's own
-  hardware-verified IR write. Keep a backup and expect to retry/report back if
-  it doesn't work on your pedal — see MIDI_MAPPING_NOTES.md, "CAB IR slot write".
+- **An FX2 profile upload's final "apply" step always fails** on real hardware (confirmed
+  2026-11-20, every FX2 slot) — the data is still written and verified correctly, and the upload
+  still reports success, but it isn't established whether the pedal needs an extra nudge to play
+  the new content live. AMP slots and CAB IR slots both apply cleanly. See MIDI_MAPPING_NOTES.md,
+  "AMP/FX2 profile upload".
 
 ## License
 

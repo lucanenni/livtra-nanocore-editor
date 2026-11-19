@@ -1035,7 +1035,13 @@ single-file import, one full factory restore, plus read-only probes sent from th
 tooling). **This editor implements upload** (AMP/FX2 Profiles tab); it was checked on real hardware
 over USB on 2026-10-01: a one-file upload to one AMP slot sent a request stream byte-identical (apart
 from the sequence counter) to ToneCommand's for the same file, 199 frames, and every reply had
-status 0. BLE was not tried.
+status 0. BLE was not tried. That first hardware check used an AMP slot; checked again on real
+hardware 2026-11-20 across every AMP and FX2 slot: AMP slots apply cleanly (status 0, matching the
+2026-10-01 run), but **every FX2 slot's `0x37` ("apply") comes back status 4**, regardless of
+which FX2 type is currently active — the write itself (`0x31`-`0x35`) still lands and reads back
+byte-for-byte, only the live-apply step fails. `runProfileUpload` (`midi/profileUpload.ts`) treats
+this the same way `runIrUpload` already treated `0x57`: non-fatal (`applyFailed: true`), since the
+data is already safely committed by `0x33`/`0x35` before `0x37` runs.
 
 **Framing, restated (explains every frame documented above).** Every message is
 `F0 7D 4E 43 <dir> <packed> F7` (`dir` = `70` host→device, `71` reply, `72` unsolicited push),
@@ -1062,7 +1068,7 @@ model id); 30–37 are the FX2 drive models (scream, Klone, OCD, DS2, PiFUZZ v.2
 | `0x33` | u32 LE `(slot << 24) \| length`, then u32 LE **CRC-32** (zlib/IEEE) of the whole uploaded data | finalize |
 | `0x35` | `slot` (1 byte) + ASCII name | set the slot's name — ToneCommand sends the *file name* (`00.ead`); a factory restore sends the model name (`BogXTC1`, …) |
 | `0x36` | `slot` (1 byte) | catalog record, 30 bytes (below) — **read-only** |
-| `0x37` | `slot` (1 byte) | sent once after a successful import, between two `0x30`s; effect not established (plausibly "apply/select this profile") |
+| `0x37` | `slot` (1 byte) | sent once after a successful import, between two `0x30`s; "apply" — confirmed 2026-11-20: always status 0 for an AMP slot, always status 4 for an FX2 slot (every slot tried, regardless of which is currently active) |
 
 **Catalog record (`0x36` reply, 30 bytes):** `slot`, `present` (1), `lastWritten` (0/1 — set only on
 the most recently written slot, i.e. the same slot `0x30`'s fifth value points at, not a persistent
@@ -1118,21 +1124,24 @@ itself only knows `wirelessEnabled`.
 **Practical notes.** `0x30` and `0x36` are safe reads (this project's tooling sends them while
 developing); everything that writes (`0x31`–`0x35`, `0x37`) overwrites a slot — use ToneCommand's
 restore to put factory content back. Captured over **USB only**: other transports may chunk
-differently (larger or unacknowledged writes). Still unknown: `0x37`'s exact effect, the
-checksum in the catalog record, the first four `0x30` values, and error statuses (every reply in the
-captures was status 0).
+differently (larger or unacknowledged writes). Still unknown: why `0x37` ("apply") always fails
+for FX2 slots specifically (see above), the checksum in the catalog record, and the first four
+`0x30` values.
 
-## CAB IR slot write (opcodes `0x50`–`0x57`) — added 2026-11-18
+## CAB IR slot write (opcodes `0x50`–`0x57`) — added 2026-11-18, confirmed on real hardware 2026-11-20
 
 The 30 CAB IR slots' read side (`0x56` catalog, `0x59` body read) was already confirmed on real
-hardware (2026-10-20). The write side was not — it's built by analogy with the AMP/FX2 family
-above, at the same +0x20 opcode offset this project's own `SYNC`/`ABORT` doc comments already
-guessed for IR (`0x38`→`0x5a`, `0x34`→`0x54`) before this was written, and cross-checked against
-`nanocore-controller` (dvilelaf), which independently reverse-engineered and **verified on its own
-real pedal** (2026-10-08) the exact same opcode table for both AMP and IR — including IR storage
-info (30 slots, 4096-byte default limit), 64-byte acknowledged write chunks, and that the stored
-AMP blob is a cleartext `DDPB` structure, not the encrypted `.ead`/`SAPF` form — which matches the
-opcode numbering already in this file (`0x33` finalize/commit, `0x34` abort) exactly.
+hardware (2026-10-20). The write side was built by analogy with the AMP/FX2 family above, at the
+same +0x20 opcode offset this project's own `SYNC`/`ABORT` doc comments already guessed for IR
+(`0x38`→`0x5a`, `0x34`→`0x54`), and cross-checked against `nanocore-controller` (dvilelaf), which
+independently reverse-engineered and **verified on its own real pedal** (2026-10-08) the exact
+same opcode table for both AMP and IR — including IR storage info (30 slots, 4096-byte default
+limit), 64-byte acknowledged write chunks, and that the stored AMP blob is a cleartext `DDPB`
+structure, not the encrypted `.ead`/`SAPF` form — which matches the opcode numbering already in
+this file (`0x33` finalize/commit, `0x34` abort) exactly. **Confirmed on this project's own
+hardware 2026-11-20**: wrote a synthetic test IR into a real slot, read it back byte-for-byte
+identical, then restored the original factory IR the same way — including a clean `0x57` apply
+(`applyFailed: false`), unlike the AMP/FX2 family's `0x37` (see above).
 
 | Step | AMP | IR |
 |---|---|---|
@@ -1146,11 +1155,11 @@ opcode numbering already in this file (`0x33` finalize/commit, `0x34` abort) exa
 | apply (sent once after name) | `0x37` | `0x57` |
 | read | `0x39` | `0x59` |
 
-`0x37`/`0x57` ("apply") is the one step not independently confirmed for IR on any hardware this
-project has seen — `nanocore-controller`'s own verified write exercised `0x57` without incident,
-but still calls its purpose unknown. `runIrUpload` (`midi/profileUpload.ts`) treats its failure as
-non-fatal (`applyFailed: true`) rather than failing the whole upload, since the IR data itself is
-already safely committed by the time it runs.
+`0x57` ("apply") came back status 0 on this project's own hardware (2026-11-20, see above) and in
+`nanocore-controller`'s verified write; its AMP/FX2 twin `0x37` instead always fails for FX2 slots
+(see "AMP/FX2 profile upload" above). `runIrUpload` and `runProfileUpload` (`midi/profileUpload.ts`)
+both treat an apply failure as non-fatal (`applyFailed: true`) rather than failing the whole
+upload, since the data itself is already safely committed by the time apply runs.
 
 **IR data format**: raw little-endian float32 mono samples, no header — confirmed by
 `nanocore-controller` against all 30 factory IR files (1024 samples/4096 B for 28 of them, shorter

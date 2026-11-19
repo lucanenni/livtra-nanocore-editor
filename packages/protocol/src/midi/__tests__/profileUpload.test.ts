@@ -200,7 +200,7 @@ describe('runProfileUpload', () => {
     const phases: UploadPhase[] = [];
     const result = await runProfileUpload({ transact: device.transact, slot: 29, data, name: '00.ead', onProgress: (p) => phases.push(p) });
 
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, applyFailed: false });
     expect(device.store.slot).toBe(29);
     expect(device.store.length).toBe(260);
     expect(device.store.data).toEqual(Array.from(data));
@@ -217,7 +217,7 @@ describe('runProfileUpload', () => {
   it('survives a dropped chunk acknowledgement by resending that chunk', async () => {
     const device = fakeDevice({ dropReplyOnce: (m) => m.opcode === 0x32 });
     const result = await runProfileUpload({ transact: device.transact, slot: 3, data, name: 'x' });
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, applyFailed: false });
     expect(device.store.data).toEqual(Array.from(data));
     expect(device.log.filter((m) => m.opcode === 0x32).length).toBeGreaterThan(5); // resends happened
   });
@@ -227,6 +227,13 @@ describe('runProfileUpload', () => {
     const result = await runProfileUpload({ transact: device.transact, slot: 29, data, name: 'x' });
     expect(result).toEqual({ ok: false, phase: 'finalize', reason: 'device-status', status: 5, offset: undefined });
     expect(device.log.some((m) => m.opcode === 0x35)).toBe(false); // never got as far as naming
+  });
+
+  it('reports a failed apply step without failing the upload — the data is already committed (real FX2 slots always fail apply this way, 2026-11-20)', async () => {
+    const device = fakeDevice({ statusFor: (op) => (op === 0x37 ? 4 : 0) });
+    const result = await runProfileUpload({ transact: device.transact, slot: 29, data, name: 'x' });
+    expect(result).toEqual({ ok: true, applyFailed: true });
+    expect(device.store.name).toBe('x'); // name (and the data before it) still landed
   });
 
   it('reports no response, and refuses a slot the device does not have before writing anything', async () => {
